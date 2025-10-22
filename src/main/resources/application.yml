@@ -1,0 +1,11 @@
+#   Database Configuration
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  datasource:
+    driver-class-name: ${JDBC_DATABASE_DRIVER:com.mysql.cj.jdbc.Driver}
+    url: jdbc:mysql://${JDBC_DATABASE_HOST:}:${JDBC_DATABASE_PORT:}/${JDBC_DATABASE_NAME:}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${JDBC_DATABASE_USERNAME:}
+    password: ${JDBC_DATABASE_PASSWORD:}

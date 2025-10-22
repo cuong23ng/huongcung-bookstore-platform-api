@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: huongcung-sqlserver
+    environment:
+      MYSQL_ROOT_PASSWORD: hungcuong
+    ports:
+      - "3306:3306"
+    volumes:
+      - huongcung-sqlserver-data:/var/opt/mysql
+
+volumes:
+  huongcung-sqlserver-data:
