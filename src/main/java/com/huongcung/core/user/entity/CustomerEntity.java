@@ -6,7 +6,7 @@ import lombok.*;
 
 
 @Entity
-@Table(name = "customer")
+@Table(name = "customers")
 @DiscriminatorValue("CUSTOMER")
 @PrimaryKeyJoinColumn(name = "user_id")
 @Getter
@@ -14,7 +14,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CustomerEntity extends UserEntity {
-    
+
     @Enumerated(EnumType.STRING)
     @Column(name = "customer_tier")
     private CustomerTier customerTier = CustomerTier.BRONZE;
