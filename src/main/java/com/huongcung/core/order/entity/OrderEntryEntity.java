@@ -1,6 +1,6 @@
 package com.huongcung.core.order.entity;
 
-import com.huongcung.core.product.entity.BooksEntity;
+import com.huongcung.core.product.entity.AbstractBookEntity;
 import com.huongcung.core.common.entity.BaseEntity;
 import com.huongcung.core.inventory.enumeration.City;
 import com.huongcung.core.order.enumeration.ItemType;
@@ -23,7 +23,7 @@ public class OrderEntryEntity extends BaseEntity {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
-    private BooksEntity book;
+    private AbstractBookEntity book;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "item_type", nullable = false)

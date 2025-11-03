@@ -1,6 +1,6 @@
 package com.huongcung.core.inventory.entity;
 
-import com.huongcung.core.product.entity.PhysicalBooksEntity;
+import com.huongcung.core.product.entity.PhysicalBookEntity;
 import com.huongcung.core.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,7 +18,7 @@ public class StockLevelEntity extends BaseEntity {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
-    private PhysicalBooksEntity book;
+    private PhysicalBookEntity book;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "warehouse_id", nullable = false)

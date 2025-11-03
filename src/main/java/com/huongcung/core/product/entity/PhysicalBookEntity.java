@@ -1,5 +1,6 @@
 package com.huongcung.core.product.entity;
 
+import com.huongcung.core.product.enumeration.CoverType;
 import com.huongcung.core.common.entity.PriceRowEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,35 +9,30 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
-@Table(name = "ebooks")
+@Table(name = "physical_books")
 @PrimaryKeyJoinColumn(name = "book_id")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class EbookEntity extends AbstractBookEntity {
+public class PhysicalBookEntity extends AbstractBookEntity {
+    
+    @Column(name = "isbn", unique = true)
+    private String isbn;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "cover_type")
+    private CoverType coverType;
     
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PriceRowEntity> prices;
     
+    @Column(name = "weight_grams")
+    private Double weightGrams;
+    
     @Column(name = "current_price", precision = 10, scale = 2)
     private BigDecimal currentPrice;
     
-    @Column(name = "file_url")
-    private String fileUrl;
-    
-    @Column(name = "file_name")
-    private String fileName;
-    
-    @Column(name = "file_size")
-    private Long fileSize; // in bytes
-    
-    @Column(name = "file_format")
-    private String fileFormat; // PDF, EPUB, MOBI
-    
-    @Column(name = "download_count")
-    private Integer downloadCount = 0;
-    
-    @Column(name = "is_active")
-    private Boolean isActive = true;
+    @Column(name = "dimensions")
+    private String dimensions; // Format: "L x W x H cm"
 }

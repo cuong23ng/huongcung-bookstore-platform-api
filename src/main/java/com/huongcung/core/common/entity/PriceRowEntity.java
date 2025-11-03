@@ -1,6 +1,6 @@
 package com.huongcung.core.common.entity;
 
-import com.huongcung.core.product.entity.BooksEntity;
+import com.huongcung.core.product.entity.AbstractBookEntity;
 import com.huongcung.core.common.enumeration.Currency;
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,7 +18,7 @@ public class PriceRowEntity extends BaseEntity {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
-    private BooksEntity book;
+    private AbstractBookEntity book;
     
     @Column(name = "amount", precision = 10, scale = 2, nullable = false)
     private BigDecimal amount;

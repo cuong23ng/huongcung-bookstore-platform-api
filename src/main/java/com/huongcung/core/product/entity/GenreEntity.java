@@ -7,7 +7,7 @@ import lombok.*;
 import java.util.List;
 
 @Entity
-@Table(name = "category")
+@Table(name = "genres")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -27,9 +27,9 @@ public class GenreEntity extends BaseEntity {
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<GenreEntity> children;
     
-    @ManyToMany(mappedBy = "categories", fetch = FetchType.LAZY)
-    private List<BooksEntity> books;
+    @ManyToMany(mappedBy = "genres", fetch = FetchType.LAZY)
+    private List<AbstractBookEntity> books;
     
-    @Column(name = "is_active", nullable = false)
+    @Column(name = "is_active", nullable = false, columnDefinition = "boolean default true")
     private Boolean isActive = true;
 }

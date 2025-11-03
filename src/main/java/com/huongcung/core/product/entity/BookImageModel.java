@@ -14,7 +14,7 @@ public class BookImageModel extends BaseEntity {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
-    private BooksEntity book;
+    private AbstractBookEntity book;
     
     @Column(name = "url", nullable = false)
     private String url;
@@ -24,7 +24,12 @@ public class BookImageModel extends BaseEntity {
     
     @Column(name = "position")
     private Integer position;
-    
-    @Column(name = "is_primary", nullable = false)
-    private Boolean isPrimary = false;
+
+    public boolean isCover() {
+        return this.position != null && this.position.equals(1);
+    }
+
+    public boolean isBackCover() {
+        return this.position != null && this.position.equals(2);
+    }
 }

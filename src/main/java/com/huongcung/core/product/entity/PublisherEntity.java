@@ -26,7 +26,4 @@ public class PublisherEntity extends BaseEntity {
     
     @Column(name = "website")
     private String website;
-    
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive = true;
 }
