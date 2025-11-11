@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Solr Configuration for Huong Cung Bookstore - Books Core
+  Optimized for search performance and Vietnamese language support
+-->
+<config>
+  <luceneMatchVersion>9.7.0</luceneMatchVersion>
+  
+  <dataDir>${solr.data.dir:}</dataDir>
+  
+  <directoryFactory name="DirectoryFactory" class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}"/>
+  
+  <codecFactory class="solr.SchemaCodecFactory"/>
+  
+  <indexConfig>
+    <!-- Lock factory for index -->
+    <lockType>${solr.lock.type:native}</lockType>
+    
+    <!-- Index writer settings -->
+    <infoStream>false</infoStream>
+    
+    <!-- Merge policy -->
+    <mergePolicyFactory class="org.apache.solr.index.SortingMergePolicyFactory">
+      <str name="sort">publicationDate desc</str>
+      <str name="wrapped.prefix">internal</str>
+      <str name="wrapped.class">org.apache.solr.index.TieredMergePolicyFactory</str>
+      <int name="wrapped.maxMergeAtOnce">10</int>
+      <int name="wrapped.segmentsPerTier">10</int>
+      <double name="wrapped.reclaimDeletesWeight">2.0</double>
+      <int name="wrapped.maxMergedSegmentMB">512</int>
+    </mergePolicyFactory>
+    
+    <!-- Merge scheduler -->
+    <mergeScheduler class="org.apache.lucene.index.ConcurrentMergeScheduler"/>
+    
+    <!-- RAM buffer size for indexing -->
+    <ramBufferSizeMB>100</ramBufferSizeMB>
+    
+    <!-- Max buffered docs -->
+    <maxBufferedDocs>1000</maxBufferedDocs>
+    
+    <!-- Use compound file format -->
+    <useCompoundFile>true</useCompoundFile>
+  </indexConfig>
+  
+  <!-- JMX configuration -->
+  <jmx />
+  
+  <!-- Update request processor chain -->
+  <updateRequestProcessorChain name="add-unknown-fields-to-the-schema" default="true">
+    <processor class="solr.LogUpdateProcessorFactory"/>
+    <processor class="solr.DistributedUpdateProcessorFactory"/>
+    <processor class="solr.RunUpdateProcessorFactory"/>
+  </updateRequestProcessorChain>
+  
+  <!-- Request handlers -->
+  
+  <!-- Standard request handler -->
+  <requestHandler name="/select" class="solr.SearchHandler">
+    <lst name="defaults">
+      <str name="echoParams">explicit</str>
+      <int name="rows">10</int>
+      <str name="df">title</str>
+    </lst>
+    <arr name="last-components">
+      <str>spellcheck</str>
+    </arr>
+  </requestHandler>
+  
+  <!-- Update request handler -->
+  <requestHandler name="/update" class="solr.UpdateRequestHandler">
+    <lst name="defaults">
+      <str name="update.chain">add-unknown-fields-to-the-schema</str>
+    </lst>
+  </requestHandler>
+  
+  <!-- Admin handlers -->
+  <requestHandler name="/admin/ping" class="solr.PingRequestHandler">
+    <lst name="defaults">
+      <str name="qt">/select</str>
+      <str name="q">solrpingquery</str>
+    </lst>
+  </requestHandler>
+  
+  <!-- Suggest request handler -->
+  <requestHandler name="/suggest" class="solr.SearchHandler" startup="lazy">
+    <lst name="defaults">
+      <str name="suggest">true</str>
+      <str name="suggest.count">10</str>
+      <str name="suggest.dictionary">suggest</str>
+    </lst>
+    <arr name="components">
+      <str>suggest</str>
+    </arr>
+  </requestHandler>
+  
+  <!-- Search components -->
+  
+  <!-- Highlighting component -->
+  <searchComponent name="highlight" class="solr.HighlightComponent">
+    <lst name="defaults">
+      <str name="hl">on</str>
+      <str name="hl.fl">title,description,titleText,descriptionText</str>
+      <str name="hl.snippets">3</str>
+      <str name="hl.fragsize">200</str>
+      <str name="hl.method">unified</str>
+    </lst>
+  </searchComponent>
+  
+  <!-- Faceting component -->
+  <searchComponent name="facet" class="solr.FacetComponent"/>
+  
+  <!-- Spell check component -->
+  <searchComponent name="spellcheck" class="solr.SpellCheckComponent">
+    <str name="queryAnalyzerFieldType">text_vi</str>
+    <lst name="spellchecker">
+      <str name="name">default</str>
+      <str name="field">titleText</str>
+      <str name="classname">solr.DirectSolrSpellChecker</str>
+      <str name="distanceMeasure">internal</str>
+      <float name="accuracy">0.5</float>
+      <int name="maxEdits">2</int>
+      <int name="minPrefix">1</int>
+      <int name="maxInspections">5</int>
+      <int name="minQueryLength">4</int>
+      <float name="maxQueryFrequency">0.01</float>
+      <float name="thresholdTokenFrequency">.01</float>
+    </lst>
+  </searchComponent>
+  
+  <!-- Suggest component -->
+  <searchComponent name="suggest" class="solr.SuggestComponent">
+    <lst name="suggester">
+      <str name="name">suggest</str>
+      <str name="lookupImpl">FuzzyLookupFactory</str>
+      <str name="dictionaryImpl">DocumentDictionaryFactory</str>
+      <str name="field">titleText</str>
+      <str name="suggestAnalyzerFieldType">text_vi</str>
+      <str name="buildOnStartup">false</str>
+      <str name="buildOnCommit">true</str>
+      <str name="weightField">averageRating</str>
+    </lst>
+  </searchComponent>
+  
+  <!-- Query parsers -->
+  <queryParser name="lucene" class="solr.LuceneQParserPlugin"/>
+  <queryParser name="dismax" class="solr.DisMaxQParserPlugin"/>
+  <queryParser name="edismax" class="solr.ExtendedDisMaxQParserPlugin"/>
+  
+  <!-- Caching -->
+  
+  <!-- Filter cache -->
+  <filterCache class="solr.FastLRUCache"
+               size="512"
+               initialSize="512"
+               autowarmCount="128"/>
+  
+  <!-- Query result cache -->
+  <queryResultCache class="solr.LRUCache"
+                    size="512"
+                    initialSize="512"
+                    autowarmCount="128"/>
+  
+  <!-- Document cache -->
+  <documentCache class="solr.LRUCache"
+                 size="512"
+                 initialSize="512"
+                 autowarmCount="0"/>
+  
+  <!-- Field value cache -->
+  <cache name="perSegFilter" class="solr.search.LRUCache" size="10" initialSize="0" autowarmCount="10" regenerator="solr.NoOpRegenerator" />
+  
+  <!-- Auto-warming -->
+  <useColdSearcher>false</useColdSearcher>
+  <maxWarmingSearchers>2</maxWarmingSearchers>
+  
+</config>

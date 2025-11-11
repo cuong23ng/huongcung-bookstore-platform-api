@@ -1,0 +1,31 @@
+# Vietnamese synonyms for search
+# Format: word1,word2 => both words will match each other
+sách,cuốn,quyển
+tác giả,nhà văn
+nhà xuất bản,nxb
+tiếng việt,việt nam,tiếng việt nam
+tiếng anh,anh ngữ,english
+tiếng pháp,pháp ngữ,french
+tiếng nhật,nhật ngữ,japanese
+tiểu thuyết,novel
+truyện,story
+khoa học,science
+lịch sử,history
+văn học,literature
+kinh tế,economics
+công nghệ,technology
+giáo dục,education
+y học,medicine
+thể thao,sports
+nghệ thuật,art
+âm nhạc,music
+phim ảnh,cinema
+du lịch,travel
+nấu ăn,cooking
+làm đẹp,beauty
+thời trang,fashion
+trẻ em,children
+thiếu nhi,kids
+thanh thiếu niên,teen
+người lớn,adult
+
