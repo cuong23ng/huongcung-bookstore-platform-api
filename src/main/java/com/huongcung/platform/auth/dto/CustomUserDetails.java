@@ -1,8 +1,8 @@
 package com.huongcung.platform.auth.dto;
 
-import com.huongcung.core.user.entity.CustomerEntity;
-import com.huongcung.core.user.entity.StaffEntity;
-import com.huongcung.core.user.entity.UserEntity;
+import com.huongcung.core.user.model.entity.CustomerEntity;
+import com.huongcung.core.user.model.entity.StaffEntity;
+import com.huongcung.core.user.model.entity.UserEntity;
 import com.huongcung.core.user.enumeration.StaffType;
 import com.huongcung.platform.auth.enumeration.UserRole;
 import lombok.AllArgsConstructor;

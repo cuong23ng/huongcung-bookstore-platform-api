@@ -75,6 +75,8 @@ public class WebSecurityConfiguration {
                 // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
+                .requestMatchers("/api/books/**").permitAll()
+                .requestMatchers("/api/books/search").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 
@@ -89,13 +91,6 @@ public class WebSecurityConfiguration {
                 
                 // Customer endpoints
                 .requestMatchers("/api/customer/**").hasRole(UserRole.CUSTOMER.getCode())
-                
-                // Mixed access endpoints
-                .requestMatchers("/api/books/**").hasAnyRole(
-                    UserRole.CUSTOMER.getCode(), 
-                    UserRole.ADMIN.getCode(), 
-                    UserRole.STORE_MANAGER.getCode(), 
-                    UserRole.SUPPORT_AGENT.getCode())
                 .requestMatchers("/api/orders/**").hasAnyRole(
                     UserRole.CUSTOMER.getCode(), 
                     UserRole.ADMIN.getCode(), 

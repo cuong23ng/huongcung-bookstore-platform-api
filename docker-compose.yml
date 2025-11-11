@@ -2,14 +2,126 @@ version: '3.8'
 
 services:
   mysql:
-    image: mysql:latest
-    container_name: huongcung-sqlserver
+    image: mysql:8.0
+    container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: hungcuong
+      MYSQL_DATABASE: huongcungbookstore
     ports:
       - "3306:3306"
     volumes:
-      - huongcung-sqlserver-data:/var/opt/mysql
+      - mysql-data:/var/lib/mysql
+      - ./init-mysql.sql:/docker-entrypoint-initdb.d/init-mysql.sql
+    networks:
+      - platform-network
+    command: --bind-address=0.0.0.0 --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-phungcuong"]
+      timeout: 20s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: hungcuong
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - platform-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    environment:
+      MINIO_ROOT_USER: hungcuong
+      MINIO_ROOT_PASSWORD: 12345678
+    ports:
+      # API port
+      - "9000:9000"
+      # Console/UI port
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - platform-network
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: [ "CMD", "mc", "ready", "local" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  solr:
+    image: solr:9.7
+    container_name: solr
+    ports:
+      - "8983:8983"
+    volumes:
+      - solr-data:/var/solr
+      - ./Platform/src/main/resources/solr/books:/opt/solr-config:ro
+    networks:
+      - platform-network
+    environment:
+      SOLR_HEAP: 512m
+      SOLR_CORE_NAME: ${SOLR_CORE_NAME:-books}
+    entrypoint:
+      - docker-entrypoint.sh
+      - solr-precreate
+      - ${SOLR_CORE_NAME:-books}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8983/solr/admin/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  platform-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: platform-app
+    environment:
+      # Database configuration
+      JDBC_DATABASE_DRIVER: com.mysql.cj.jdbc.Driver
+      JDBC_DATABASE_HOST: mysql
+      JDBC_DATABASE_PORT: 3306
+      JDBC_DATABASE_NAME: huongcungbookstore
+      JDBC_DATABASE_USERNAME: root
+      JDBC_DATABASE_PASSWORD: hungcuong
+      # JWT configuration
+      JWT_SECRET: myVerySecureSecretKeyForJWTTokenGenerationThatIsLongEnoughForHS512AlgorithmAndContainsAtLeast64Characters
+      JWT_EXPIRATION: 86400000
+      # MinIO configuration
+      MINIO_URL: http://minio:9000
+      MINIO_ACCESS_KEY: hungcuong
+      MINIO_SECRET_KEY: 12345678
+      # Solr configuration
+      SOLR_HOST: solr
+      SOLR_PORT: 8983
+      SOLR_CORE_NAME: ${SOLR_CORE_NAME:-books}
+    ports:
+      - "8082:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - platform-network
+    restart: unless-stopped
 
 volumes:
-  huongcung-sqlserver-data:
+  mysql-data:
+  minio-data:
+  solr-data:
+
+networks:
+  platform-network:
+    driver: bridge

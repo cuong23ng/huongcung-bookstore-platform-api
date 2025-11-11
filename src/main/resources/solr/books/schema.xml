@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Solr Schema for Huong Cung Bookstore - Books Core
+  Configured for Vietnamese language support and faceted search
+-->
+<schema name="books" version="1.6">
+  <uniqueKey>id</uniqueKey>
+  <defaultSearchField>title</defaultSearchField>
+  <solrQueryParser defaultOperator="OR"/>
+
+  <!-- Field Types -->
+  
+  <!-- Standard string field type -->
+  <fieldType name="string" class="solr.StrField" sortMissingLast="true" />
+  
+  <!-- Standard integer field type -->
+  <fieldType name="pint" class="solr.IntPointField" docValues="true"/>
+  
+  <!-- Standard double field type -->
+  <fieldType name="pdouble" class="solr.DoublePointField" docValues="true"/>
+  
+  <!-- Standard date field type -->
+  <fieldType name="pdate" class="solr.DatePointField" docValues="true"/>
+  
+  <!-- Boolean field type -->
+  <fieldType name="boolean" class="solr.BoolField"/>
+  
+  <!-- General text field with standard analysis -->
+  <fieldType name="text_general" class="solr.TextField" positionIncrementGap="100" multiValued="true">
+    <analyzer type="index">
+      <tokenizer class="solr.StandardTokenizerFactory"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+      <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
+    </analyzer>
+    <analyzer type="query">
+      <tokenizer class="solr.StandardTokenizerFactory"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+      <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
+      <filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
+    </analyzer>
+  </fieldType>
+
+  <!-- Vietnamese text field type with diacritic-insensitive search -->
+  <fieldType name="text_vi" class="solr.TextField" positionIncrementGap="100" multiValued="true">
+    <analyzer type="index">
+      <tokenizer class="solr.StandardTokenizerFactory"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+      <!-- Vietnamese diacritic removal for flexible search -->
+      <filter class="solr.ASCIIFoldingFilterFactory"/>
+      <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
+    </analyzer>
+    <analyzer type="query">
+      <tokenizer class="solr.StandardTokenizerFactory"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+      <!-- Vietnamese diacritic removal for query matching -->
+      <filter class="solr.ASCIIFoldingFilterFactory"/>
+      <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
+      <filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
+    </analyzer>
+  </fieldType>
+
+  <!-- Fields -->
+  
+  <!-- Core identification -->
+  <field name="id" type="string" indexed="true" stored="true" required="true"/>
+  
+  <!-- Title fields: general text for search and Vietnamese text for Vietnamese analysis -->
+  <field name="title" type="text_general" indexed="true" stored="true" multiValued="false"/>
+  <field name="titleText" type="text_vi" indexed="true" stored="false" multiValued="false"/>
+  
+  <!-- Description fields: general text for search and Vietnamese text for Vietnamese analysis -->
+  <field name="description" type="text_general" indexed="true" stored="true" multiValued="false"/>
+  <field name="descriptionText" type="text_vi" indexed="true" stored="false" multiValued="false"/>
+  
+  <!-- ISBN -->
+  <field name="isbn" type="string" indexed="true" stored="true" multiValued="false"/>
+  
+  <!-- Author names (multi-valued for co-authors) -->
+  <field name="authorNames" type="string" indexed="true" stored="true" multiValued="true"/>
+  
+  <!-- Publisher -->
+  <field name="publisherName" type="string" indexed="true" stored="true" multiValued="false"/>
+  
+  <!-- Genre/Category names (multi-valued) -->
+  <field name="genreNames" type="string" indexed="true" stored="true" multiValued="true"/>
+  
+  <!-- Language -->
+  <field name="language" type="string" indexed="true" stored="true" multiValued="false"/>
+  
+  <!-- Format: PHYSICAL, DIGITAL, BOTH -->
+  <field name="format" type="string" indexed="true" stored="true" multiValued="false"/>
+  
+  <!-- Prices -->
+  <field name="physicalPrice" type="pdouble" indexed="true" stored="true" multiValued="false"/>
+  <field name="digitalPrice" type="pdouble" indexed="true" stored="true" multiValued="false"/>
+  
+  <!-- Publication date -->
+  <field name="publicationDate" type="pdate" indexed="true" stored="true" multiValued="false"/>
+  
+  <!-- City availability flags -->
+  <field name="availableInHanoi" type="boolean" indexed="true" stored="true" multiValued="false"/>
+  <field name="availableInHcmc" type="boolean" indexed="true" stored="true" multiValued="false"/>
+  <field name="availableInDanang" type="boolean" indexed="true" stored="true" multiValued="false"/>
+  
+  <!-- Rating and review fields (optional, for future use) -->
+  <field name="averageRating" type="pdouble" indexed="true" stored="true" multiValued="false"/>
+  <field name="reviewCount" type="pint" indexed="true" stored="true" multiValued="false"/>
+  
+  <!-- Timestamp -->
+  <field name="createdAt" type="pdate" indexed="true" stored="true" multiValued="false"/>
+  
+  <!-- Copy fields for multi-field search -->
+  <copyField source="title" dest="titleText"/>
+  <copyField source="description" dest="descriptionText"/>
+  
+  <!-- Dynamic fields for future extensibility -->
+  <dynamicField name="*_s" type="string" indexed="true" stored="true" multiValued="false"/>
+  <dynamicField name="*_ss" type="string" indexed="true" stored="true" multiValued="true"/>
+  <dynamicField name="*_i" type="pint" indexed="true" stored="true" multiValued="false"/>
+  <dynamicField name="*_is" type="pint" indexed="true" stored="true" multiValued="true"/>
+  <dynamicField name="*_d" type="pdouble" indexed="true" stored="true" multiValued="false"/>
+  <dynamicField name="*_ds" type="pdouble" indexed="true" stored="true" multiValued="true"/>
+  <dynamicField name="*_b" type="boolean" indexed="true" stored="true" multiValued="false"/>
+  <dynamicField name="*_dt" type="pdate" indexed="true" stored="true" multiValued="false"/>
+</schema>

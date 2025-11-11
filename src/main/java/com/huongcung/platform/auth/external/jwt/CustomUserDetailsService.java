@@ -1,7 +1,7 @@
 package com.huongcung.platform.auth.external.jwt;
 
 import com.huongcung.platform.auth.dto.CustomUserDetails;
-import com.huongcung.core.user.entity.UserEntity;
+import com.huongcung.core.user.model.entity.UserEntity;
 import com.huongcung.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

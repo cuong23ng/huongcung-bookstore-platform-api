@@ -1,6 +1,6 @@
 package com.huongcung.core.user.repository;
 
-import com.huongcung.core.user.entity.UserEntity;
+import com.huongcung.core.user.model.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

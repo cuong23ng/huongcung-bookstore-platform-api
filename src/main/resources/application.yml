@@ -1,4 +1,6 @@
 #   Database Configuration
+# Note: If you encounter foreign key constraint errors, the DatabaseCleanupConfig
+# component will automatically clean up orphaned data on startup.
 spring:
   jpa:
     hibernate:
@@ -9,6 +11,12 @@ spring:
     url: jdbc:mysql://${JDBC_DATABASE_HOST:}:${JDBC_DATABASE_PORT:}/${JDBC_DATABASE_NAME:}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: ${JDBC_DATABASE_USERNAME:}
     password: ${JDBC_DATABASE_PASSWORD:}
+  cache:
+    type: simple
+    cache-names:
+      - searchResults
+      - searchFacets
+      - searchSuggestions
 
 # Server Configuration
 server:
@@ -31,3 +39,17 @@ s3:
   bucket: ${S3_BUCKET}
   accessKey: ${S3_ACCESS_KEY}
   secretKey: ${S3_SECRET_KEY}
+
+# Solr Configuration
+solr:
+  host: ${SOLR_HOST:localhost}
+  port: ${SOLR_PORT:8983}
+  core: ${SOLR_CORE_NAME:books}
+  connection-timeout: 5000
+  socket-timeout: 10000
+  indexing:
+    batch-size: ${SOLR_INDEXING_BATCH_SIZE:1000}
+    enabled: ${SOLR_INDEXING_ENABLED:true}
+    retry:
+      max-attempts: ${SOLR_INDEXING_RETRY_MAX_ATTEMPTS:3}
+      delay-ms: ${SOLR_INDEXING_RETRY_DELAY_MS:1000}
