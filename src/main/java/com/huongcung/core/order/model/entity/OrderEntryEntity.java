@@ -37,8 +37,4 @@ public class OrderEntryEntity extends BaseEntity {
     
     @Column(name = "total_price", precision = 10, scale = 2, nullable = false)
     private BigDecimal totalPrice;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(name = "city")
-    private City city; // For physical items
 }
