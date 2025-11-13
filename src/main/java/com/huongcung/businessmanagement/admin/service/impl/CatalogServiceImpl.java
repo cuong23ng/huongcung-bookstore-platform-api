@@ -245,7 +245,7 @@ public class CatalogServiceImpl implements CatalogService {
         log.info("Book created successfully with ID: {}, code: {}", savedBook.getId(), savedBook.getCode());
         
         // Handle image uploads if provided
-        if (CollectionUtils.isEmpty(request.getImages())) {
+        if (!CollectionUtils.isEmpty(request.getImages())) {
             uploadBookImages(savedBook, request.getImages());
         }
         
@@ -451,7 +451,7 @@ public class CatalogServiceImpl implements CatalogService {
             return;
         }
         
-        String folderPath = "books/" + book.getId(); // TODO: fix
+        String folderPath = "books/" + book.getId();
         
         for (int i = 0; i < images.size(); i++) {
             BookImageData imageData = images.get(i);
