@@ -77,6 +77,7 @@ public class WebSecurityConfiguration {
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api/books/**").permitAll()
                 .requestMatchers("/api/books/search").permitAll()
+                .requestMatchers("/api/checkout/ghn/**").permitAll() // GHN address lookup endpoints
                 .requestMatchers("/actuator/health").permitAll()
                 //.requestMatchers("/api/admin/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
@@ -92,6 +93,11 @@ public class WebSecurityConfiguration {
                 
                 // Customer endpoints
                 .requestMatchers("/api/customer/**").hasRole(UserRole.CUSTOMER.getCode())
+                .requestMatchers("/api/checkout/orders").hasAnyRole(
+                    UserRole.CUSTOMER.getCode(), 
+                    UserRole.ADMIN.getCode(), 
+                    UserRole.STORE_MANAGER.getCode(), 
+                    UserRole.SUPPORT_AGENT.getCode())
                 .requestMatchers("/api/orders/**").hasAnyRole(
                     UserRole.CUSTOMER.getCode(), 
                     UserRole.ADMIN.getCode(), 

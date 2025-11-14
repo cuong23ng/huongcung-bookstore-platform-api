@@ -73,4 +73,7 @@ public class OrderEntity extends BaseEntity {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ConsignmentEntity> consignments;
+    
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private DeliveryInfoEntity deliveryInfo;
 }

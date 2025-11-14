@@ -53,3 +53,13 @@ solr:
     retry:
       max-attempts: ${SOLR_INDEXING_RETRY_MAX_ATTEMPTS:3}
       delay-ms: ${SOLR_INDEXING_RETRY_DELAY_MS:1000}
+
+# GHN API Configuration
+ghn:
+  api-token: ${GHN_API_TOKEN}
+  base-url: ${GHN_BASE_URL}
+  shop-id: ${GHN_SHOP_ID:}
+  client-id: ${GHN_CLIENT_ID:}
+  timeout: ${GHN_TIMEOUT:10000}
+  retry-max-attempts: ${GHN_RETRY_MAX_ATTEMPTS:3}
+  retry-delay-ms: ${GHN_RETRY_DELAY_MS:1000}

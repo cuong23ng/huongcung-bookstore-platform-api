@@ -11,4 +11,6 @@ public interface AbstractBookRepository extends JpaRepository<AbstractBookEntity
     AbstractBookEntity findAbstractBookEntityByCode(String code);
     
     List<AbstractBookEntity> findByIdIn(List<Long> ids);
+    
+    List<AbstractBookEntity> findByCodeIn(List<String> codes);
 }
