@@ -9,6 +9,7 @@ import java.util.List;
 @Repository
 public interface AuthorRepository extends JpaRepository<AuthorEntity, Long> {
     List<AuthorEntity> findByIdIn(List<Long> ids);
+    org.springframework.data.domain.Page<AuthorEntity> findByNameContainingIgnoreCase(String name, org.springframework.data.domain.Pageable pageable);
 }
 
 

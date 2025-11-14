@@ -451,8 +451,10 @@ public class CatalogServiceImpl implements CatalogService {
             return;
         }
         
-        String folderPath = "books/" + book.getId();
-        
+        // String folderPath = "books/" + book.getId();
+        // TODO: folderPath
+        String folderPath = "images/";
+
         for (int i = 0; i < images.size(); i++) {
             BookImageData imageData = images.get(i);
             
@@ -481,9 +483,10 @@ public class CatalogServiceImpl implements CatalogService {
                     folderPath
                 );
                 
-                // Get full URL
-                String fullUrl = imageService.getFullUrl(relativePath);
-                
+                // TODO: Get full URL
+//                String fullUrl = imageService.getFullUrl(relativePath);
+                String fullUrl = relativePath;
+
                 // Create BookImageEntity
                 BookImageEntity bookImage = new BookImageEntity();
                 bookImage.setBook(book);

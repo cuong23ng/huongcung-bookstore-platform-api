@@ -1,9 +1,8 @@
 package com.huongcung.businessmanagement.controller;
 
-import com.huongcung.businessmanagement.admin.model.BookCreateRequest;
-import com.huongcung.businessmanagement.admin.model.BookDetailDTO;
-import com.huongcung.businessmanagement.admin.model.BookUpdateRequest;
+import com.huongcung.businessmanagement.admin.model.*;
 import com.huongcung.businessmanagement.admin.service.CatalogService;
+import com.huongcung.businessmanagement.admin.service.ContributorService;
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.common.model.response.BaseResponse;
 import com.huongcung.core.media.model.entity.BookImageEntity;
@@ -37,6 +36,7 @@ import java.util.Map;
 public class AdminCatalogController {
     
     private final CatalogService catalogService;
+    private final ContributorService contributorService;
     private final AbstractBookRepository bookRepository;
     private final BookImageRepository bookImageRepository;
     private final ImageService imageService;
@@ -170,8 +170,10 @@ public class AdminCatalogController {
         
         AbstractBookEntity book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
-        
-        String folderPath = "books/" + id;
+
+        // String folderPath = "books/" + book.getId();
+        // TODO: folderPath
+        String folderPath = "images/";
         
         // Upload images using ImageService
         for (int i = 0; i < files.length; i++) {
@@ -202,7 +204,8 @@ public class AdminCatalogController {
                 );
                 
                 // Get full URL
-                String fullUrl = imageService.getFullUrl(relativePath);
+//                String fullUrl = imageService.getFullUrl(relativePath);
+                String fullUrl = relativePath;
                 
                 // Create BookImageEntity
                 BookImageEntity bookImage = new BookImageEntity();
@@ -222,6 +225,255 @@ public class AdminCatalogController {
         
         return ResponseEntity.ok(BaseResponse.builder()
                 .message("Images uploaded successfully")
+                .build());
+    }
+    
+    // ========== Author Endpoints ==========
+    
+    @GetMapping("/authors")
+    public ResponseEntity<BaseResponse> getAllAuthors(
+            @PageableDefault(size = 20, page = 0) Pageable pageable,
+            @RequestParam(required = false) String name) {
+        
+        log.debug("Fetching authors list - page: {}, size: {}, name: {}", 
+                pageable.getPageNumber(), pageable.getPageSize(), name);
+        
+        ContributorService.PaginatedAuthorResponse response = contributorService.getAllAuthors(pageable, name);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .data(Map.of(
+                        "authors", response.authors(),
+                        "pagination", response.pagination()
+                ))
+                .build());
+    }
+    
+    @GetMapping("/authors/{id}")
+    public ResponseEntity<BaseResponse> getAuthorById(@PathVariable Long id) {
+        log.debug("Fetching author by ID: {}", id);
+        
+        com.huongcung.core.contributor.model.dto.AuthorDTO authorDTO = contributorService.getAuthorById(id);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .data(authorDTO)
+                .build());
+    }
+    
+    @PostMapping("/authors")
+    public ResponseEntity<BaseResponse> createAuthor(@Valid @RequestBody AuthorCreateRequest request) {
+        log.info("Creating author: name={}", request.getName());
+        
+        com.huongcung.core.contributor.model.dto.AuthorDTO authorDTO = contributorService.createAuthor(request);
+        
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(BaseResponse.builder()
+                        .data(authorDTO)
+                        .message("Author created successfully")
+                        .build());
+    }
+    
+    @PutMapping("/authors/{id}")
+    public ResponseEntity<BaseResponse> updateAuthor(
+            @PathVariable Long id,
+            @Valid @RequestBody AuthorUpdateRequest request) {
+        
+        log.info("Updating author ID: {}", id);
+        
+        com.huongcung.core.contributor.model.dto.AuthorDTO authorDTO = contributorService.updateAuthor(id, request);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .data(authorDTO)
+                .message("Author updated successfully")
+                .build());
+    }
+    
+    @DeleteMapping("/authors/{id}")
+    public ResponseEntity<BaseResponse> deleteAuthor(@PathVariable Long id) {
+        log.info("Deleting author ID: {}", id);
+        
+        contributorService.deleteAuthor(id);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .message("Author deleted successfully")
+                .build());
+    }
+    
+    // ========== Translator Endpoints ==========
+    
+    @GetMapping("/translators")
+    public ResponseEntity<BaseResponse> getAllTranslators(
+            @PageableDefault(size = 20, page = 0) Pageable pageable,
+            @RequestParam(required = false) String name) {
+        
+        ContributorService.PaginatedTranslatorResponse response = contributorService.getAllTranslators(pageable, name);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .data(Map.of(
+                        "translators", response.translators(),
+                        "pagination", response.pagination()
+                ))
+                .build());
+    }
+    
+    @GetMapping("/translators/{id}")
+    public ResponseEntity<BaseResponse> getTranslatorById(@PathVariable Long id) {
+        com.huongcung.core.contributor.model.dto.TranslatorDTO translatorDTO = contributorService.getTranslatorById(id);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .data(translatorDTO)
+                .build());
+    }
+    
+    @PostMapping("/translators")
+    public ResponseEntity<BaseResponse> createTranslator(@Valid @RequestBody TranslatorCreateRequest request) {
+        com.huongcung.core.contributor.model.dto.TranslatorDTO translatorDTO = contributorService.createTranslator(request);
+        
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(BaseResponse.builder()
+                        .data(translatorDTO)
+                        .message("Translator created successfully")
+                        .build());
+    }
+    
+    @PutMapping("/translators/{id}")
+    public ResponseEntity<BaseResponse> updateTranslator(
+            @PathVariable Long id,
+            @Valid @RequestBody TranslatorUpdateRequest request) {
+        
+        com.huongcung.core.contributor.model.dto.TranslatorDTO translatorDTO = contributorService.updateTranslator(id, request);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .data(translatorDTO)
+                .message("Translator updated successfully")
+                .build());
+    }
+    
+    @DeleteMapping("/translators/{id}")
+    public ResponseEntity<BaseResponse> deleteTranslator(@PathVariable Long id) {
+        contributorService.deleteTranslator(id);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .message("Translator deleted successfully")
+                .build());
+    }
+    
+    // ========== Publisher Endpoints ==========
+    
+    @GetMapping("/publishers")
+    public ResponseEntity<BaseResponse> getAllPublishers(
+            @PageableDefault(size = 20, page = 0) Pageable pageable,
+            @RequestParam(required = false) String name) {
+        
+        ContributorService.PaginatedPublisherResponse response = contributorService.getAllPublishers(pageable, name);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .data(Map.of(
+                        "publishers", response.publishers(),
+                        "pagination", response.pagination()
+                ))
+                .build());
+    }
+    
+    @GetMapping("/publishers/{id}")
+    public ResponseEntity<BaseResponse> getPublisherById(@PathVariable Long id) {
+        com.huongcung.core.contributor.model.dto.PublisherDTO publisherDTO = contributorService.getPublisherById(id);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .data(publisherDTO)
+                .build());
+    }
+    
+    @PostMapping("/publishers")
+    public ResponseEntity<BaseResponse> createPublisher(@Valid @RequestBody PublisherCreateRequest request) {
+        com.huongcung.core.contributor.model.dto.PublisherDTO publisherDTO = contributorService.createPublisher(request);
+        
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(BaseResponse.builder()
+                        .data(publisherDTO)
+                        .message("Publisher created successfully")
+                        .build());
+    }
+    
+    @PutMapping("/publishers/{id}")
+    public ResponseEntity<BaseResponse> updatePublisher(
+            @PathVariable Long id,
+            @Valid @RequestBody PublisherUpdateRequest request) {
+        
+        com.huongcung.core.contributor.model.dto.PublisherDTO publisherDTO = contributorService.updatePublisher(id, request);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .data(publisherDTO)
+                .message("Publisher updated successfully")
+                .build());
+    }
+    
+    @DeleteMapping("/publishers/{id}")
+    public ResponseEntity<BaseResponse> deletePublisher(@PathVariable Long id) {
+        contributorService.deletePublisher(id);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .message("Publisher deleted successfully")
+                .build());
+    }
+    
+    // ========== Genre Endpoints ==========
+    
+    @GetMapping("/genres")
+    public ResponseEntity<BaseResponse> getAllGenres(
+            @PageableDefault(size = 20, page = 0) Pageable pageable,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Long parentId,
+            @RequestParam(required = false) Boolean isActive) {
+        
+        ContributorService.PaginatedGenreResponse response = contributorService.getAllGenres(pageable, name, parentId, isActive);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .data(Map.of(
+                        "genres", response.genres(),
+                        "pagination", response.pagination()
+                ))
+                .build());
+    }
+    
+    @GetMapping("/genres/{id}")
+    public ResponseEntity<BaseResponse> getGenreById(@PathVariable Long id) {
+        GenreListDTO genreDTO = contributorService.getGenreById(id);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .data(genreDTO)
+                .build());
+    }
+    
+    @PostMapping("/genres")
+    public ResponseEntity<BaseResponse> createGenre(@Valid @RequestBody GenreCreateRequest request) {
+        GenreListDTO genreDTO = contributorService.createGenre(request);
+        
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(BaseResponse.builder()
+                        .data(genreDTO)
+                        .message("Genre created successfully")
+                        .build());
+    }
+    
+    @PutMapping("/genres/{id}")
+    public ResponseEntity<BaseResponse> updateGenre(
+            @PathVariable Long id,
+            @Valid @RequestBody GenreUpdateRequest request) {
+        
+        GenreListDTO genreDTO = contributorService.updateGenre(id, request);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .data(genreDTO)
+                .message("Genre updated successfully")
+                .build());
+    }
+    
+    @DeleteMapping("/genres/{id}")
+    public ResponseEntity<BaseResponse> deleteGenre(@PathVariable Long id) {
+        contributorService.deleteGenre(id);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .message("Genre deleted successfully")
                 .build());
     }
     
