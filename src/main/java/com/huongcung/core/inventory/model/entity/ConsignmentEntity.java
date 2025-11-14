@@ -7,16 +7,7 @@ import com.huongcung.core.common.model.entity.BaseEntity;
 import com.huongcung.core.inventory.enumeration.ConsignmentStatus;
 import com.huongcung.core.order.model.entity.OrderEntity;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,9 +20,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ConsignmentEntity extends BaseEntity {
-    
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false, unique = true)
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
     private OrderEntity order;
     
     @Enumerated(EnumType.STRING)
@@ -58,4 +49,8 @@ public class ConsignmentEntity extends BaseEntity {
 
     @OneToMany(mappedBy = "consignment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ConsignmentEntryEntity> entries;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "warehouse_id", nullable = false)
+    private WarehouseEntity originWarehouse;
 }

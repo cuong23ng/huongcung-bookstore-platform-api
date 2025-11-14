@@ -1,5 +1,6 @@
 package com.huongcung.core.order.model.entity;
 
+import com.huongcung.core.inventory.model.entity.ConsignmentEntity;
 import com.huongcung.core.order.enumeration.OrderStatus;
 import com.huongcung.core.order.enumeration.OrderType;
 import com.huongcung.core.order.enumeration.PaymentMethod;
@@ -69,4 +70,7 @@ public class OrderEntity extends BaseEntity {
     
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderEntryEntity> entries;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<ConsignmentEntity> consignments;
 }

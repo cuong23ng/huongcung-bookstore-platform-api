@@ -78,6 +78,7 @@ public class WebSecurityConfiguration {
                 .requestMatchers("/api/books/**").permitAll()
                 .requestMatchers("/api/books/search").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
+                //.requestMatchers("/api/admin/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 
                 // Admin endpoints
