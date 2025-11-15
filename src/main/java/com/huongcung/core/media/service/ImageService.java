@@ -10,7 +10,7 @@ public interface ImageService {
      * @param file the multipart file
      * @return relative path of the saved image
      */
-    String saveImage(MultipartFile file);
+    String saveImage(MultipartFile file, String subFolder);
     
     /**
      * Save image from Base64 string to S3
@@ -30,6 +30,4 @@ public interface ImageService {
      * @return relative path of the saved image
      */
     String saveImageFromStream(InputStream inputStream, String fileName, String folderPath, String contentType);
-    
-    String getFullUrl(String relativePath);
 }

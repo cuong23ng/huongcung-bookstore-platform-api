@@ -24,8 +24,8 @@ public class BookImageData {
     /**
      * Optional alt text for the image
      */
-    private String altText;
-    
+    private String altText; // TODO: autogenerate in BE
+
     /**
      * Optional position (1 = cover, 2 = back cover, etc.)
      * If not provided, will be set based on order in the list
@@ -37,6 +37,8 @@ public class BookImageData {
      */
     private String fileName;
 }
+
+
 
 
 

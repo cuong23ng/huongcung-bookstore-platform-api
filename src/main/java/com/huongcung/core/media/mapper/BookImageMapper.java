@@ -1,9 +1,9 @@
 package com.huongcung.core.media.mapper;
 
 import com.huongcung.core.common.mapper.EntityMapper;
+import com.huongcung.core.media.helper.FileUrlHelper;
 import com.huongcung.core.media.model.dto.BookImageDTO;
 import com.huongcung.core.media.model.entity.BookImageEntity;
-import com.huongcung.core.media.helper.ImageUrlHelper;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -12,7 +12,7 @@ import org.mapstruct.Mappings;
 
 @Mapper(
     componentModel = "spring",
-    uses = { ImageUrlHelper.class }
+    uses = { FileUrlHelper.class }
 )
 public interface BookImageMapper extends EntityMapper<BookImageDTO, BookImageEntity> {
 

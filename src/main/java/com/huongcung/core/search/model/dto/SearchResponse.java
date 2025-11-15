@@ -1,6 +1,6 @@
 package com.huongcung.core.search.model.dto;
 
-import com.huongcung.platform.bookstore.model.BookData;
+import com.huongcung.webstore.bookstore.model.BookData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

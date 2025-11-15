@@ -95,7 +95,7 @@ curl -X GET http://localhost:8080/api/auth/health \
 - `/api/store-manager/**` - Store managers and admins
 - `/api/support/**` - Support agents and admins
 - `/api/customer/**` - Customers only
-- `/api/books/**` - All authenticated users
+- `/api/books/**` - All users
 - `/api/orders/**` - All authenticated users
 
 ## Configuration

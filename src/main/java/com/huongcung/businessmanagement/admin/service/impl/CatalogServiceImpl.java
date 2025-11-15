@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -43,6 +44,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static com.huongcung.core.media.constant.Constants.BOOKS_FOLDER;
 
 @Service
 @RequiredArgsConstructor
@@ -164,7 +167,7 @@ public class CatalogServiceImpl implements CatalogService {
             throw new IllegalArgumentException("Book type is required (PHYSICAL or EBOOK)");
         }
         
-        // Validate bookType
+        // TODO: Validate bookType
         if (!"PHYSICAL".equalsIgnoreCase(request.getBookType()) && !"EBOOK".equalsIgnoreCase(request.getBookType())) {
             throw new IllegalArgumentException("Book type must be either PHYSICAL or EBOOK");
         }
@@ -203,7 +206,7 @@ public class CatalogServiceImpl implements CatalogService {
         // Create base book entity
         AbstractBookEntity book;
         
-        if ("PHYSICAL".equalsIgnoreCase(request.getBookType())) {
+        if ("PHYSICAL".equalsIgnoreCase(request.getBookType())) { // TODO: Add enum
             PhysicalBookEntity physicalBook = new PhysicalBookEntity();
             physicalBook.setIsbn(request.getIsbn());
             physicalBook.setCoverType(request.getCoverType());
@@ -235,8 +238,8 @@ public class CatalogServiceImpl implements CatalogService {
         book.setTranslators(translators);
         book.setPublisher(publisher);
         book.setGenres(genres);
-        book.setHasPhysicalEdition(request.getHasPhysicalEdition() != null ? request.getHasPhysicalEdition() : false);
-        book.setHasElectricEdition(request.getHasElectricEdition() != null ? request.getHasElectricEdition() : false);
+        book.setHasPhysicalEdition(request.getHasPhysicalEdition() != null ? request.getHasPhysicalEdition() : false); // TODO: Delete
+        book.setHasElectricEdition(request.getHasElectricEdition() != null ? request.getHasElectricEdition() : false); // TODO: Delete
         book.setIsActive(true);
         
         // Save book
@@ -318,8 +321,7 @@ public class CatalogServiceImpl implements CatalogService {
         }
         
         // Update subtype-specific fields
-        if (book instanceof PhysicalBookEntity) {
-            PhysicalBookEntity physicalBook = (PhysicalBookEntity) book;
+        if (book instanceof PhysicalBookEntity physicalBook) {
             if (request.getIsbn() != null && !Objects.equals(physicalBook.getIsbn(), request.getIsbn())) {
                 changes.append("isbn updated; ");
                 physicalBook.setIsbn(request.getIsbn());
@@ -340,8 +342,7 @@ public class CatalogServiceImpl implements CatalogService {
                 changes.append("currentPrice updated; ");
                 physicalBook.setCurrentPrice(request.getCurrentPrice());
             }
-        } else if (book instanceof EbookEntity) {
-            EbookEntity ebook = (EbookEntity) book;
+        } else if (book instanceof EbookEntity ebook) {
             if (request.getFileUrl() != null && !Objects.equals(ebook.getFileUrl(), request.getFileUrl())) {
                 changes.append("fileUrl updated; ");
                 ebook.setFileUrl(request.getFileUrl());
@@ -371,7 +372,7 @@ public class CatalogServiceImpl implements CatalogService {
         AbstractBookEntity updatedBook = bookRepository.save(book);
         
         // Audit logging
-        String changeLog = changes.length() > 0 ? changes.toString() : "no changes";
+        String changeLog = !changes.isEmpty() ? changes.toString() : "no changes";
         log.info("Book updated: bookId={}, updatedBy={}, changes={}, timestamp={}", 
                 id, updatedBy, changeLog, LocalDateTime.now());
         
@@ -387,7 +388,7 @@ public class CatalogServiceImpl implements CatalogService {
         
         return bookMapper.toDetailDTO(updatedBook);
     }
-    
+
     @Override
     @Transactional
     public BookDetailDTO deactivateBook(Long id, String deactivatedBy) {
@@ -425,7 +426,59 @@ public class CatalogServiceImpl implements CatalogService {
         
         return bookMapper.toDetailDTO(deactivatedBook);
     }
-    
+
+    @Override
+    public void uploadBookImages(Long id, MultipartFile[] files) {
+        log.info("Uploading {} images for book ID: {}", files.length, id);
+
+        AbstractBookEntity book = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
+
+        // Upload images using ImageService
+        for (int i = 0; i < files.length; i++) {
+            MultipartFile file = files[i];
+            if (file.isEmpty()) {
+                continue;
+            }
+
+            try {
+                // Get filename
+                String fileName = file.getOriginalFilename();
+                if (fileName == null || fileName.isBlank()) {
+                    fileName = "image_" + (i + 1) + ".jpg";
+                }
+
+                // Get content type
+                String contentType = file.getContentType();
+                if (contentType == null || contentType.isBlank()) {
+                    contentType = "image/jpeg";
+                }
+
+                // Save image to S3 with correct folder path
+                String relativePath = imageService.saveImageFromStream(
+                        file.getInputStream(),
+                        fileName,
+                        BOOKS_FOLDER,
+                        contentType
+                );
+
+                // Create BookImageEntity
+                BookImageEntity bookImage = new BookImageEntity();
+                bookImage.setBook(book);
+                bookImage.setUrl(relativePath);
+                bookImage.setAltText("");
+                bookImage.setPosition(i + 1); // Position starts from 1
+
+                bookImageRepository.save(bookImage);
+
+                log.debug("Image uploaded for book ID: {}, position: {}, url: {}", id, i + 1, relativePath);
+            } catch (Exception e) {
+                log.error("Failed to upload image for book ID: {}", id, e);
+                throw new RuntimeException("Failed to upload image: " + e.getMessage());
+            }
+        }
+    }
+
     /**
      * Generate unique book code from title
      * Format: BK-{first 3 uppercase letters of title}-{UUID first 8 chars}
@@ -448,18 +501,15 @@ public class CatalogServiceImpl implements CatalogService {
      */
     private void uploadBookImages(AbstractBookEntity book, List<BookImageData> images) {
         if (book == null || CollectionUtils.isEmpty(images)) {
+            log.debug("No images to upload for book ID: {}", book != null ? book.getId() : "null");
             return;
         }
-        
-        // String folderPath = "books/" + book.getId();
-        // TODO: folderPath
-        String folderPath = "images/";
 
         for (int i = 0; i < images.size(); i++) {
             BookImageData imageData = images.get(i);
             
             if (imageData == null || !StringUtils.hasText(imageData.getBase64Data())) {
-                log.warn("Skipping empty image data at index {}", i);
+                log.warn("Skipping null image data at index {} for book ID: {}", i, book.getId());
                 continue;
             }
             
@@ -475,30 +525,26 @@ public class CatalogServiceImpl implements CatalogService {
                 if (fileName == null || fileName.isBlank()) {
                     fileName = "image_" + position + ".jpg"; // Default filename
                 }
-                
+
                 // Upload image to S3
                 String relativePath = imageService.saveImageFromBase64(
                     imageData.getBase64Data(),
                     fileName,
-                    folderPath
+                    BOOKS_FOLDER
                 );
-                
-                // TODO: Get full URL
-//                String fullUrl = imageService.getFullUrl(relativePath);
-                String fullUrl = relativePath;
 
                 // Create BookImageEntity
                 BookImageEntity bookImage = new BookImageEntity();
                 bookImage.setBook(book);
-                bookImage.setUrl(fullUrl);
-                bookImage.setAltText(imageData.getAltText() != null ? imageData.getAltText() : fileName);
+                bookImage.setUrl(relativePath);
+                bookImage.setAltText("");
                 bookImage.setPosition(position);
                 
                 // Save to database
-                bookImageRepository.save(bookImage);
-                
-                log.debug("Image uploaded for book ID: {}, position: {}, url: {}", 
-                    book.getId(), position, fullUrl);
+                BookImageEntity savedImage = bookImageRepository.save(bookImage);
+
+                log.info("Image uploaded successfully for book ID: {}, imageId: {}, position: {}, url: {}",
+                        book.getId(), savedImage.getId(), position, relativePath);
                 
             } catch (Exception e) {
                 log.error("Failed to upload image at index {} for book ID: {}", i, book.getId(), e);

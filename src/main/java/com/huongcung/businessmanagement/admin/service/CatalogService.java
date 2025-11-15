@@ -7,6 +7,9 @@ import com.huongcung.businessmanagement.admin.model.BookUpdateRequest;
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  * Service interface for catalog management operations
@@ -52,6 +55,8 @@ public interface CatalogService {
      * @throws RuntimeException if book not found or related entities not found
      */
     BookDetailDTO updateBook(Long id, BookUpdateRequest request, String updatedBy);
+
+    void uploadBookImages(Long id, MultipartFile[] files);
     
     /**
      * Deactivate book entry (soft delete)
@@ -65,7 +70,7 @@ public interface CatalogService {
     /**
      * Response wrapper for paginated book list
      */
-    record PaginatedBookResponse(java.util.List<BookListDTO> books, PaginationInfo pagination) {}
+    record PaginatedBookResponse(List<BookListDTO> books, PaginationInfo pagination) {}
 }
 
 

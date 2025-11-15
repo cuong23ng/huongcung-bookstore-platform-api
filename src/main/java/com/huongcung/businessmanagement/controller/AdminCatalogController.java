@@ -5,6 +5,9 @@ import com.huongcung.businessmanagement.admin.service.CatalogService;
 import com.huongcung.businessmanagement.admin.service.ContributorService;
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.common.model.response.BaseResponse;
+import com.huongcung.core.contributor.model.dto.AuthorDTO;
+import com.huongcung.core.contributor.model.dto.PublisherDTO;
+import com.huongcung.core.contributor.model.dto.TranslatorDTO;
 import com.huongcung.core.media.model.entity.BookImageEntity;
 import com.huongcung.core.media.repository.BookImageRepository;
 import com.huongcung.core.media.service.ImageService;
@@ -37,9 +40,6 @@ public class AdminCatalogController {
     
     private final CatalogService catalogService;
     private final ContributorService contributorService;
-    private final AbstractBookRepository bookRepository;
-    private final BookImageRepository bookImageRepository;
-    private final ImageService imageService;
     
     /**
      * Get paginated list of all books with optional filtering
@@ -157,72 +157,15 @@ public class AdminCatalogController {
      * 
      * @param id the book ID
      * @param files array of image files to upload
-     * @param altText optional alt text for images
      * @return BaseResponse with success message
      */
     @PostMapping("/{id}/images")
     public ResponseEntity<BaseResponse> uploadBookImages(
             @PathVariable Long id,
-            @RequestParam("files") MultipartFile[] files,
-            @RequestParam(required = false) String altText) {
-        
-        log.info("Uploading {} images for book ID: {}", files.length, id);
-        
-        AbstractBookEntity book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
+            @RequestParam("files") MultipartFile[] files) {
 
-        // String folderPath = "books/" + book.getId();
-        // TODO: folderPath
-        String folderPath = "images/";
-        
-        // Upload images using ImageService
-        for (int i = 0; i < files.length; i++) {
-            MultipartFile file = files[i];
-            if (file.isEmpty()) {
-                continue;
-            }
-            
-            try {
-                // Get filename
-                String fileName = file.getOriginalFilename();
-                if (fileName == null || fileName.isBlank()) {
-                    fileName = "image_" + (i + 1) + ".jpg";
-                }
-                
-                // Get content type
-                String contentType = file.getContentType();
-                if (contentType == null || contentType.isBlank()) {
-                    contentType = "image/jpeg";
-                }
-                
-                // Save image to S3 with correct folder path
-                String relativePath = imageService.saveImageFromStream(
-                    file.getInputStream(),
-                    fileName,
-                    folderPath,
-                    contentType
-                );
-                
-                // Get full URL
-//                String fullUrl = imageService.getFullUrl(relativePath);
-                String fullUrl = relativePath;
-                
-                // Create BookImageEntity
-                BookImageEntity bookImage = new BookImageEntity();
-                bookImage.setBook(book);
-                bookImage.setUrl(fullUrl);
-                bookImage.setAltText(altText != null ? altText : fileName);
-                bookImage.setPosition(i + 1); // Position starts from 1
-                
-                bookImageRepository.save(bookImage);
-                
-                log.debug("Image uploaded for book ID: {}, position: {}, url: {}", id, i + 1, fullUrl);
-            } catch (Exception e) {
-                log.error("Failed to upload image for book ID: {}", id, e);
-                throw new RuntimeException("Failed to upload image: " + e.getMessage());
-            }
-        }
-        
+        catalogService.uploadBookImages(id, files);
+
         return ResponseEntity.ok(BaseResponse.builder()
                 .message("Images uploaded successfully")
                 .build());
@@ -252,7 +195,7 @@ public class AdminCatalogController {
     public ResponseEntity<BaseResponse> getAuthorById(@PathVariable Long id) {
         log.debug("Fetching author by ID: {}", id);
         
-        com.huongcung.core.contributor.model.dto.AuthorDTO authorDTO = contributorService.getAuthorById(id);
+        AuthorDTO authorDTO = contributorService.getAuthorById(id);
         
         return ResponseEntity.ok(BaseResponse.builder()
                 .data(authorDTO)
@@ -263,7 +206,7 @@ public class AdminCatalogController {
     public ResponseEntity<BaseResponse> createAuthor(@Valid @RequestBody AuthorCreateRequest request) {
         log.info("Creating author: name={}", request.getName());
         
-        com.huongcung.core.contributor.model.dto.AuthorDTO authorDTO = contributorService.createAuthor(request);
+        AuthorDTO authorDTO = contributorService.createAuthor(request);
         
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(BaseResponse.builder()
@@ -279,7 +222,7 @@ public class AdminCatalogController {
         
         log.info("Updating author ID: {}", id);
         
-        com.huongcung.core.contributor.model.dto.AuthorDTO authorDTO = contributorService.updateAuthor(id, request);
+        AuthorDTO authorDTO = contributorService.updateAuthor(id, request);
         
         return ResponseEntity.ok(BaseResponse.builder()
                 .data(authorDTO)
@@ -317,7 +260,7 @@ public class AdminCatalogController {
     
     @GetMapping("/translators/{id}")
     public ResponseEntity<BaseResponse> getTranslatorById(@PathVariable Long id) {
-        com.huongcung.core.contributor.model.dto.TranslatorDTO translatorDTO = contributorService.getTranslatorById(id);
+        TranslatorDTO translatorDTO = contributorService.getTranslatorById(id);
         
         return ResponseEntity.ok(BaseResponse.builder()
                 .data(translatorDTO)
@@ -326,7 +269,7 @@ public class AdminCatalogController {
     
     @PostMapping("/translators")
     public ResponseEntity<BaseResponse> createTranslator(@Valid @RequestBody TranslatorCreateRequest request) {
-        com.huongcung.core.contributor.model.dto.TranslatorDTO translatorDTO = contributorService.createTranslator(request);
+        TranslatorDTO translatorDTO = contributorService.createTranslator(request);
         
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(BaseResponse.builder()
@@ -340,7 +283,7 @@ public class AdminCatalogController {
             @PathVariable Long id,
             @Valid @RequestBody TranslatorUpdateRequest request) {
         
-        com.huongcung.core.contributor.model.dto.TranslatorDTO translatorDTO = contributorService.updateTranslator(id, request);
+        TranslatorDTO translatorDTO = contributorService.updateTranslator(id, request);
         
         return ResponseEntity.ok(BaseResponse.builder()
                 .data(translatorDTO)
@@ -376,7 +319,7 @@ public class AdminCatalogController {
     
     @GetMapping("/publishers/{id}")
     public ResponseEntity<BaseResponse> getPublisherById(@PathVariable Long id) {
-        com.huongcung.core.contributor.model.dto.PublisherDTO publisherDTO = contributorService.getPublisherById(id);
+        PublisherDTO publisherDTO = contributorService.getPublisherById(id);
         
         return ResponseEntity.ok(BaseResponse.builder()
                 .data(publisherDTO)
@@ -385,7 +328,7 @@ public class AdminCatalogController {
     
     @PostMapping("/publishers")
     public ResponseEntity<BaseResponse> createPublisher(@Valid @RequestBody PublisherCreateRequest request) {
-        com.huongcung.core.contributor.model.dto.PublisherDTO publisherDTO = contributorService.createPublisher(request);
+        PublisherDTO publisherDTO = contributorService.createPublisher(request);
         
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(BaseResponse.builder()
@@ -399,7 +342,7 @@ public class AdminCatalogController {
             @PathVariable Long id,
             @Valid @RequestBody PublisherUpdateRequest request) {
         
-        com.huongcung.core.contributor.model.dto.PublisherDTO publisherDTO = contributorService.updatePublisher(id, request);
+        PublisherDTO publisherDTO = contributorService.updatePublisher(id, request);
         
         return ResponseEntity.ok(BaseResponse.builder()
                 .data(publisherDTO)
