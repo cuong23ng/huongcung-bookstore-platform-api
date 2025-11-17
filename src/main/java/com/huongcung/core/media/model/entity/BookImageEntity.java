@@ -7,21 +7,16 @@ import lombok.*;
 
 @Entity
 @Table(name = "book_images")
+@PrimaryKeyJoinColumn(name = "image_id")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class BookImageEntity extends BaseEntity {
+public class BookImageEntity extends ImageEntity {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
     private AbstractBookEntity book;
-    
-    @Column(name = "url", nullable = false)
-    private String url;
-    
-    @Column(name = "alt_text")
-    private String altText;
     
     @Column(name = "position")
     private Integer position;

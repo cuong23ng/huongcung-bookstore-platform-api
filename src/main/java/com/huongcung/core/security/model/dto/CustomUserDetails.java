@@ -2,7 +2,6 @@ package com.huongcung.core.security.model.dto;
 
 import com.huongcung.core.user.model.entity.CustomerEntity;
 import com.huongcung.core.user.model.entity.StaffEntity;
-import com.huongcung.core.user.model.entity.UserEntity;
 import com.huongcung.core.user.enumeration.StaffType;
 import com.huongcung.core.security.enumeration.UserRole;
 import lombok.AllArgsConstructor;
@@ -27,47 +26,61 @@ public class CustomUserDetails implements UserDetails {
     private Collection<? extends GrantedAuthority> authorities;
     
     /**
-     * Create CustomUserDetails from UserEntity
-     * @param user the UserEntity
+     * Create CustomUserDetails from CustomerEntity
+     * @param customer the CustomerEntity
      * @return CustomUserDetails instance
      */
-    public static CustomUserDetails create(UserEntity user) {
-        List<GrantedAuthority> authorities = getAuthorities(user);
+    public static CustomUserDetails create(CustomerEntity customer) {
+        List<GrantedAuthority> authorities = Collections.singletonList(
+            new SimpleGrantedAuthority(UserRole.CUSTOMER.getSpringSecurityRole())
+        );
         
         return new CustomUserDetails(
-            user.getId(),
-            user.getEmail(),
-            user.getPasswordHash(),
-            user.getIsActive(),
-            user.getEmailVerified(),
+            customer.getId(),
+            customer.getEmail(),
+            customer.getPasswordHash(),
+            customer.getIsActive(),
+            customer.getEmailVerified(),
             authorities
         );
     }
     
     /**
-     * Get authorities based on user type and role
-     * @param user the UserEntity
+     * Create CustomUserDetails from StaffEntity
+     * @param staff the StaffEntity
+     * @return CustomUserDetails instance
+     */
+    public static CustomUserDetails create(StaffEntity staff) {
+        List<GrantedAuthority> authorities = getAuthorities(staff);
+        
+        return new CustomUserDetails(
+            staff.getId(),
+            staff.getEmail(),
+            staff.getPasswordHash(),
+            staff.getIsActive(),
+            staff.getEmailVerified(),
+            authorities
+        );
+    }
+    
+    /**
+     * Get authorities based on staff type
+     * @param staff the StaffEntity
      * @return list of authorities
      */
-    private static List<GrantedAuthority> getAuthorities(UserEntity user) {
-        if (user instanceof CustomerEntity) {
-            return Collections.singletonList(new SimpleGrantedAuthority(UserRole.CUSTOMER.getSpringSecurityRole()));
-        } else if (user instanceof StaffEntity staff) {
-            StaffType staffType = staff.getStaffType();
+    private static List<GrantedAuthority> getAuthorities(StaffEntity staff) {
+        StaffType staffType = staff.getStaffType();
 
-            switch (staffType) {
-                case ADMIN:
-                    return Collections.singletonList(new SimpleGrantedAuthority(UserRole.ADMIN.getSpringSecurityRole()));
-                case STORE_MANAGER:
-                    return Collections.singletonList(new SimpleGrantedAuthority(UserRole.STORE_MANAGER.getSpringSecurityRole()));
-                case SUPPORT_AGENT:
-                    return Collections.singletonList(new SimpleGrantedAuthority(UserRole.SUPPORT_AGENT.getSpringSecurityRole()));
-                default:
-                    return Collections.singletonList(new SimpleGrantedAuthority("ROLE_STAFF"));
-            }
+        switch (staffType) {
+            case ADMIN:
+                return Collections.singletonList(new SimpleGrantedAuthority(UserRole.ADMIN.getSpringSecurityRole()));
+            case STORE_MANAGER:
+                return Collections.singletonList(new SimpleGrantedAuthority(UserRole.STORE_MANAGER.getSpringSecurityRole()));
+            case SUPPORT_AGENT:
+                return Collections.singletonList(new SimpleGrantedAuthority(UserRole.SUPPORT_AGENT.getSpringSecurityRole()));
+            default:
+                return Collections.singletonList(new SimpleGrantedAuthority("ROLE_STAFF"));
         }
-
-        return Collections.emptyList();
     }
     
     @Override

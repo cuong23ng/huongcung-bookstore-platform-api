@@ -11,5 +11,5 @@ public interface StorageService {
 
     String save(MultipartFile file, String folderPath);
 
-    String save(String base64Data, String fileName, String folderPath);
+    String save(String base64Data, String fileName, String folderPath, String contentType);
 }

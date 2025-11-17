@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -30,6 +31,7 @@ public class AbstractBookDTO extends BaseDTO {
     private int pageCount;
     private String description;
     private List<BookImageDTO> images;
+    private BigDecimal currentPrice;
     private boolean hasPhysicalEdition;
     private boolean hasElectricEdition;
 }

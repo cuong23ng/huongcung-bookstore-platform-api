@@ -16,7 +16,8 @@ public class BookData {
     private String language;
     private int pageCount;
     private String description;
+    private BookImageData cover;
     private List<BookImageData> images;
-    private boolean hasPhysicalEdition;
-    private boolean hasElectricEdition;
+    private PhysicalBookData physicalBookInfo;
+    private EbookData ebookInfo;
 }

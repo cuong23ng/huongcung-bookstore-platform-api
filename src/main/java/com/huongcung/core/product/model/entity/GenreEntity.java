@@ -14,8 +14,8 @@ import java.util.List;
 @NoArgsConstructor
 public class GenreEntity extends BaseEntity {
     
-    @Column(name = "name", nullable = false)
-    private String name;
+    @Column(name = "code", nullable = false)
+    private String code;
     
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;

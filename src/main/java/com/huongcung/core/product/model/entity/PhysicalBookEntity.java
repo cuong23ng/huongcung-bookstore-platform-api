@@ -27,12 +27,18 @@ public class PhysicalBookEntity extends AbstractBookEntity {
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PriceRowEntity> prices;
     
-    @Column(name = "weight_grams")
-    private Double weightGrams;
-    
     @Column(name = "current_price", precision = 10, scale = 2)
     private BigDecimal currentPrice;
-    
-    @Column(name = "dimensions")
-    private String dimensions; // Format: "L x W x H cm"
+
+    @Column(name = "weight_grams")
+    private Integer weightGrams;
+
+    @Column(name = "height_cm")
+    private Integer heightCm;
+
+    @Column(name = "width_cm")
+    private Integer widthCm;
+
+    @Column(name = "length_cm")
+    private Integer lengthCm;
 }

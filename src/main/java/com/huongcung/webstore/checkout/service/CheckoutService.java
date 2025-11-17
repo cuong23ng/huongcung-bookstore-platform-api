@@ -1,6 +1,6 @@
 package com.huongcung.webstore.checkout.service;
 
-import com.huongcung.core.inventory.enumeration.City;
+import com.huongcung.core.common.enumeration.City;
 import com.huongcung.core.inventory.model.entity.StockLevelEntity;
 import com.huongcung.core.inventory.model.entity.WarehouseEntity;
 import com.huongcung.core.inventory.repository.StockLevelRepository;
@@ -20,8 +20,8 @@ import com.huongcung.core.product.model.entity.AbstractBookEntity;
 import com.huongcung.core.product.model.entity.EbookEntity;
 import com.huongcung.core.product.model.entity.PhysicalBookEntity;
 import com.huongcung.core.product.repository.AbstractBookRepository;
-import com.huongcung.core.user.model.entity.UserEntity;
-import com.huongcung.core.user.repository.UserRepository;
+import com.huongcung.core.user.model.entity.CustomerEntity;
+import com.huongcung.core.user.repository.CustomerRepository;
 import com.huongcung.webstore.checkout.dto.CheckoutItemDTO;
 import com.huongcung.webstore.checkout.dto.CheckoutRequest;
 import com.huongcung.webstore.checkout.dto.CheckoutResponse;
@@ -53,7 +53,7 @@ public class CheckoutService {
     private final AbstractBookRepository bookRepository;
     private final StockLevelRepository stockLevelRepository;
     private final WarehouseRepository warehouseRepository;
-    private final UserRepository userRepository;
+    private final CustomerRepository customerRepository;
     private final GhnApiClient ghnApiClient;
     private final ObjectMapper objectMapper;
     
@@ -62,7 +62,7 @@ public class CheckoutService {
         log.info("Creating order for customer: {}", customerId);
         
         // Get customer
-        UserEntity customer = userRepository.findById(customerId)
+        CustomerEntity customer = customerRepository.findById(customerId)
             .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + customerId));
         
         // Validate and get books

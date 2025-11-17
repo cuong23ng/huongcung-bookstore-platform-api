@@ -48,14 +48,13 @@ public class BookCreateRequest {
     
     private List<Long> genreIds; // IDs of GenreEntity
     
-    @NotBlank(message = "Book type is required")
-    private String bookType; // "PHYSICAL" or "EBOOK"
-    
     // PhysicalBookEntity specific fields
     private String isbn;
     private CoverType coverType;
-    private Double weightGrams;
-    private String dimensions; // Format: "L x W x H cm"
+    private Integer weightGrams;
+    private Integer heightCm;
+    private Integer widthCm;
+    private Integer lengthCm;
     private BigDecimal currentPrice;
     
     // EbookEntity specific fields
@@ -65,8 +64,8 @@ public class BookCreateRequest {
     private String fileFormat; // PDF, EPUB, MOBI
     
     // Common flags
-    private Boolean hasPhysicalEdition = false;
-    private Boolean hasElectricEdition = false;
+    private Boolean isPhysicalEdition = false;
+    private Boolean isElectricEdition = false;
     
     // Images to upload (Base64 encoded)
     private List<BookImageData> images;

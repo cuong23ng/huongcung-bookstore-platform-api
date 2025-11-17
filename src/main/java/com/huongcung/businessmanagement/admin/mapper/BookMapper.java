@@ -46,7 +46,9 @@ public interface BookMapper {
     @Mapping(target = "isbn", expression = "java(getIsbn(entity))")
     @Mapping(target = "coverType", expression = "java(getCoverType(entity))")
     @Mapping(target = "weightGrams", expression = "java(getWeightGrams(entity))")
-    @Mapping(target = "dimensions", expression = "java(getDimensions(entity))")
+    @Mapping(target = "heightCm", expression = "java(getHeightCm(entity))")
+    @Mapping(target = "widthCm", expression = "java(getWidthCm(entity))")
+    @Mapping(target = "lengthCm", expression = "java(getLengthCm(entity))")
     @Mapping(target = "fileUrl", expression = "java(getFileUrl(entity))")
     @Mapping(target = "fileName", expression = "java(getFileName(entity))")
     @Mapping(target = "fileSize", expression = "java(getFileSize(entity))")
@@ -111,51 +113,63 @@ public interface BookMapper {
         return null;
     }
     
-    default Double getWeightGrams(AbstractBookEntity entity) {
+    default Integer getWeightGrams(AbstractBookEntity entity) {
         if (entity instanceof PhysicalBookEntity) {
             return ((PhysicalBookEntity) entity).getWeightGrams();
         }
         return null;
     }
     
-    default String getDimensions(AbstractBookEntity entity) {
+    default Integer getHeightCm(AbstractBookEntity entity) {
         if (entity instanceof PhysicalBookEntity) {
-            return ((PhysicalBookEntity) entity).getDimensions();
+            return ((PhysicalBookEntity) entity).getHeightCm();
+        }
+        return null;
+    }
+    
+    default Integer getWidthCm(AbstractBookEntity entity) {
+        if (entity instanceof PhysicalBookEntity) {
+            return ((PhysicalBookEntity) entity).getWidthCm();
+        }
+        return null;
+    }
+    
+    default Integer getLengthCm(AbstractBookEntity entity) {
+        if (entity instanceof PhysicalBookEntity) {
+            return ((PhysicalBookEntity) entity).getLengthCm();
         }
         return null;
     }
     
     default String getFileUrl(AbstractBookEntity entity) {
-        if (entity instanceof EbookEntity) {
-            return ((EbookEntity) entity).getFileUrl();
+        if (entity instanceof EbookEntity ebook && ebook.getFile() != null) {
+            return ebook.getFile().getUrl();
         }
         return null;
     }
     
     default String getFileName(AbstractBookEntity entity) {
-        if (entity instanceof EbookEntity) {
-            return ((EbookEntity) entity).getFileName();
+        if (entity instanceof EbookEntity ebook && ebook.getFile() != null) {
+            return ebook.getFile().getFileName();
         }
         return null;
     }
     
     default Long getFileSize(AbstractBookEntity entity) {
-        if (entity instanceof EbookEntity) {
-            return ((EbookEntity) entity).getFileSize();
-        }
+        // FileSize is not stored in MediaEntity, return null or handle separately if needed
         return null;
     }
     
     default String getFileFormat(AbstractBookEntity entity) {
-        if (entity instanceof EbookEntity) {
-            return ((EbookEntity) entity).getFileFormat();
+        if (entity instanceof EbookEntity ebook && ebook.getFile() != null && ebook.getFile().getFileType() != null) {
+            return ebook.getFile().getFileType().getCode();
         }
         return null;
     }
     
     default Integer getDownloadCount(AbstractBookEntity entity) {
-        if (entity instanceof EbookEntity) {
-            return ((EbookEntity) entity).getDownloadCount();
+        if (entity instanceof EbookEntity ebook && ebook.getFile() != null) {
+            return ebook.getFile().getDownloadCount();
         }
         return null;
     }
@@ -176,7 +190,7 @@ public interface BookMapper {
         return genres.stream()
                 .map(genre -> BookDetailDTO.GenreDTO.builder()
                         .id(genre.getId())
-                        .name(genre.getName())
+                        .name(genre.getCode())
                         .description(genre.getDescription())
                         .build())
                 .toList();

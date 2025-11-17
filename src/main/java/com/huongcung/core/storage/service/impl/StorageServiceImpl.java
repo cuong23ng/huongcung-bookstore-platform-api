@@ -27,8 +27,6 @@ public class StorageServiceImpl implements StorageService {
     private final S3ClientConfig s3ClientConfig;
     private final S3Client s3Client;
 
-    private static final Pattern BASE64_DATA_URI_PATTERN = Pattern.compile("^data:([^;]+);base64,(.+)$");
-
     @Override
     public String getFullUrl(String relativePath) {
         if (relativePath == null || relativePath.isBlank()) {
@@ -135,25 +133,15 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public String save(String base64Data, String fileName, String folderPath) {
+    public String save(String base64Data, String fileName, String folderPath, String contentType) {
         if (base64Data == null || base64Data.isBlank()) {
             throw new IllegalArgumentException("Base64 data cannot be null or empty");
-        }
-
-        // Parse Base64 data (handle data URI format: data:image/jpeg;base64,...)
-        String contentType = "";
-        String actualBase64Data = base64Data;
-
-        Matcher matcher = BASE64_DATA_URI_PATTERN.matcher(base64Data.trim());
-        if (matcher.matches()) {
-            contentType = matcher.group(1);
-            actualBase64Data = matcher.group(2);
         }
 
         // Decode Base64
         byte[] imageBytes;
         try {
-            imageBytes = Base64.getDecoder().decode(actualBase64Data);
+            imageBytes = Base64.getDecoder().decode(base64Data);
         } catch (IllegalArgumentException e) {
             log.error("Invalid Base64 data", e);
             throw new IllegalArgumentException("Invalid Base64 data: " + e.getMessage(), e);

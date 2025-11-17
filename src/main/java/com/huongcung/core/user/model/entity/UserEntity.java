@@ -6,15 +6,10 @@ import lombok.*;
 
 import java.time.LocalDate;
 
-@Entity
-@Table(name = "users")
-@Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "user_type", discriminatorType = DiscriminatorType.STRING)
+@MappedSuperclass
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
-public class UserEntity extends BaseEntity {
+public abstract class UserEntity extends BaseEntity {
     
     @Column(name = "uid", unique = true)
     private String uid;

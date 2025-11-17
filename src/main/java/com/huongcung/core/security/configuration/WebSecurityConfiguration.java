@@ -1,19 +1,21 @@
 package com.huongcung.core.security.configuration;
 
 import com.huongcung.core.security.enumeration.UserRole;
+import com.huongcung.core.security.external.jwt.CustomerUserDetailsService;
+import com.huongcung.core.security.external.jwt.StaffUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -23,6 +25,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Configuration
@@ -31,7 +35,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WebSecurityConfiguration {
 
-    private final UserDetailsService userDetailsService;
+    private final CustomerUserDetailsService customerUserDetailsService;
+
+    private final StaffUserDetailsService staffUserDetailsService;
 
     private final OncePerRequestFilter oncePerRequestFilter;
 
@@ -40,16 +46,41 @@ public class WebSecurityConfiguration {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+    @Bean("customerAuthenticationProvider")
+    public AuthenticationProvider customerAuthenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(customerUserDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
-
+    
+    @Bean("staffAuthenticationProvider")
+    public AuthenticationProvider staffAuthenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(staffUserDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+    
+    /**
+     * Primary authentication manager that uses both customer and staff providers.
+     * This is used by HttpSecurity and will try both providers when authenticating.
+     */
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
+    @Primary
+    public AuthenticationManager authenticationManager() {
+        List<AuthenticationProvider> providers = new ArrayList<>();
+        providers.add(customerAuthenticationProvider());
+        providers.add(staffAuthenticationProvider());
+        return new ProviderManager(providers);
+    }
+    
+    @Bean("customerAuthenticationManager")
+    public AuthenticationManager customerAuthenticationManager() {
+        return new ProviderManager(Collections.singletonList(customerAuthenticationProvider()));
+    }
+    
+    @Bean("staffAuthenticationManager")
+    public AuthenticationManager staffAuthenticationManager() {
+        return new ProviderManager(Collections.singletonList(staffAuthenticationProvider()));
     }
 
     @Bean
@@ -74,6 +105,7 @@ public class WebSecurityConfiguration {
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/admin/auth/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api/books/**").permitAll()
                 .requestMatchers("/api/books/search").permitAll()
@@ -107,7 +139,8 @@ public class WebSecurityConfiguration {
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )
-            .authenticationProvider(authenticationProvider())
+            .authenticationProvider(customerAuthenticationProvider())
+            .authenticationProvider(staffAuthenticationProvider())
             .addFilterBefore(oncePerRequestFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();

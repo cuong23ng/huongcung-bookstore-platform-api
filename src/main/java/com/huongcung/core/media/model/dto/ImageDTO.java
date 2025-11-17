@@ -10,8 +10,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @SuperBuilder
 @NoArgsConstructor
-public class BookImageDTO extends ImageDTO {
-    private int position;
-    private boolean isCover;
-    private boolean isBackCover;
+public class ImageDTO {
+    private String url;
+    private String altText;
 }

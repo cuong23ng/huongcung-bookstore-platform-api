@@ -1,6 +1,7 @@
 package com.huongcung.core.product.model.entity;
 
 import com.huongcung.core.common.model.entity.PriceRowEntity;
+import com.huongcung.core.media.model.entity.EbookFileEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,27 +16,19 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EbookEntity extends AbstractBookEntity {
+
+    @Column(name = "isbn", unique = true)
+    private String isbn;
     
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PriceRowEntity> prices;
     
     @Column(name = "current_price", precision = 10, scale = 2)
     private BigDecimal currentPrice;
-    
-    @Column(name = "file_url")
-    private String fileUrl;
-    
-    @Column(name = "file_name")
-    private String fileName;
-    
-    @Column(name = "file_size")
-    private Long fileSize; // in bytes
-    
-    @Column(name = "file_format")
-    private String fileFormat; // PDF, EPUB, MOBI
-    
-    @Column(name = "download_count")
-    private Integer downloadCount = 0;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "file", nullable = false, unique = true)
+    private EbookFileEntity file;
     
     @Column(name = "is_active")
     private Boolean isActive = true;

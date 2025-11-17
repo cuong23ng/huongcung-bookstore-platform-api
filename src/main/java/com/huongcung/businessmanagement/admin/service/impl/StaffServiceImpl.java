@@ -5,11 +5,11 @@ import com.huongcung.businessmanagement.admin.model.StaffCreateRequest;
 import com.huongcung.businessmanagement.admin.model.StaffDTO;
 import com.huongcung.businessmanagement.admin.model.StaffUpdateRequest;
 import com.huongcung.businessmanagement.admin.service.StaffService;
+import com.huongcung.core.common.enumeration.City;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import com.huongcung.core.user.enumeration.StaffType;
 import com.huongcung.core.user.model.entity.StaffEntity;
 import com.huongcung.core.user.repository.StaffRepository;
-import com.huongcung.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class StaffServiceImpl implements StaffService {
     
-    private final UserRepository userRepository;
     private final StaffRepository staffRepository;
     private final PasswordEncoder passwordEncoder;
     private final StaffMapper staffMapper;
@@ -63,7 +62,7 @@ public class StaffServiceImpl implements StaffService {
         }
         
         // Check if email already exists
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (staffRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email is already registered");
         }
         
@@ -76,13 +75,12 @@ public class StaffServiceImpl implements StaffService {
         staff.setLastName(request.getLastName());
         staff.setPhone(request.getPhone());
         staff.setStaffType(request.getStaffType());
-        staff.setAssignedCity(request.getAssignedCity());
+        staff.setAssignedCity(City.valueOf(request.getAssignedCity()));
         staff.setIsActive(true); // Set isActive = true by default (AC6)
         staff.setEmailVerified(false);
         
-        // Save using UserRepository (StaffEntity extends UserEntity)
-        // The @DiscriminatorValue("STAFF") annotation will set user_type = "STAFF" automatically
-        StaffEntity savedStaff = (StaffEntity) userRepository.save(staff);
+        // Save using StaffRepository
+        StaffEntity savedStaff = staffRepository.save(staff);
         
         log.info("Staff account created successfully with ID: {}, email: {}", savedStaff.getId(), savedStaff.getEmail());
         

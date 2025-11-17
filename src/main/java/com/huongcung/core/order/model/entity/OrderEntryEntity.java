@@ -2,7 +2,6 @@ package com.huongcung.core.order.model.entity;
 
 import com.huongcung.core.product.model.entity.AbstractBookEntity;
 import com.huongcung.core.common.model.entity.BaseEntity;
-import com.huongcung.core.inventory.enumeration.City;
 import com.huongcung.core.order.enumeration.ItemType;
 import jakarta.persistence.*;
 import lombok.*;

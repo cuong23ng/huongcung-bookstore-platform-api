@@ -1,9 +1,6 @@
 package com.huongcung.core.search.service.impl;
 
-import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.contributor.model.entity.AuthorEntity;
-import com.huongcung.core.contributor.model.entity.PublisherEntity;
-import com.huongcung.core.inventory.enumeration.City;
 import com.huongcung.core.product.model.entity.AbstractBookEntity;
 import com.huongcung.core.product.model.entity.EbookEntity;
 import com.huongcung.core.product.model.entity.GenreEntity;
@@ -18,10 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -180,8 +174,8 @@ public class SearchIndexServiceImpl implements SearchIndexService {
         // Genres
         if (book.getGenres() != null) {
             List<String> genreNames = book.getGenres().stream()
-                .map(GenreEntity::getName)
-                .filter(name -> name != null && !name.isEmpty())
+                .map(GenreEntity::getCode)
+                .filter(code -> code != null && !code.isEmpty())
                 .collect(Collectors.toList());
             document.setGenreNames(genreNames);
         }

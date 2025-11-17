@@ -1,12 +1,19 @@
 package com.huongcung.core.media.model.entity;
 
-import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@MappedSuperclass
+@Entity
+@Table(name = "images")
+@Inheritance(strategy = InheritanceType.JOINED)
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class ImageEntity extends MediaEntity {
-    String altText;
+    @Column(name = "alt_text", nullable = true)
+    private String altText;
 }

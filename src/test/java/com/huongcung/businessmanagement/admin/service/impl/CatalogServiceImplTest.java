@@ -126,7 +126,7 @@ class CatalogServiceImplTest {
         // Setup test genre
         testGenre = new GenreEntity();
         testGenre.setId(1L);
-        testGenre.setName("Fiction");
+        testGenre.setCode("FICTION");
         
         // Setup test physical book
         testPhysicalBook = new PhysicalBookEntity();
@@ -148,9 +148,14 @@ class CatalogServiceImplTest {
         testEbook.setTitle("Test Ebook");
         testEbook.setLanguage(Language.ENGLISH);
         testEbook.setAuthors(Arrays.asList(testAuthor));
-        testEbook.setFileUrl("https://example.com/book.pdf");
-        testEbook.setFileName("book.pdf");
-        testEbook.setFileFormat("PDF");
+        
+        // Create EbookFileEntity
+        com.huongcung.core.media.model.entity.EbookFileEntity ebookFile = new com.huongcung.core.media.model.entity.EbookFileEntity();
+        ebookFile.setUrl("https://example.com/book.pdf");
+        ebookFile.setFileName("book.pdf");
+        ebookFile.setDownloadCount(0);
+        testEbook.setFile(ebookFile);
+        
         testEbook.setCurrentPrice(new BigDecimal("100000"));
         testEbook.setIsActive(true);
     }

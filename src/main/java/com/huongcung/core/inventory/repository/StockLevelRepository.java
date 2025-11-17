@@ -1,7 +1,7 @@
 package com.huongcung.core.inventory.repository;
 
+import com.huongcung.core.common.enumeration.City;
 import com.huongcung.core.inventory.model.entity.StockLevelEntity;
-import com.huongcung.core.inventory.enumeration.City;
 import com.huongcung.core.product.model.entity.PhysicalBookEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;

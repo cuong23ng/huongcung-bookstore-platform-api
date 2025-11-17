@@ -8,7 +8,6 @@ import com.huongcung.businessmanagement.admin.service.StaffService;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import com.huongcung.core.user.enumeration.StaffType;
 import com.huongcung.core.security.configuration.JwtConfiguration;
-import com.huongcung.core.security.external.jwt.CustomUserDetailsService;
 import com.huongcung.core.security.external.jwt.JwtTokenBlacklistService;
 import com.huongcung.core.security.external.jwt.JwtTokenProvider;
 import org.junit.jupiter.api.Test;

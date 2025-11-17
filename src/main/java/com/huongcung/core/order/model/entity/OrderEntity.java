@@ -6,7 +6,7 @@ import com.huongcung.core.order.enumeration.OrderType;
 import com.huongcung.core.order.enumeration.PaymentMethod;
 import com.huongcung.core.order.enumeration.PaymentStatus;
 import com.huongcung.core.common.model.entity.BaseEntity;
-import com.huongcung.core.user.model.entity.UserEntity;
+import com.huongcung.core.user.model.entity.CustomerEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,7 +26,7 @@ public class OrderEntity extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
-    private UserEntity customer;
+    private CustomerEntity customer;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "order_type", nullable = false)

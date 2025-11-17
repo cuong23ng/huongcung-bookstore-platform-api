@@ -45,8 +45,10 @@ public class BookUpdateRequest {
     // PhysicalBookEntity specific fields
     private String isbn;
     private CoverType coverType;
-    private Double weightGrams;
-    private String dimensions;
+    private Integer weightGrams;
+    private Integer heightCm;
+    private Integer widthCm;
+    private Integer lengthCm;
     private BigDecimal currentPrice;
     
     // EbookEntity specific fields

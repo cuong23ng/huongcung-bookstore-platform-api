@@ -1,7 +1,7 @@
 package com.huongcung.core.media.model.entity;
 
 import com.huongcung.core.common.model.entity.BaseEntity;
-import com.huongcung.core.media.enumeration.Folder;
+import com.huongcung.core.media.enumeration.FileType;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
@@ -12,11 +12,11 @@ import lombok.Setter;
 @Setter
 public abstract class MediaEntity extends BaseEntity {
     @Column(name = "file_name", nullable = false)
-    String fileName;
+    private String fileName;
 
-    @Column(name = "file_type", nullable = false)
-    String fileType;
+    @Column(name = "file_type", nullable = true)
+    private FileType fileType;
 
-    @Column(name = "folder", nullable = false)
-    Folder folder;
+    @Column(name = "url", nullable = false)
+    private String url;
 }

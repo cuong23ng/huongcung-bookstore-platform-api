@@ -8,11 +8,6 @@ import com.huongcung.core.common.model.response.BaseResponse;
 import com.huongcung.core.contributor.model.dto.AuthorDTO;
 import com.huongcung.core.contributor.model.dto.PublisherDTO;
 import com.huongcung.core.contributor.model.dto.TranslatorDTO;
-import com.huongcung.core.media.model.entity.BookImageEntity;
-import com.huongcung.core.media.repository.BookImageRepository;
-import com.huongcung.core.media.service.ImageService;
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
-import com.huongcung.core.product.repository.AbstractBookRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -97,7 +92,8 @@ public class AdminCatalogController {
      */
     @PostMapping
     public ResponseEntity<BaseResponse> createBook(@Valid @RequestBody BookCreateRequest request) {
-        log.info("Creating book: title={}, bookType={}", request.getTitle(), request.getBookType());
+        log.info("Creating book: title={}, physical={}, ebook={}"
+                , request.getTitle(), request.getIsPhysicalEdition(), request.getIsElectricEdition());
         
         BookDetailDTO bookDTO = catalogService.createBook(request);
         

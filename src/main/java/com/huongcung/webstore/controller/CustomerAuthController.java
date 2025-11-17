@@ -4,7 +4,7 @@ import com.huongcung.core.security.model.dto.LoginRequest;
 import com.huongcung.core.security.model.dto.LoginResponse;
 import com.huongcung.core.security.model.dto.LogoutResponse;
 import com.huongcung.core.security.model.dto.RegisterRequest;
-import com.huongcung.core.security.service.AuthService;
+import com.huongcung.core.security.service.CustomerAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,9 +18,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 @CrossOrigin(origins = "*", maxAge = 3600)
-public class AuthController {
+public class CustomerAuthController {
     
-    private final AuthService authService;
+    private final CustomerAuthService customerAuthService;
     
     /**
      * Authenticate user and return JWT token
@@ -30,7 +30,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         log.info("Login attempt for email: {}", loginRequest.getEmail());
-        LoginResponse response = authService.login(loginRequest);
+        LoginResponse response = customerAuthService.login(loginRequest);
         log.info("Login successful for user: {}", loginRequest.getEmail());
         return ResponseEntity.ok(response);
     }
@@ -43,7 +43,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<LoginResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
         log.info("Registration attempt for email: {}", registerRequest.getEmail());
-        LoginResponse response = authService.register(registerRequest);
+        LoginResponse response = customerAuthService.register(registerRequest);
         log.info("Registration successful for user: {}", registerRequest.getEmail());
         return ResponseEntity.ok(response);
     }
@@ -56,7 +56,7 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<LogoutResponse> logout(@RequestHeader("Authorization") String authHeader) {
         log.info("Logout attempt with Authorization header");
-        LogoutResponse response = authService.logout(authHeader);
+        LogoutResponse response = customerAuthService.logout(authHeader);
         log.info("Logout result: {}, {}", response.isSuccess(), response.getMessage());
         return ResponseEntity.ok(response);
     }

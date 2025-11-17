@@ -32,4 +32,6 @@ public class BookServiceImpl implements BookService {
         AbstractBookDTO bookDTO = abstractBookService.findBookByCode(code);
         return bookViewMapper.toBookData(bookDTO);
     }
+
+    private void populate()
 }

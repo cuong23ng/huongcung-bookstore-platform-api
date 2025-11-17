@@ -14,7 +14,9 @@ import com.huongcung.core.contributor.model.entity.TranslatorEntity;
 import com.huongcung.core.contributor.repository.AuthorRepository;
 import com.huongcung.core.contributor.repository.PublisherRepository;
 import com.huongcung.core.contributor.repository.TranslatorRepository;
+import com.huongcung.core.media.enumeration.FileType;
 import com.huongcung.core.media.model.entity.BookImageEntity;
+import com.huongcung.core.media.model.entity.EbookFileEntity;
 import com.huongcung.core.media.repository.BookImageRepository;
 import com.huongcung.core.media.service.ImageService;
 import com.huongcung.core.product.model.entity.AbstractBookEntity;
@@ -45,7 +47,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static com.huongcung.core.media.constant.Constants.BOOKS_FOLDER;
+import static com.huongcung.core.media.constant.FolderConstants.BOOKS;
 
 @Service
 @RequiredArgsConstructor
@@ -148,7 +150,8 @@ public class CatalogServiceImpl implements CatalogService {
     @Override
     @Transactional
     public BookDetailDTO createBook(BookCreateRequest request) {
-        log.info("Creating book: title={}, bookType={}", request.getTitle(), request.getBookType());
+        log.info("Creating book: title={}, physical={}, ebook={}",
+                request.getTitle(), request.getIsPhysicalEdition(), request.getIsElectricEdition());
         
         // Validate required fields
         if (request.getTitle() == null || request.getTitle().isBlank()) {
@@ -163,12 +166,8 @@ public class CatalogServiceImpl implements CatalogService {
             throw new IllegalArgumentException("At least one author is required");
         }
         
-        if (request.getBookType() == null || request.getBookType().isBlank()) {
-            throw new IllegalArgumentException("Book type is required (PHYSICAL or EBOOK)");
-        }
-        
         // TODO: Validate bookType
-        if (!"PHYSICAL".equalsIgnoreCase(request.getBookType()) && !"EBOOK".equalsIgnoreCase(request.getBookType())) {
+        if (!request.getIsElectricEdition() && !request.getIsPhysicalEdition()) {
             throw new IllegalArgumentException("Book type must be either PHYSICAL or EBOOK");
         }
         
@@ -206,21 +205,33 @@ public class CatalogServiceImpl implements CatalogService {
         // Create base book entity
         AbstractBookEntity book;
         
-        if ("PHYSICAL".equalsIgnoreCase(request.getBookType())) { // TODO: Add enum
+        if (request.getIsPhysicalEdition()) {
             PhysicalBookEntity physicalBook = new PhysicalBookEntity();
             physicalBook.setIsbn(request.getIsbn());
             physicalBook.setCoverType(request.getCoverType());
             physicalBook.setWeightGrams(request.getWeightGrams());
-            physicalBook.setDimensions(request.getDimensions());
+            physicalBook.setHeightCm(request.getHeightCm());
+            physicalBook.setWidthCm(request.getWidthCm());
+            physicalBook.setLengthCm(request.getLengthCm());
             physicalBook.setCurrentPrice(request.getCurrentPrice());
             book = physicalBook;
         } else {
             EbookEntity ebook = new EbookEntity();
-            ebook.setFileUrl(request.getFileUrl());
-            ebook.setFileName(request.getFileName());
-            ebook.setFileSize(request.getFileSize());
-            ebook.setFileFormat(request.getFileFormat());
-            ebook.setDownloadCount(0);
+            
+            // Create EbookFileEntity
+            if (request.getFileUrl() != null || request.getFileName() != null) {
+                EbookFileEntity ebookFile = new EbookFileEntity();
+                ebookFile.setFileName(request.getFileName());
+                ebookFile.setUrl(request.getFileUrl());
+                // Map fileFormat string to FileType enum if needed
+                if (request.getFileFormat() != null) {
+                    FileType fileType = FileType.findFileTypeByCode(request.getFileFormat());
+                    ebookFile.setFileType(fileType);
+                }
+                ebookFile.setDownloadCount(0);
+                ebook.setFile(ebookFile);
+            }
+            
             ebook.setCurrentPrice(request.getCurrentPrice());
             ebook.setIsActive(true);
             book = ebook;
@@ -238,8 +249,8 @@ public class CatalogServiceImpl implements CatalogService {
         book.setTranslators(translators);
         book.setPublisher(publisher);
         book.setGenres(genres);
-        book.setHasPhysicalEdition(request.getHasPhysicalEdition() != null ? request.getHasPhysicalEdition() : false); // TODO: Delete
-        book.setHasElectricEdition(request.getHasElectricEdition() != null ? request.getHasElectricEdition() : false); // TODO: Delete
+        book.setHasPhysicalEdition(request.getIsPhysicalEdition());
+        book.setHasElectricEdition(request.getIsElectricEdition());
         book.setIsActive(true);
         
         // Save book
@@ -334,31 +345,49 @@ public class CatalogServiceImpl implements CatalogService {
                 changes.append("weightGrams updated; ");
                 physicalBook.setWeightGrams(request.getWeightGrams());
             }
-            if (request.getDimensions() != null && !Objects.equals(physicalBook.getDimensions(), request.getDimensions())) {
-                changes.append("dimensions updated; ");
-                physicalBook.setDimensions(request.getDimensions());
+            if (request.getHeightCm() != null && !Objects.equals(physicalBook.getHeightCm(), request.getHeightCm())) {
+                changes.append("heightCm updated; ");
+                physicalBook.setHeightCm(request.getHeightCm());
+            }
+            if (request.getWidthCm() != null && !Objects.equals(physicalBook.getWidthCm(), request.getWidthCm())) {
+                changes.append("widthCm updated; ");
+                physicalBook.setWidthCm(request.getWidthCm());
+            }
+            if (request.getLengthCm() != null && !Objects.equals(physicalBook.getLengthCm(), request.getLengthCm())) {
+                changes.append("lengthCm updated; ");
+                physicalBook.setLengthCm(request.getLengthCm());
             }
             if (request.getCurrentPrice() != null && !Objects.equals(physicalBook.getCurrentPrice(), request.getCurrentPrice())) {
                 changes.append("currentPrice updated; ");
                 physicalBook.setCurrentPrice(request.getCurrentPrice());
             }
         } else if (book instanceof EbookEntity ebook) {
-            if (request.getFileUrl() != null && !Objects.equals(ebook.getFileUrl(), request.getFileUrl())) {
-                changes.append("fileUrl updated; ");
-                ebook.setFileUrl(request.getFileUrl());
+            // Update file information if provided
+            if (request.getFileUrl() != null || request.getFileName() != null || request.getFileFormat() != null) {
+                EbookFileEntity ebookFile = ebook.getFile();
+                if (ebookFile == null) {
+                    ebookFile = new EbookFileEntity();
+                    ebookFile.setDownloadCount(0);
+                }
+                
+                if (request.getFileUrl() != null && !Objects.equals(ebookFile.getUrl(), request.getFileUrl())) {
+                    changes.append("fileUrl updated; ");
+                    ebookFile.setUrl(request.getFileUrl());
+                }
+                if (request.getFileName() != null && !Objects.equals(ebookFile.getFileName(), request.getFileName())) {
+                    changes.append("fileName updated; ");
+                    ebookFile.setFileName(request.getFileName());
+                }
+                if (request.getFileFormat() != null) {
+                    FileType fileType = FileType.findFileTypeByCode(request.getFileFormat());
+                    if (fileType != null && !Objects.equals(ebookFile.getFileType(), fileType)) {
+                        changes.append("fileFormat updated; ");
+                        ebookFile.setFileType(fileType);
+                    }
+                }
+                ebook.setFile(ebookFile);
             }
-            if (request.getFileName() != null && !Objects.equals(ebook.getFileName(), request.getFileName())) {
-                changes.append("fileName updated; ");
-                ebook.setFileName(request.getFileName());
-            }
-            if (request.getFileSize() != null && !Objects.equals(ebook.getFileSize(), request.getFileSize())) {
-                changes.append("fileSize updated; ");
-                ebook.setFileSize(request.getFileSize());
-            }
-            if (request.getFileFormat() != null && !Objects.equals(ebook.getFileFormat(), request.getFileFormat())) {
-                changes.append("fileFormat updated; ");
-                ebook.setFileFormat(request.getFileFormat());
-            }
+            
             if (request.getCurrentPrice() != null && !Objects.equals(ebook.getCurrentPrice(), request.getCurrentPrice())) {
                 changes.append("currentPrice updated; ");
                 ebook.setCurrentPrice(request.getCurrentPrice());
@@ -458,7 +487,7 @@ public class CatalogServiceImpl implements CatalogService {
                 String relativePath = imageService.saveImageFromStream(
                         file.getInputStream(),
                         fileName,
-                        BOOKS_FOLDER,
+                        BOOKS,
                         contentType
                 );
 
@@ -501,7 +530,6 @@ public class CatalogServiceImpl implements CatalogService {
      */
     private void uploadBookImages(AbstractBookEntity book, List<BookImageData> images) {
         if (book == null || CollectionUtils.isEmpty(images)) {
-            log.debug("No images to upload for book ID: {}", book != null ? book.getId() : "null");
             return;
         }
 
@@ -523,28 +551,14 @@ public class CatalogServiceImpl implements CatalogService {
                 // Generate filename if not provided
                 String fileName = imageData.getFileName();
                 if (fileName == null || fileName.isBlank()) {
-                    fileName = "image_" + position + ".jpg"; // Default filename
+                    imageData.setFileName("image_" + position + ".jpg"); // Default filename
                 }
 
                 // Upload image to S3
-                String relativePath = imageService.saveImageFromBase64(
-                    imageData.getBase64Data(),
-                    fileName,
-                    BOOKS_FOLDER
-                );
-
-                // Create BookImageEntity
-                BookImageEntity bookImage = new BookImageEntity();
-                bookImage.setBook(book);
-                bookImage.setUrl(relativePath);
-                bookImage.setAltText("");
-                bookImage.setPosition(position);
-                
-                // Save to database
-                BookImageEntity savedImage = bookImageRepository.save(bookImage);
+                BookImageEntity savedImage = imageService.saveBookImageFromBase64(book, imageData, BOOKS);
 
                 log.info("Image uploaded successfully for book ID: {}, imageId: {}, position: {}, url: {}",
-                        book.getId(), savedImage.getId(), position, relativePath);
+                        book.getId(), savedImage.getId(), position, savedImage.getUrl());
                 
             } catch (Exception e) {
                 log.error("Failed to upload image at index {} for book ID: {}", i, book.getId(), e);

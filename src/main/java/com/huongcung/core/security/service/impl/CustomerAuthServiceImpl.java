@@ -8,9 +8,8 @@ import com.huongcung.core.security.enumeration.UserRole;
 import com.huongcung.core.security.model.dto.CustomUserDetails;
 import com.huongcung.core.security.external.jwt.JwtTokenProvider;
 import com.huongcung.core.user.model.entity.CustomerEntity;
-import com.huongcung.core.user.model.entity.UserEntity;
-import com.huongcung.core.user.repository.UserRepository;
-import com.huongcung.core.security.service.AuthService;
+import com.huongcung.core.user.repository.CustomerRepository;
+import com.huongcung.core.security.service.CustomerAuthService;
 import com.huongcung.core.security.external.jwt.JwtTokenBlacklistService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +17,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,21 +29,22 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AuthServiceImpl implements AuthService {
+public class CustomerAuthServiceImpl implements CustomerAuthService {
     
-    private final AuthenticationManager authenticationManager;
-    private final UserRepository userRepository;
+    @Qualifier("customerAuthenticationManager")
+    private final AuthenticationManager customerAuthenticationManager;
+    private final CustomerRepository customerRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
     private final JwtTokenBlacklistService jwtTokenBlacklistService;
     
     /**
-     * Authenticate user and return JWT token
+     * Authenticate customer and return JWT token
      * @param loginRequest the login credentials
      * @return LoginResponse with JWT token and user info
      */
     public LoginResponse login(LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
+        Authentication authentication = customerAuthenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getEmail(),
                         loginRequest.getPassword()
@@ -57,16 +58,16 @@ public class AuthServiceImpl implements AuthService {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
-        // Load full user entity for first and last name
-        UserEntity user = userRepository.findById(userDetails.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        // Load full customer entity for first and last name
+        CustomerEntity customer = customerRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
 
         return LoginResponse.builder()
                 .token(token)
-                .id(user.getId())
-                .email(user.getEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
+                .id(customer.getId())
+                .email(customer.getEmail())
+                .firstName(customer.getFirstName())
+                .lastName(customer.getLastName())
                 .roles(roles)
                 .userType(determineUserType(roles))
                 .build();
@@ -79,8 +80,8 @@ public class AuthServiceImpl implements AuthService {
      */
     @Transactional
     public LoginResponse register(RegisterRequest registerRequest) {
-        // Check if user already exists
-        if (userRepository.existsByEmail(registerRequest.getEmail())) {
+        // Check if customer already exists
+        if (customerRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
             throw new RuntimeException("Email is already registered");
         }
 
@@ -96,9 +97,9 @@ public class AuthServiceImpl implements AuthService {
         customer.setIsActive(true);
         customer.setEmailVerified(false); // TODO: Implement email verification
 
-        CustomerEntity savedCustomer = userRepository.save(customer);
+        CustomerEntity savedCustomer = customerRepository.save(customer);
 
-        // Generate token for the new user
+        // Generate token for the new customer
         String token = tokenProvider.generateToken(
             savedCustomer.getEmail(),
             List.of(UserRole.CUSTOMER.getSpringSecurityRole())
@@ -115,7 +116,6 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
     
-    
     /**
      * Determine user type from roles
      * @param roles the list of roles
@@ -131,7 +131,7 @@ public class AuthServiceImpl implements AuthService {
     }
     
     /**
-     * Logout user by extracting token from Authorization header
+     * Logout customer by extracting token from Authorization header
      * @param authHeader the Authorization header value
      * @return LogoutResponse indicating success or failure
      */
@@ -150,7 +150,8 @@ public class AuthServiceImpl implements AuthService {
         // Blacklist the token
         jwtTokenBlacklistService.blacklistToken(token);
 
-        log.info("User logged out successfully");
+        log.info("Customer logged out successfully");
         return LogoutResponse.success();
     }
 }
+

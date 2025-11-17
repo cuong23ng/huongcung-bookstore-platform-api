@@ -1,7 +1,6 @@
 package com.huongcung.webstore.checkout.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huongcung.core.inventory.enumeration.City;
 import com.huongcung.core.inventory.model.entity.StockLevelEntity;
 import com.huongcung.core.inventory.model.entity.WarehouseEntity;
 import com.huongcung.core.inventory.repository.StockLevelRepository;
@@ -13,7 +12,6 @@ import com.huongcung.core.order.repository.OrderRepository;
 import com.huongcung.core.product.model.entity.PhysicalBookEntity;
 import com.huongcung.core.product.repository.AbstractBookRepository;
 import com.huongcung.core.user.model.entity.CustomerEntity;
-import com.huongcung.core.user.repository.UserRepository;
 import com.huongcung.webstore.checkout.dto.CheckoutItemDTO;
 import com.huongcung.webstore.checkout.dto.CheckoutRequest;
 import com.huongcung.webstore.checkout.dto.ShippingAddressDTO;

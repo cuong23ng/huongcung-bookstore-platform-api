@@ -22,8 +22,9 @@ public class AuthorCreateRequest {
     
     @Size(max = 5000, message = "Biography must not exceed 5000 characters")
     private String biography;
-    
-    private String photoUrl;
+
+    // Avatar
+    private ImageData image;
     
     private LocalDate birthDate;
     

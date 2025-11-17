@@ -46,3 +46,4 @@ WHERE b.publisher_id IS NOT NULL AND p.id IS NULL;
 
 
 
+

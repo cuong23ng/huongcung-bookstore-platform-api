@@ -25,7 +25,8 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
-    private final CustomUserDetailsService userDetailsService;
+    private final CustomerUserDetailsService customerUserDetailsService;
+    private final StaffUserDetailsService staffUserDetailsService;
     private final JwtConfiguration jwtConfiguration;
     private final JwtTokenBlacklistService jwtTokenBlacklistService;
     
@@ -47,7 +48,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 
                 String username = tokenProvider.getUsernameFromToken(jwt);
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                // Try to load user from both customer and staff services
+                UserDetails userDetails = null;
+                try {
+                    userDetails = customerUserDetailsService.loadUserByUsername(username);
+                } catch (Exception e) {
+                    log.debug("User not found in customer service, trying staff service: {}", username);
+                    try {
+                        userDetails = staffUserDetailsService.loadUserByUsername(username);
+                    } catch (Exception ex) {
+                        log.debug("User not found in staff service either: {}", username);
+                    }
+                }
 
                 if (userDetails != null) {
                     UsernamePasswordAuthenticationToken authentication =
