@@ -42,14 +42,14 @@ public class StaffServiceImpl implements StaffService {
         log.info("Creating staff account for email: {}, staffType: {}", request.getEmail(), request.getStaffType());
         
         // Validate staffType is not ADMIN
-        if (request.getStaffType() == StaffType.ADMIN) {
-            throw new IllegalArgumentException("ADMIN staff type cannot be created via this endpoint. Admins must be created separately.");
-        }
+//        if (request.getStaffType() == StaffType.ADMIN) {
+//            throw new IllegalArgumentException("ADMIN staff type cannot be created via this endpoint. Admins must be created separately.");
+//        }
         
         // Validate staffType is either STORE_MANAGER or SUPPORT_AGENT
-        if (request.getStaffType() != StaffType.STORE_MANAGER && request.getStaffType() != StaffType.SUPPORT_AGENT) {
-            throw new IllegalArgumentException("Staff type must be either STORE_MANAGER or SUPPORT_AGENT");
-        }
+//        if (request.getStaffType() != StaffType.STORE_MANAGER && request.getStaffType() != StaffType.SUPPORT_AGENT) {
+//            throw new IllegalArgumentException("Staff type must be either STORE_MANAGER or SUPPORT_AGENT");
+//        }
         
         // Validate assignedCity for STORE_MANAGER
         if (request.getStaffType() == StaffType.STORE_MANAGER) {
@@ -75,7 +75,7 @@ public class StaffServiceImpl implements StaffService {
         staff.setLastName(request.getLastName());
         staff.setPhone(request.getPhone());
         staff.setStaffType(request.getStaffType());
-        staff.setAssignedCity(City.valueOf(request.getAssignedCity()));
+        staff.setAssignedCity(request.getAssignedCity() != null ? City.valueOf(request.getAssignedCity()) : null);
         staff.setIsActive(true); // Set isActive = true by default (AC6)
         staff.setEmailVerified(false);
         

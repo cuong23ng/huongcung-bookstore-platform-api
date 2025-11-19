@@ -1,7 +1,7 @@
 package com.huongcung.businessmanagement.admin.model;
 
 import com.huongcung.core.common.enumeration.Language;
-import com.huongcung.core.product.enumeration.CoverType;
+import com.huongcung.core.catalog.enumeration.CoverType;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;

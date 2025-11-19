@@ -6,7 +6,7 @@
                  version="2.2">
     
     <!-- Register BookEntityListener for AbstractBookEntity -->
-    <entity class="com.huongcung.core.product.model.entity.AbstractBookEntity">
+    <entity class="com.huongcung.core.catalog.model.entity.BookEntity">
         <entity-listeners>
             <entity-listener class="com.huongcung.core.search.listener.BookEntityListener"/>
         </entity-listeners>

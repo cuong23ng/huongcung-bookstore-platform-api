@@ -1,7 +1,7 @@
 package com.huongcung.webstore.bookstore.mapper;
 
 import com.huongcung.core.common.mapper.CommonMapper;
-import com.huongcung.core.product.model.dto.AbstractBookDTO;
+import com.huongcung.core.catalog.model.dto.AbstractBookDTO;
 import com.huongcung.core.contributor.model.dto.AuthorDTO;
 import com.huongcung.core.media.model.dto.BookImageDTO;
 import com.huongcung.core.contributor.model.dto.PublisherDTO;

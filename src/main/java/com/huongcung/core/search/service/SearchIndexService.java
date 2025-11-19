@@ -1,6 +1,6 @@
 package com.huongcung.core.search.service;
 
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
+import com.huongcung.core.catalog.model.entity.BookEntity;
 
 /**
  * Service interface for indexing books into Solr
@@ -13,7 +13,7 @@ public interface SearchIndexService {
      * @param book Book entity to index
      * @return true if indexing succeeded, false otherwise
      */
-    boolean indexBook(AbstractBookEntity book);
+    boolean indexBook(BookEntity book);
     
     /**
      * Index all books from the database into Solr

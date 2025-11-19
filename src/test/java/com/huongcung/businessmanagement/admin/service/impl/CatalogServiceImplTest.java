@@ -4,25 +4,22 @@ import com.huongcung.businessmanagement.admin.mapper.BookMapper;
 import com.huongcung.businessmanagement.admin.model.BookCreateRequest;
 import com.huongcung.businessmanagement.admin.model.BookDetailDTO;
 import com.huongcung.businessmanagement.admin.model.BookImageData;
-import com.huongcung.businessmanagement.admin.model.BookListDTO;
 import com.huongcung.businessmanagement.admin.model.BookUpdateRequest;
+import com.huongcung.core.catalog.model.entity.BookEntity;
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.contributor.model.entity.AuthorEntity;
 import com.huongcung.core.contributor.model.entity.PublisherEntity;
-import com.huongcung.core.contributor.model.entity.TranslatorEntity;
 import com.huongcung.core.contributor.repository.AuthorRepository;
 import com.huongcung.core.contributor.repository.PublisherRepository;
 import com.huongcung.core.contributor.repository.TranslatorRepository;
 import com.huongcung.core.media.model.entity.BookImageEntity;
 import com.huongcung.core.media.repository.BookImageRepository;
 import com.huongcung.core.media.service.ImageService;
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
-import com.huongcung.core.product.model.entity.EbookEntity;
-import com.huongcung.core.product.model.entity.GenreEntity;
-import com.huongcung.core.product.model.entity.PhysicalBookEntity;
-import com.huongcung.core.product.repository.AbstractBookRepository;
-import com.huongcung.core.product.repository.GenreRepository;
-import com.huongcung.core.search.model.dto.PaginationInfo;
+import com.huongcung.core.catalog.model.entity.EbookEntity;
+import com.huongcung.core.catalog.model.entity.GenreEntity;
+import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
+import com.huongcung.core.catalog.repository.AbstractBookRepository;
+import com.huongcung.core.catalog.repository.GenreRepository;
 import com.huongcung.core.search.service.SearchIndexService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -32,17 +29,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -91,13 +84,13 @@ class CatalogServiceImplTest {
     private CriteriaBuilder criteriaBuilder;
     
     @Mock
-    private CriteriaQuery<AbstractBookEntity> criteriaQuery;
+    private CriteriaQuery<BookEntity> criteriaQuery;
     
     @Mock
     private CriteriaQuery<Long> countQuery;
     
     @Mock
-    private TypedQuery<AbstractBookEntity> typedQuery;
+    private TypedQuery<BookEntity> typedQuery;
     
     @Mock
     private TypedQuery<Long> countTypedQuery;
@@ -170,10 +163,10 @@ class CatalogServiceImplTest {
         request.setAuthorIds(Arrays.asList(1L));
         request.setBookType("PHYSICAL");
         request.setIsbn("9876543210");
-        request.setCurrentPrice(new BigDecimal("200000"));
+        request.setPhysicalPrice(new BigDecimal("200000"));
         
         when(authorRepository.findByIdIn(anyList())).thenReturn(Arrays.asList(testAuthor));
-        when(bookRepository.save(any(AbstractBookEntity.class))).thenAnswer(invocation -> {
+        when(bookRepository.save(any(BookEntity.class))).thenAnswer(invocation -> {
             PhysicalBookEntity book = invocation.getArgument(0);
             book.setId(1L);
             book.setCode("NEW-ABC12345");
@@ -185,7 +178,7 @@ class CatalogServiceImplTest {
                 .code("NEW-ABC12345")
                 .title("New Physical Book")
                 .build();
-        when(bookMapper.toDetailDTO(any(AbstractBookEntity.class))).thenReturn(bookDTO);
+        when(bookMapper.toDetailDTO(any(BookEntity.class))).thenReturn(bookDTO);
         
         // When
         BookDetailDTO result = catalogService.createBook(request);
@@ -209,10 +202,10 @@ class CatalogServiceImplTest {
         request.setFileUrl("https://example.com/ebook.pdf");
         request.setFileName("ebook.pdf");
         request.setFileFormat("PDF");
-        request.setCurrentPrice(new BigDecimal("150000"));
+        request.setPhysicalPrice(new BigDecimal("150000"));
         
         when(authorRepository.findByIdIn(anyList())).thenReturn(Arrays.asList(testAuthor));
-        when(bookRepository.save(any(AbstractBookEntity.class))).thenAnswer(invocation -> {
+        when(bookRepository.save(any(BookEntity.class))).thenAnswer(invocation -> {
             EbookEntity book = invocation.getArgument(0);
             book.setId(2L);
             book.setCode("NEW-DEF67890");
@@ -225,7 +218,7 @@ class CatalogServiceImplTest {
                 .title("New Ebook")
                 .bookType("EBOOK")
                 .build();
-        when(bookMapper.toDetailDTO(any(AbstractBookEntity.class))).thenReturn(bookDTO);
+        when(bookMapper.toDetailDTO(any(BookEntity.class))).thenReturn(bookDTO);
         
         // When
         BookDetailDTO result = catalogService.createBook(request);
@@ -306,7 +299,7 @@ class CatalogServiceImplTest {
         request.setImages(Arrays.asList(imageData));
         
         when(authorRepository.findByIdIn(anyList())).thenReturn(Arrays.asList(testAuthor));
-        when(bookRepository.save(any(AbstractBookEntity.class))).thenAnswer(invocation -> {
+        when(bookRepository.save(any(BookEntity.class))).thenAnswer(invocation -> {
             PhysicalBookEntity book = invocation.getArgument(0);
             book.setId(1L);
             book.setCode("NEW-IMG12345");
@@ -321,7 +314,7 @@ class CatalogServiceImplTest {
                 .code("NEW-IMG12345")
                 .title("New Book with Images")
                 .build();
-        when(bookMapper.toDetailDTO(any(AbstractBookEntity.class))).thenReturn(bookDTO);
+        when(bookMapper.toDetailDTO(any(BookEntity.class))).thenReturn(bookDTO);
         
         // When
         BookDetailDTO result = catalogService.createBook(request);
@@ -379,7 +372,7 @@ class CatalogServiceImplTest {
         request.setDescription("Updated description");
         
         when(bookRepository.findById(bookId)).thenReturn(Optional.of(testPhysicalBook));
-        when(bookRepository.save(any(AbstractBookEntity.class))).thenReturn(testPhysicalBook);
+        when(bookRepository.save(any(BookEntity.class))).thenReturn(testPhysicalBook);
         
         BookDetailDTO bookDTO = BookDetailDTO.builder()
                 .id(1L)
@@ -394,7 +387,7 @@ class CatalogServiceImplTest {
         // Then
         assertNotNull(result);
         assertEquals("Updated Title", result.getTitle());
-        verify(bookRepository, times(1)).save(any(AbstractBookEntity.class));
+        verify(bookRepository, times(1)).save(any(BookEntity.class));
     }
     
     @Test
@@ -419,7 +412,7 @@ class CatalogServiceImplTest {
         when(authorRepository.findByIdIn(anyList())).thenReturn(Arrays.asList(testAuthor, author2));
         when(publisherRepository.findById(1L)).thenReturn(Optional.of(testPublisher));
         when(genreRepository.findByIdIn(anyList())).thenReturn(Arrays.asList(testGenre, genre2));
-        when(bookRepository.save(any(AbstractBookEntity.class))).thenReturn(testPhysicalBook);
+        when(bookRepository.save(any(BookEntity.class))).thenReturn(testPhysicalBook);
         
         BookDetailDTO bookDTO = BookDetailDTO.builder()
                 .id(1L)
@@ -442,8 +435,8 @@ class CatalogServiceImplTest {
         // Given
         Long bookId = 1L;
         when(bookRepository.findById(bookId)).thenReturn(Optional.of(testPhysicalBook));
-        when(bookRepository.save(any(AbstractBookEntity.class))).thenAnswer(invocation -> {
-            AbstractBookEntity book = invocation.getArgument(0);
+        when(bookRepository.save(any(BookEntity.class))).thenAnswer(invocation -> {
+            BookEntity book = invocation.getArgument(0);
             book.setIsActive(false);
             return book;
         });
@@ -452,7 +445,7 @@ class CatalogServiceImplTest {
                 .id(1L)
                 .isActive(false)
                 .build();
-        when(bookMapper.toDetailDTO(any(AbstractBookEntity.class))).thenReturn(bookDTO);
+        when(bookMapper.toDetailDTO(any(BookEntity.class))).thenReturn(bookDTO);
         
         // When
         BookDetailDTO result = catalogService.deactivateBook(bookId, "admin@example.com");
@@ -460,7 +453,7 @@ class CatalogServiceImplTest {
         // Then
         assertNotNull(result);
         assertFalse(result.getIsActive());
-        verify(bookRepository, times(1)).save(any(AbstractBookEntity.class));
+        verify(bookRepository, times(1)).save(any(BookEntity.class));
     }
     
     @Test
@@ -474,26 +467,26 @@ class CatalogServiceImplTest {
         request.setBookType("PHYSICAL");
         
         when(authorRepository.findByIdIn(anyList())).thenReturn(Arrays.asList(testAuthor));
-        when(bookRepository.save(any(AbstractBookEntity.class))).thenAnswer(invocation -> {
+        when(bookRepository.save(any(BookEntity.class))).thenAnswer(invocation -> {
             PhysicalBookEntity book = invocation.getArgument(0);
             book.setId(1L);
             book.setCode("NEW-ABC12345");
             return book;
         });
-        when(searchIndexService.indexBook(any(AbstractBookEntity.class))).thenReturn(true);
+        when(searchIndexService.indexBook(any(BookEntity.class))).thenReturn(true);
         
         BookDetailDTO bookDTO = BookDetailDTO.builder()
                 .id(1L)
                 .code("NEW-ABC12345")
                 .title("New Book")
                 .build();
-        when(bookMapper.toDetailDTO(any(AbstractBookEntity.class))).thenReturn(bookDTO);
+        when(bookMapper.toDetailDTO(any(BookEntity.class))).thenReturn(bookDTO);
         
         // When
         catalogService.createBook(request);
         
         // Then
-        verify(searchIndexService, times(1)).indexBook(any(AbstractBookEntity.class));
+        verify(searchIndexService, times(1)).indexBook(any(BookEntity.class));
     }
     
     @Test
@@ -510,7 +503,7 @@ class CatalogServiceImplTest {
         request.setBookType("PHYSICAL");
         
         when(authorRepository.findByIdIn(anyList())).thenReturn(Arrays.asList(testAuthor));
-        when(bookRepository.save(any(AbstractBookEntity.class))).thenAnswer(invocation -> {
+        when(bookRepository.save(any(BookEntity.class))).thenAnswer(invocation -> {
             PhysicalBookEntity book = invocation.getArgument(0);
             book.setId(1L);
             book.setCode("NEW-ABC12345");
@@ -522,7 +515,7 @@ class CatalogServiceImplTest {
                 .code("NEW-ABC12345")
                 .title("New Book")
                 .build();
-        when(bookMapper.toDetailDTO(any(AbstractBookEntity.class))).thenReturn(bookDTO);
+        when(bookMapper.toDetailDTO(any(BookEntity.class))).thenReturn(bookDTO);
         
         // When & Then - should not throw exception
         assertDoesNotThrow(() -> catalogService.createBook(request));

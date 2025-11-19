@@ -1,4 +1,4 @@
-package com.huongcung.core.product.model.entity;
+package com.huongcung.core.catalog.model.entity;
 
 import com.huongcung.core.common.model.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -28,7 +28,7 @@ public class GenreEntity extends BaseEntity {
     private List<GenreEntity> children;
     
     @ManyToMany(mappedBy = "genres", fetch = FetchType.LAZY)
-    private List<AbstractBookEntity> books;
+    private List<BookEntity> books;
     
     @Column(name = "is_active", nullable = false, columnDefinition = "boolean default true")
     private Boolean isActive = true;

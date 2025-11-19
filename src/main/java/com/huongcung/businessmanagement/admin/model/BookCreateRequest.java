@@ -1,7 +1,7 @@
 package com.huongcung.businessmanagement.admin.model;
 
 import com.huongcung.core.common.enumeration.Language;
-import com.huongcung.core.product.enumeration.CoverType;
+import com.huongcung.core.catalog.enumeration.CoverType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -40,13 +40,17 @@ public class BookCreateRequest {
     
     @NotNull(message = "At least one author is required")
     @Size(min = 1, message = "At least one author is required")
-    private List<Long> authorIds; // IDs of AuthorEntity
+    private List<Long> authorIds;
     
-    private List<Long> translatorIds; // IDs of TranslatorEntity
+    private List<Long> translatorIds;
     
-    private Long publisherId; // ID of PublisherEntity
+    private Long publisherId;
     
-    private List<Long> genreIds; // IDs of GenreEntity
+    private List<Long> genreIds;
+
+    // Common flags
+    private Boolean hasPhysicalEdition = false;
+    private Boolean hasElectricEdition = false;
     
     // PhysicalBookEntity specific fields
     private String isbn;
@@ -55,17 +59,11 @@ public class BookCreateRequest {
     private Integer heightCm;
     private Integer widthCm;
     private Integer lengthCm;
-    private BigDecimal currentPrice;
+    private BigDecimal physicalBookPrice;
     
     // EbookEntity specific fields
-    private String fileUrl;
-    private String fileName;
-    private Long fileSize; // in bytes
-    private String fileFormat; // PDF, EPUB, MOBI
-    
-    // Common flags
-    private Boolean isPhysicalEdition = false;
-    private Boolean isElectricEdition = false;
+    private String eisbn;
+    private BigDecimal ebookPrice;
     
     // Images to upload (Base64 encoded)
     private List<BookImageData> images;

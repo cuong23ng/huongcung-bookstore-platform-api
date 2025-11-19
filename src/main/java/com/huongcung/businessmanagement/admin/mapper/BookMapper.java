@@ -4,14 +4,15 @@ import com.huongcung.businessmanagement.admin.model.BookCreateRequest;
 import com.huongcung.businessmanagement.admin.model.BookDetailDTO;
 import com.huongcung.businessmanagement.admin.model.BookListDTO;
 import com.huongcung.businessmanagement.admin.model.BookUpdateRequest;
+import com.huongcung.core.catalog.enumeration.CoverType;
+import com.huongcung.core.catalog.model.entity.BookEntity;
 import com.huongcung.core.contributor.mapper.AuthorMapper;
 import com.huongcung.core.contributor.mapper.PublisherMapper;
 import com.huongcung.core.contributor.mapper.TranslatorMapper;
 import com.huongcung.core.media.mapper.BookImageMapper;
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
-import com.huongcung.core.product.model.entity.EbookEntity;
-import com.huongcung.core.product.model.entity.GenreEntity;
-import com.huongcung.core.product.model.entity.PhysicalBookEntity;
+import com.huongcung.core.catalog.model.entity.EbookEntity;
+import com.huongcung.core.catalog.model.entity.GenreEntity;
+import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -36,7 +37,7 @@ public interface BookMapper {
      * Maps AbstractBookEntity to BookListDTO (for paginated lists)
      */
     @Mapping(target = "bookType", expression = "java(determineBookType(entity))")
-    BookListDTO toListDTO(AbstractBookEntity entity);
+    BookListDTO toListDTO(BookEntity entity);
     
     /**
      * Maps AbstractBookEntity to BookDetailDTO (for detailed view)
@@ -56,7 +57,7 @@ public interface BookMapper {
     @Mapping(target = "downloadCount", expression = "java(getDownloadCount(entity))")
     @Mapping(target = "currentPrice", expression = "java(getCurrentPrice(entity))")
     @Mapping(target = "genres", expression = "java(mapGenres(entity.getGenres()))")
-    BookDetailDTO toDetailDTO(AbstractBookEntity entity);
+    BookDetailDTO toDetailDTO(BookEntity entity);
     
     /**
      * Maps BookCreateRequest to AbstractBookEntity
@@ -72,7 +73,7 @@ public interface BookMapper {
     @Mapping(target = "images", ignore = true) // Set separately
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    AbstractBookEntity toEntity(BookCreateRequest request);
+    BookEntity toEntity(BookCreateRequest request);
     
     /**
      * Updates AbstractBookEntity with values from BookUpdateRequest (partial update)
@@ -87,10 +88,10 @@ public interface BookMapper {
     @Mapping(target = "images", ignore = true) // Managed separately
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    void updateEntityFromRequest(BookUpdateRequest request, @MappingTarget AbstractBookEntity entity);
+    void updateEntityFromRequest(BookUpdateRequest request, @MappingTarget BookEntity entity);
     
     // Helper methods for determining book type and extracting subtype-specific fields
-    default String determineBookType(AbstractBookEntity entity) {
+    default String determineBookType(BookEntity entity) {
         if (entity instanceof PhysicalBookEntity) {
             return "PHYSICAL";
         } else if (entity instanceof EbookEntity) {
@@ -99,82 +100,70 @@ public interface BookMapper {
         return null;
     }
     
-    default String getIsbn(AbstractBookEntity entity) {
+    default String getIsbn(BookEntity entity) {
         if (entity instanceof PhysicalBookEntity) {
             return ((PhysicalBookEntity) entity).getIsbn();
         }
         return null;
     }
     
-    default com.huongcung.core.product.enumeration.CoverType getCoverType(AbstractBookEntity entity) {
+    default CoverType getCoverType(BookEntity entity) {
         if (entity instanceof PhysicalBookEntity) {
             return ((PhysicalBookEntity) entity).getCoverType();
         }
         return null;
     }
     
-    default Integer getWeightGrams(AbstractBookEntity entity) {
+    default Integer getWeightGrams(BookEntity entity) {
         if (entity instanceof PhysicalBookEntity) {
             return ((PhysicalBookEntity) entity).getWeightGrams();
         }
         return null;
     }
     
-    default Integer getHeightCm(AbstractBookEntity entity) {
+    default Integer getHeightCm(BookEntity entity) {
         if (entity instanceof PhysicalBookEntity) {
             return ((PhysicalBookEntity) entity).getHeightCm();
         }
         return null;
     }
     
-    default Integer getWidthCm(AbstractBookEntity entity) {
+    default Integer getWidthCm(BookEntity entity) {
         if (entity instanceof PhysicalBookEntity) {
             return ((PhysicalBookEntity) entity).getWidthCm();
         }
         return null;
     }
     
-    default Integer getLengthCm(AbstractBookEntity entity) {
+    default Integer getLengthCm(BookEntity entity) {
         if (entity instanceof PhysicalBookEntity) {
             return ((PhysicalBookEntity) entity).getLengthCm();
         }
         return null;
     }
     
-    default String getFileUrl(AbstractBookEntity entity) {
-        if (entity instanceof EbookEntity ebook && ebook.getFile() != null) {
-            return ebook.getFile().getUrl();
-        }
+    default String getFileUrl(BookEntity entity) {
         return null;
     }
     
-    default String getFileName(AbstractBookEntity entity) {
-        if (entity instanceof EbookEntity ebook && ebook.getFile() != null) {
-            return ebook.getFile().getFileName();
-        }
+    default String getFileName(BookEntity entity) {
         return null;
     }
     
-    default Long getFileSize(AbstractBookEntity entity) {
+    default Long getFileSize(BookEntity entity) {
         // FileSize is not stored in MediaEntity, return null or handle separately if needed
         return null;
     }
     
-    default String getFileFormat(AbstractBookEntity entity) {
-        if (entity instanceof EbookEntity ebook && ebook.getFile() != null && ebook.getFile().getFileType() != null) {
-            return ebook.getFile().getFileType().getCode();
-        }
+    default String getFileFormat(BookEntity entity) {
         return null;
     }
     
-    default Integer getDownloadCount(AbstractBookEntity entity) {
-        if (entity instanceof EbookEntity ebook && ebook.getFile() != null) {
-            return ebook.getFile().getDownloadCount();
-        }
+    default Integer getDownloadCount(BookEntity entity) {
         return null;
     }
     
-    default java.math.BigDecimal getCurrentPrice(AbstractBookEntity entity) {
+    default java.math.BigDecimal getCurrentPrice(BookEntity entity) {
         if (entity instanceof PhysicalBookEntity) {
             return ((PhysicalBookEntity) entity).getCurrentPrice();
         } else if (entity instanceof EbookEntity) {

@@ -1,6 +1,5 @@
-package com.huongcung.core.product.model.entity;
+package com.huongcung.core.catalog.model.entity;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import com.huongcung.core.common.model.entity.BaseEntity;
@@ -10,7 +9,6 @@ import com.huongcung.core.contributor.model.entity.AuthorEntity;
 import com.huongcung.core.contributor.model.entity.PublisherEntity;
 import com.huongcung.core.contributor.model.entity.TranslatorEntity;
 import com.huongcung.core.media.model.entity.BookImageEntity;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -22,7 +20,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -36,9 +33,9 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class AbstractBookEntity extends BaseEntity {
+public class BookEntity extends BaseEntity {
 
-    @Column(name = "code", unique = true, nullable = false)
+    @Column(name = "code", nullable = false)
     private String code;
     
     @Column(name = "title", nullable = false)
@@ -75,9 +72,6 @@ public class AbstractBookEntity extends BaseEntity {
     @JoinColumn(name = "publisher_id")
     private PublisherEntity publisher;
     
-    @Column(name = "publication_date")
-    private LocalDate publicationDate;
-    
     @Enumerated(EnumType.STRING)
     @Column(name = "language")
     private Language language;
@@ -88,14 +82,8 @@ public class AbstractBookEntity extends BaseEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "books", fetch = FetchType.LAZY)
     private List<BookImageEntity> images;
-
-    @Column(name = "has_physical_edition", nullable = false)
-    private boolean hasPhysicalEdition;
-
-    @Column(name = "has_electric_edition", nullable = false)
-    private boolean hasElectricEdition;
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;

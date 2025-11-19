@@ -1,4 +1,4 @@
-package com.huongcung.core.product.enumeration;
+package com.huongcung.core.catalog.enumeration;
 
 public enum CoverType {
     HARDCOVER,

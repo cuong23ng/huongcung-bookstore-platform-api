@@ -1,9 +1,11 @@
 package com.huongcung.core.storage.service;
 
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 
+@Service
 public interface StorageService {
     String getFullUrl(String relativePath);
 

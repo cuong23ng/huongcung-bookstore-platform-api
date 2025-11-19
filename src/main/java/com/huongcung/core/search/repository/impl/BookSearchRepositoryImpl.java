@@ -142,7 +142,6 @@ public class BookSearchRepositoryImpl implements BookSearchRepository {
         if (document.getTitleText() != null) solrDoc.addField("titleText", document.getTitleText());
         if (document.getDescription() != null) solrDoc.addField("description", document.getDescription());
         if (document.getDescriptionText() != null) solrDoc.addField("descriptionText", document.getDescriptionText());
-        if (document.getIsbn() != null) solrDoc.addField("isbn", document.getIsbn());
         if (document.getAuthorNames() != null) solrDoc.addField("authorNames", document.getAuthorNames());
         if (document.getPublisherName() != null) solrDoc.addField("publisherName", document.getPublisherName());
         if (document.getGenreNames() != null) solrDoc.addField("genreNames", document.getGenreNames());
@@ -150,7 +149,6 @@ public class BookSearchRepositoryImpl implements BookSearchRepository {
         if (document.getFormat() != null) solrDoc.addField("format", document.getFormat());
         if (document.getPhysicalPrice() != null) solrDoc.addField("physicalPrice", document.getPhysicalPrice());
         if (document.getDigitalPrice() != null) solrDoc.addField("digitalPrice", document.getDigitalPrice());
-        if (document.getPublicationDate() != null) solrDoc.addField("publicationDate", document.getPublicationDate());
         if (document.getAvailableInHanoi() != null) solrDoc.addField("availableInHanoi", document.getAvailableInHanoi());
         if (document.getAvailableInHcmc() != null) solrDoc.addField("availableInHcmc", document.getAvailableInHcmc());
         if (document.getAvailableInDanang() != null) solrDoc.addField("availableInDanang", document.getAvailableInDanang());

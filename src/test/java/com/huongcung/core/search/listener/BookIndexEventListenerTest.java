@@ -1,6 +1,6 @@
 package com.huongcung.core.search.listener;
 
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
+import com.huongcung.core.catalog.model.entity.BookEntity;
 import com.huongcung.core.search.event.BookCreatedEvent;
 import com.huongcung.core.search.event.BookDeletedEvent;
 import com.huongcung.core.search.event.BookUpdatedEvent;
@@ -30,7 +30,7 @@ class BookIndexEventListenerTest {
     @InjectMocks
     private BookIndexEventListener eventListener;
 
-    private AbstractBookEntity testBook;
+    private BookEntity testBook;
 
     @BeforeEach
     void setUp() {
@@ -39,7 +39,7 @@ class BookIndexEventListenerTest {
         ReflectionTestUtils.setField(eventListener, "maxRetryAttempts", 3);
         ReflectionTestUtils.setField(eventListener, "retryDelayMs", 100L); // Short delay for tests
         
-        testBook = new AbstractBookEntity();
+        testBook = new BookEntity();
         testBook.setId(1L);
         testBook.setTitle("Test Book");
     }
@@ -48,7 +48,7 @@ class BookIndexEventListenerTest {
     @DisplayName("Should handle book created event successfully")
     void testHandleBookCreated_Success() {
         // Given
-        when(searchIndexService.indexBook(any(AbstractBookEntity.class))).thenReturn(true);
+        when(searchIndexService.indexBook(any(BookEntity.class))).thenReturn(true);
         BookCreatedEvent event = new BookCreatedEvent(this, testBook);
 
         // When
@@ -62,7 +62,7 @@ class BookIndexEventListenerTest {
     @DisplayName("Should retry on indexing failure")
     void testHandleBookCreated_WithRetry() {
         // Given
-        when(searchIndexService.indexBook(any(AbstractBookEntity.class)))
+        when(searchIndexService.indexBook(any(BookEntity.class)))
             .thenThrow(new RuntimeException("Solr error"))
             .thenThrow(new RuntimeException("Solr error"))
             .thenReturn(true);
@@ -147,7 +147,7 @@ class BookIndexEventListenerTest {
     @DisplayName("Should fail after max retry attempts")
     void testHandleBookCreated_MaxRetriesExceeded() {
         // Given
-        when(searchIndexService.indexBook(any(AbstractBookEntity.class)))
+        when(searchIndexService.indexBook(any(BookEntity.class)))
             .thenThrow(new RuntimeException("Persistent error"));
         BookCreatedEvent event = new BookCreatedEvent(this, testBook);
 

@@ -1,6 +1,6 @@
 package com.huongcung.core.order.model.entity;
 
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
+import com.huongcung.core.catalog.model.entity.BookEntity;
 import com.huongcung.core.common.model.entity.BaseEntity;
 import com.huongcung.core.order.enumeration.ItemType;
 import jakarta.persistence.*;
@@ -22,7 +22,7 @@ public class OrderEntryEntity extends BaseEntity {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
-    private AbstractBookEntity book;
+    private BookEntity book;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "item_type", nullable = false)

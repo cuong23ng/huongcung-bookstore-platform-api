@@ -1,12 +1,11 @@
-package com.huongcung.core.product.model.entity;
+package com.huongcung.core.catalog.model.entity;
 
-import com.huongcung.core.product.enumeration.CoverType;
-import com.huongcung.core.common.model.entity.PriceRowEntity;
+import com.huongcung.core.catalog.enumeration.CoverType;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "physical_books")
@@ -15,18 +14,18 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PhysicalBookEntity extends AbstractBookEntity {
-    
+public class PhysicalBookEntity extends BookEntity {
+
     @Column(name = "isbn", unique = true)
     private String isbn;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "cover_type")
     private CoverType coverType;
-    
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PriceRowEntity> prices;
-    
+
+    @Column(name = "publication_date")
+    private LocalDate publicationDate;
+
     @Column(name = "current_price", precision = 10, scale = 2)
     private BigDecimal currentPrice;
 

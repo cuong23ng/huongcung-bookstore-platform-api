@@ -7,6 +7,7 @@ import com.huongcung.businessmanagement.admin.model.BookImageData;
 import com.huongcung.businessmanagement.admin.model.BookListDTO;
 import com.huongcung.businessmanagement.admin.model.BookUpdateRequest;
 import com.huongcung.businessmanagement.admin.service.CatalogService;
+import com.huongcung.core.catalog.model.entity.BookEntity;
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.contributor.model.entity.AuthorEntity;
 import com.huongcung.core.contributor.model.entity.PublisherEntity;
@@ -14,17 +15,14 @@ import com.huongcung.core.contributor.model.entity.TranslatorEntity;
 import com.huongcung.core.contributor.repository.AuthorRepository;
 import com.huongcung.core.contributor.repository.PublisherRepository;
 import com.huongcung.core.contributor.repository.TranslatorRepository;
-import com.huongcung.core.media.enumeration.FileType;
 import com.huongcung.core.media.model.entity.BookImageEntity;
-import com.huongcung.core.media.model.entity.EbookFileEntity;
 import com.huongcung.core.media.repository.BookImageRepository;
 import com.huongcung.core.media.service.ImageService;
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
-import com.huongcung.core.product.model.entity.EbookEntity;
-import com.huongcung.core.product.model.entity.GenreEntity;
-import com.huongcung.core.product.model.entity.PhysicalBookEntity;
-import com.huongcung.core.product.repository.AbstractBookRepository;
-import com.huongcung.core.product.repository.GenreRepository;
+import com.huongcung.core.catalog.model.entity.EbookEntity;
+import com.huongcung.core.catalog.model.entity.GenreEntity;
+import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
+import com.huongcung.core.catalog.repository.AbstractBookRepository;
+import com.huongcung.core.catalog.repository.GenreRepository;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import com.huongcung.core.search.service.SearchIndexService;
 import jakarta.persistence.EntityManager;
@@ -40,11 +38,10 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.text.Normalizer;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.huongcung.core.media.constant.FolderConstants.BOOKS;
@@ -78,8 +75,8 @@ public class CatalogServiceImpl implements CatalogService {
         
         // Use Criteria API for dynamic filtering
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<AbstractBookEntity> query = cb.createQuery(AbstractBookEntity.class);
-        Root<AbstractBookEntity> root = query.from(AbstractBookEntity.class);
+        CriteriaQuery<BookEntity> query = cb.createQuery(BookEntity.class);
+        Root<BookEntity> root = query.from(BookEntity.class);
         
         List<Predicate> predicates = new ArrayList<>();
         
@@ -107,12 +104,12 @@ public class CatalogServiceImpl implements CatalogService {
         
         // Get total count
         CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-        countQuery.select(cb.count(countQuery.from(AbstractBookEntity.class)));
+        countQuery.select(cb.count(countQuery.from(BookEntity.class)));
         countQuery.where(predicates.toArray(new Predicate[0]));
         Long totalCount = entityManager.createQuery(countQuery).getSingleResult();
         
         // Apply pagination
-        List<AbstractBookEntity> books = entityManager.createQuery(query)
+        List<BookEntity> books = entityManager.createQuery(query)
                 .setFirstResult((int) pageable.getOffset())
                 .setMaxResults(pageable.getPageSize())
                 .getResultList();
@@ -141,7 +138,7 @@ public class CatalogServiceImpl implements CatalogService {
     public BookDetailDTO getBookById(Long id) {
         log.debug("Fetching book by ID: {}", id);
         
-        AbstractBookEntity book = bookRepository.findById(id)
+        BookEntity book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
         
         return bookMapper.toDetailDTO(book);
@@ -149,9 +146,9 @@ public class CatalogServiceImpl implements CatalogService {
     
     @Override
     @Transactional
-    public BookDetailDTO createBook(BookCreateRequest request) {
+    public void createBook(BookCreateRequest request) {
         log.info("Creating book: title={}, physical={}, ebook={}",
-                request.getTitle(), request.getIsPhysicalEdition(), request.getIsElectricEdition());
+                request.getTitle(), request.getHasPhysicalEdition(), request.getHasElectricEdition());
         
         // Validate required fields
         if (request.getTitle() == null || request.getTitle().isBlank()) {
@@ -165,124 +162,97 @@ public class CatalogServiceImpl implements CatalogService {
         if (request.getAuthorIds() == null || request.getAuthorIds().isEmpty()) {
             throw new IllegalArgumentException("At least one author is required");
         }
-        
-        // TODO: Validate bookType
-        if (!request.getIsElectricEdition() && !request.getIsPhysicalEdition()) {
-            throw new IllegalArgumentException("Book type must be either PHYSICAL or EBOOK");
-        }
-        
-        // Generate unique book code
-        String bookCode = generateBookCode(request.getTitle());
-        
-        // Load related entities
-        List<AuthorEntity> authors = authorRepository.findByIdIn(request.getAuthorIds());
-        if (authors.size() != request.getAuthorIds().size()) {
-            throw new RuntimeException("One or more author IDs not found");
-        }
-        
-        List<TranslatorEntity> translators = null;
-        if (request.getTranslatorIds() != null && !request.getTranslatorIds().isEmpty()) {
-            translators = translatorRepository.findByIdIn(request.getTranslatorIds());
-            if (translators.size() != request.getTranslatorIds().size()) {
-                throw new RuntimeException("One or more translator IDs not found");
-            }
-        }
-        
-        PublisherEntity publisher = null;
-        if (request.getPublisherId() != null) {
-            publisher = publisherRepository.findById(request.getPublisherId())
-                    .orElseThrow(() -> new RuntimeException("Publisher not found with ID: " + request.getPublisherId()));
-        }
-        
-        List<GenreEntity> genres = null;
-        if (request.getGenreIds() != null && !request.getGenreIds().isEmpty()) {
-            genres = genreRepository.findByIdIn(request.getGenreIds());
-            if (genres.size() != request.getGenreIds().size()) {
-                throw new RuntimeException("One or more genre IDs not found");
-            }
-        }
-        
-        // Create base book entity
-        AbstractBookEntity book;
-        
-        if (request.getIsPhysicalEdition()) {
+
+        List<BookEntity> savedBooks = new ArrayList<>();
+        if (request.getHasPhysicalEdition()) {
             PhysicalBookEntity physicalBook = new PhysicalBookEntity();
+            populate(request, physicalBook);
+            physicalBook.setPublicationDate(request.getPublicationDate());
             physicalBook.setIsbn(request.getIsbn());
-            physicalBook.setCoverType(request.getCoverType());
             physicalBook.setWeightGrams(request.getWeightGrams());
             physicalBook.setHeightCm(request.getHeightCm());
             physicalBook.setWidthCm(request.getWidthCm());
             physicalBook.setLengthCm(request.getLengthCm());
-            physicalBook.setCurrentPrice(request.getCurrentPrice());
-            book = physicalBook;
-        } else {
-            EbookEntity ebook = new EbookEntity();
-            
-            // Create EbookFileEntity
-            if (request.getFileUrl() != null || request.getFileName() != null) {
-                EbookFileEntity ebookFile = new EbookFileEntity();
-                ebookFile.setFileName(request.getFileName());
-                ebookFile.setUrl(request.getFileUrl());
-                // Map fileFormat string to FileType enum if needed
-                if (request.getFileFormat() != null) {
-                    FileType fileType = FileType.findFileTypeByCode(request.getFileFormat());
-                    ebookFile.setFileType(fileType);
-                }
-                ebookFile.setDownloadCount(0);
-                ebook.setFile(ebookFile);
-            }
-            
-            ebook.setCurrentPrice(request.getCurrentPrice());
-            ebook.setIsActive(true);
-            book = ebook;
+            physicalBook.setCurrentPrice(request.getPhysicalBookPrice());
+
+            bookRepository.save(physicalBook);
+            savedBooks.add(physicalBook);
+
+            searchIndexService.indexBook(physicalBook);
+            log.debug("Book indexed in search service: {}", physicalBook.getId());
         }
-        
-        // Set common fields
-        book.setCode(bookCode);
-        book.setTitle(request.getTitle());
-        book.setDescription(request.getDescription());
-        book.setLanguage(request.getLanguage());
-        book.setPublicationDate(request.getPublicationDate());
-        book.setPageCount(request.getPageCount());
-        book.setEdition(request.getEdition());
-        book.setAuthors(authors);
-        book.setTranslators(translators);
-        book.setPublisher(publisher);
-        book.setGenres(genres);
-        book.setHasPhysicalEdition(request.getIsPhysicalEdition());
-        book.setHasElectricEdition(request.getIsElectricEdition());
-        book.setIsActive(true);
-        
-        // Save book
-        AbstractBookEntity savedBook = bookRepository.save(book);
-        
-        log.info("Book created successfully with ID: {}, code: {}", savedBook.getId(), savedBook.getCode());
+
+        if (request.getHasElectricEdition()) {
+            EbookEntity ebook = new EbookEntity();
+            populate(request, ebook);
+            ebook.setPublicationDate(request.getPublicationDate());
+            ebook.setCurrentPrice(request.getEbookPrice());
+
+            bookRepository.save(ebook);
+            savedBooks.add(ebook);
+
+            searchIndexService.indexBook(ebook);
+            log.debug("Book indexed in search service: {}", ebook.getId());
+        }
         
         // Handle image uploads if provided
         if (!CollectionUtils.isEmpty(request.getImages())) {
-            uploadBookImages(savedBook, request.getImages());
+            uploadBookImages(savedBooks, request.getImages());
         }
-        
-        // Trigger search index update if service is available
-        if (searchIndexService != null) {
-            try {
-                searchIndexService.indexBook(savedBook);
-                log.debug("Book indexed in search service: {}", savedBook.getId());
-            } catch (Exception e) {
-                log.warn("Failed to index book in search service: {}", e.getMessage());
-                // Don't fail the operation if indexing fails
+
+    }
+
+    private void populate(BookCreateRequest source, BookEntity target) {
+        // Generate unique book code
+        String bookCode = generateBookCode(source.getTitle(), source.getEdition());
+
+        // Load related entities
+        List<AuthorEntity> authors = authorRepository.findByIdIn(source.getAuthorIds());
+        if (authors.size() != source.getAuthorIds().size()) {
+            throw new RuntimeException("One or more author IDs not found");
+        }
+
+        List<TranslatorEntity> translators = null;
+        if (source.getTranslatorIds() != null && !source.getTranslatorIds().isEmpty()) {
+            translators = translatorRepository.findByIdIn(source.getTranslatorIds());
+            if (translators.size() != source.getTranslatorIds().size()) {
+                throw new RuntimeException("One or more translator IDs not found");
             }
         }
-        
-        return bookMapper.toDetailDTO(savedBook);
+
+        PublisherEntity publisher = null;
+        if (source.getPublisherId() != null) {
+            publisher = publisherRepository.findById(source.getPublisherId())
+                    .orElseThrow(() -> new RuntimeException("Publisher not found with ID: " + source.getPublisherId()));
+        }
+
+        List<GenreEntity> genres = null;
+        if (source.getGenreIds() != null && !source.getGenreIds().isEmpty()) {
+            genres = genreRepository.findByIdIn(source.getGenreIds());
+            if (genres.size() != source.getGenreIds().size()) {
+                throw new RuntimeException("One or more genre IDs not found");
+            }
+        }
+
+        target.setCode(bookCode);
+        target.setTitle(source.getTitle());
+        target.setDescription(source.getDescription());
+        target.setLanguage(source.getLanguage());
+        target.setPageCount(source.getPageCount());
+        target.setEdition(source.getEdition());
+        target.setAuthors(authors);
+        target.setTranslators(translators);
+        target.setPublisher(publisher);
+        target.setGenres(genres);
+        target.setIsActive(false);
     }
-    
+
     @Override
     @Transactional
     public BookDetailDTO updateBook(Long id, BookUpdateRequest request, String updatedBy) {
         log.info("Updating book ID: {}, updatedBy: {}", id, updatedBy);
         
-        AbstractBookEntity book = bookRepository.findById(id)
+        BookEntity book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
         
         // Track changes for audit logging
@@ -364,28 +334,7 @@ public class CatalogServiceImpl implements CatalogService {
         } else if (book instanceof EbookEntity ebook) {
             // Update file information if provided
             if (request.getFileUrl() != null || request.getFileName() != null || request.getFileFormat() != null) {
-                EbookFileEntity ebookFile = ebook.getFile();
-                if (ebookFile == null) {
-                    ebookFile = new EbookFileEntity();
-                    ebookFile.setDownloadCount(0);
-                }
-                
-                if (request.getFileUrl() != null && !Objects.equals(ebookFile.getUrl(), request.getFileUrl())) {
-                    changes.append("fileUrl updated; ");
-                    ebookFile.setUrl(request.getFileUrl());
-                }
-                if (request.getFileName() != null && !Objects.equals(ebookFile.getFileName(), request.getFileName())) {
-                    changes.append("fileName updated; ");
-                    ebookFile.setFileName(request.getFileName());
-                }
-                if (request.getFileFormat() != null) {
-                    FileType fileType = FileType.findFileTypeByCode(request.getFileFormat());
-                    if (fileType != null && !Objects.equals(ebookFile.getFileType(), fileType)) {
-                        changes.append("fileFormat updated; ");
-                        ebookFile.setFileType(fileType);
-                    }
-                }
-                ebook.setFile(ebookFile);
+
             }
             
             if (request.getCurrentPrice() != null && !Objects.equals(ebook.getCurrentPrice(), request.getCurrentPrice())) {
@@ -398,7 +347,7 @@ public class CatalogServiceImpl implements CatalogService {
         bookMapper.updateEntityFromRequest(request, book);
         
         // Save updated entity
-        AbstractBookEntity updatedBook = bookRepository.save(book);
+        BookEntity updatedBook = bookRepository.save(book);
         
         // Audit logging
         String changeLog = !changes.isEmpty() ? changes.toString() : "no changes";
@@ -423,7 +372,7 @@ public class CatalogServiceImpl implements CatalogService {
     public BookDetailDTO deactivateBook(Long id, String deactivatedBy) {
         log.info("Deactivating book ID: {}, deactivatedBy: {}", id, deactivatedBy);
         
-        AbstractBookEntity book = bookRepository.findById(id)
+        BookEntity book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
         
         if (!book.getIsActive()) {
@@ -437,7 +386,7 @@ public class CatalogServiceImpl implements CatalogService {
             ((EbookEntity) book).setIsActive(false);
         }
         
-        AbstractBookEntity deactivatedBook = bookRepository.save(book);
+        BookEntity deactivatedBook = bookRepository.save(book);
         
         // Audit logging
         log.info("Book deactivated: bookId={}, deactivatedBy={}, timestamp={}", 
@@ -458,69 +407,71 @@ public class CatalogServiceImpl implements CatalogService {
 
     @Override
     public void uploadBookImages(Long id, MultipartFile[] files) {
-        log.info("Uploading {} images for book ID: {}", files.length, id);
-
-        AbstractBookEntity book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
-
-        // Upload images using ImageService
-        for (int i = 0; i < files.length; i++) {
-            MultipartFile file = files[i];
-            if (file.isEmpty()) {
-                continue;
-            }
-
-            try {
-                // Get filename
-                String fileName = file.getOriginalFilename();
-                if (fileName == null || fileName.isBlank()) {
-                    fileName = "image_" + (i + 1) + ".jpg";
-                }
-
-                // Get content type
-                String contentType = file.getContentType();
-                if (contentType == null || contentType.isBlank()) {
-                    contentType = "image/jpeg";
-                }
-
-                // Save image to S3 with correct folder path
-                String relativePath = imageService.saveImageFromStream(
-                        file.getInputStream(),
-                        fileName,
-                        BOOKS,
-                        contentType
-                );
-
-                // Create BookImageEntity
-                BookImageEntity bookImage = new BookImageEntity();
-                bookImage.setBook(book);
-                bookImage.setUrl(relativePath);
-                bookImage.setAltText("");
-                bookImage.setPosition(i + 1); // Position starts from 1
-
-                bookImageRepository.save(bookImage);
-
-                log.debug("Image uploaded for book ID: {}, position: {}, url: {}", id, i + 1, relativePath);
-            } catch (Exception e) {
-                log.error("Failed to upload image for book ID: {}", id, e);
-                throw new RuntimeException("Failed to upload image: " + e.getMessage());
-            }
-        }
+//        log.info("Uploading {} images for book ID: {}", files.length, id);
+//
+//        AbstractBookEntity book = bookRepository.findById(id)
+//                .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
+//
+//        // Upload images using ImageService
+//        for (int i = 0; i < files.length; i++) {
+//            MultipartFile file = files[i];
+//            if (file.isEmpty()) {
+//                continue;
+//            }
+//
+//            try {
+//                // Get filename
+//                String fileName = file.getOriginalFilename();
+//                if (fileName == null || fileName.isBlank()) {
+//                    fileName = "image_" + (i + 1) + ".jpg";
+//                }
+//
+//                // Get content type
+//                String contentType = file.getContentType();
+//                if (contentType == null || contentType.isBlank()) {
+//                    contentType = "image/jpeg";
+//                }
+//
+//                // Save image to S3 with correct folder path
+//                String relativePath = imageService.saveImageFromStream(
+//                        file.getInputStream(),
+//                        fileName,
+//                        BOOKS,
+//                        contentType
+//                );
+//
+//                // Create BookImageEntity
+//                BookImageEntity bookImage = new BookImageEntity();
+//                bookImage.setBook(book);
+//                bookImage.setUrl(relativePath);
+//                bookImage.setAltText("");
+//                bookImage.setPosition(i + 1); // Position starts from 1
+//
+//                bookImageRepository.save(bookImage);
+//
+//                log.debug("Image uploaded for book ID: {}, position: {}, url: {}", id, i + 1, relativePath);
+//            } catch (Exception e) {
+//                log.error("Failed to upload image for book ID: {}", id, e);
+//                throw new RuntimeException("Failed to upload image: " + e.getMessage());
+//            }
+//        }
     }
 
-    /**
-     * Generate unique book code from title
-     * Format: BK-{first 3 uppercase letters of title}-{UUID first 8 chars}
-     */
-    private String generateBookCode(String title) {
-        String prefix = title.length() >= 3 
-                ? title.substring(0, 3).toUpperCase().replaceAll("[^A-Z0-9]", "")
-                : "BK";
-        if (prefix.isEmpty()) {
-            prefix = "BK";
-        }
-        String suffix = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        return prefix + "-" + suffix;
+    private String generateBookCode(String title, Integer edition) {
+
+        // Normalize Vietnamese characters (remove diacritics)
+        String normalized = Normalizer.normalize(title, Normalizer.Form.NFD);
+        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        String withoutDiacritics = pattern.matcher(normalized).replaceAll("");
+
+        return withoutDiacritics
+                .toLowerCase(Locale.ROOT)
+                .trim()
+                .replaceAll("\\s+", "-")  // Replace multiple spaces with single hyphen
+                .replaceAll("[^a-z0-9-]", "")  // Remove special characters except hyphens
+                .replaceAll("-+", "-")  // Replace multiple hyphens with single hyphen
+                .replaceAll("^-|-$", "")
+                .concat("-" + edition);
     }
     
     /**
@@ -528,8 +479,8 @@ public class CatalogServiceImpl implements CatalogService {
      * @param book the book entity
      * @param images list of image data (Base64 encoded)
      */
-    private void uploadBookImages(AbstractBookEntity book, List<BookImageData> images) {
-        if (book == null || CollectionUtils.isEmpty(images)) {
+    private void uploadBookImages(List<BookEntity> books, List<BookImageData> images) {
+        if (CollectionUtils.isEmpty(books) || CollectionUtils.isEmpty(images)) {
             return;
         }
 
@@ -537,7 +488,7 @@ public class CatalogServiceImpl implements CatalogService {
             BookImageData imageData = images.get(i);
             
             if (imageData == null || !StringUtils.hasText(imageData.getBase64Data())) {
-                log.warn("Skipping null image data at index {} for book ID: {}", i, book.getId());
+                log.warn("Skipping null image data at index {} for book: {}", i, books.get(0).getCode());
                 continue;
             }
             
@@ -555,19 +506,19 @@ public class CatalogServiceImpl implements CatalogService {
                 }
 
                 // Upload image to S3
-                BookImageEntity savedImage = imageService.saveBookImageFromBase64(book, imageData, BOOKS);
+                BookImageEntity savedImage = imageService.saveBookImageFromBase64(books, imageData, BOOKS);
 
-                log.info("Image uploaded successfully for book ID: {}, imageId: {}, position: {}, url: {}",
-                        book.getId(), savedImage.getId(), position, savedImage.getUrl());
+                log.info("Image uploaded successfully for book: {}, imageId: {}, position: {}, url: {}",
+                        books.get(0).getCode(), savedImage.getId(), position, savedImage.getUrl());
                 
             } catch (Exception e) {
-                log.error("Failed to upload image at index {} for book ID: {}", i, book.getId(), e);
+                log.error("Failed to upload image at index {} for book: {}", i, books.get(0).getCode(), e);
                 // Continue with other images even if one fails
                 // In production, you might want to collect errors and report them
             }
         }
         
-        log.info("Processed {} images for book ID: {}", images.size(), book.getId());
+        log.info("Processed {} images for book: {}", images.size(), books.get(0).getCode());
     }
 }
 

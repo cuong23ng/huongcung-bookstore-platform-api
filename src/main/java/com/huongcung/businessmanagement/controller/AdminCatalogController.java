@@ -93,15 +93,14 @@ public class AdminCatalogController {
     @PostMapping
     public ResponseEntity<BaseResponse> createBook(@Valid @RequestBody BookCreateRequest request) {
         log.info("Creating book: title={}, physical={}, ebook={}"
-                , request.getTitle(), request.getIsPhysicalEdition(), request.getIsElectricEdition());
+                , request.getTitle(), request.getHasPhysicalEdition(), request.getHasElectricEdition());
         
-        BookDetailDTO bookDTO = catalogService.createBook(request);
-        
-        log.info("Book created successfully with ID: {}, code: {}", bookDTO.getId(), bookDTO.getCode());
-        
+        catalogService.createBook(request);
+
+        log.info("Book {} created successfully", request.getTitle());
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(BaseResponse.builder()
-                        .data(bookDTO)
                         .message("Book created successfully")
                         .build());
     }

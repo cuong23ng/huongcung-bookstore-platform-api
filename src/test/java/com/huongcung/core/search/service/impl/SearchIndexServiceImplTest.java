@@ -1,13 +1,13 @@
 package com.huongcung.core.search.service.impl;
 
+import com.huongcung.core.catalog.model.entity.BookEntity;
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.contributor.model.entity.AuthorEntity;
 import com.huongcung.core.contributor.model.entity.PublisherEntity;
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
-import com.huongcung.core.product.model.entity.EbookEntity;
-import com.huongcung.core.product.model.entity.GenreEntity;
-import com.huongcung.core.product.model.entity.PhysicalBookEntity;
-import com.huongcung.core.product.repository.AbstractBookRepository;
+import com.huongcung.core.catalog.model.entity.EbookEntity;
+import com.huongcung.core.catalog.model.entity.GenreEntity;
+import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
+import com.huongcung.core.catalog.repository.AbstractBookRepository;
 import com.huongcung.core.search.model.entity.BookSearchDocument;
 import com.huongcung.core.search.repository.BookSearchRepository;
 import com.huongcung.core.search.service.SearchIndexService;
@@ -48,7 +48,7 @@ class SearchIndexServiceImplTest {
     @InjectMocks
     private SearchIndexServiceImpl searchIndexService;
 
-    private AbstractBookEntity testBook;
+    private BookEntity testBook;
     private PhysicalBookEntity physicalBook;
     private EbookEntity ebook;
 
@@ -109,7 +109,7 @@ class SearchIndexServiceImplTest {
         ebook.setCurrentPrice(new BigDecimal("75000"));
 
         // Create basic book
-        testBook = new AbstractBookEntity();
+        testBook = new BookEntity();
         testBook.setId(3L);
         testBook.setCode("BK003");
         testBook.setTitle("Test Book");
@@ -211,7 +211,7 @@ class SearchIndexServiceImplTest {
     @DisplayName("Should index all books in batches")
     void testIndexAllBooks_Success() throws Exception {
         // Given
-        List<AbstractBookEntity> books = Arrays.asList(physicalBook, ebook, testBook);
+        List<BookEntity> books = Arrays.asList(physicalBook, ebook, testBook);
         when(abstractBookRepository.findAll()).thenReturn(books);
         doNothing().when(bookSearchRepository).indexBatch(anyList());
 
@@ -230,7 +230,7 @@ class SearchIndexServiceImplTest {
     @DisplayName("Should handle batch indexing errors gracefully")
     void testIndexAllBooks_WithErrors() throws Exception {
         // Given
-        List<AbstractBookEntity> books = Arrays.asList(physicalBook, ebook, testBook);
+        List<BookEntity> books = Arrays.asList(physicalBook, ebook, testBook);
         when(abstractBookRepository.findAll()).thenReturn(books);
         doThrow(new RuntimeException("Batch error")).when(bookSearchRepository).indexBatch(anyList());
         doNothing().when(bookSearchRepository).index(any(BookSearchDocument.class));

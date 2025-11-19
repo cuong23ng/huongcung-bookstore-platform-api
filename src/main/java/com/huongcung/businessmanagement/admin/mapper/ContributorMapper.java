@@ -9,7 +9,7 @@ import com.huongcung.core.contributor.model.entity.AuthorEntity;
 import com.huongcung.core.contributor.model.entity.PublisherEntity;
 import com.huongcung.core.contributor.model.entity.TranslatorEntity;
 import com.huongcung.core.media.mapper.ImageMapper;
-import com.huongcung.core.product.model.entity.GenreEntity;
+import com.huongcung.core.catalog.model.entity.GenreEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

@@ -13,11 +13,10 @@ import com.huongcung.core.contributor.repository.AuthorRepository;
 import com.huongcung.core.contributor.repository.PublisherRepository;
 import com.huongcung.core.contributor.repository.TranslatorRepository;
 import com.huongcung.core.media.model.entity.ImageEntity;
-import com.huongcung.core.media.repository.BookImageRepository;
 import com.huongcung.core.media.repository.ImageRepository;
 import com.huongcung.core.media.service.ImageService;
-import com.huongcung.core.product.model.entity.GenreEntity;
-import com.huongcung.core.product.repository.GenreRepository;
+import com.huongcung.core.catalog.model.entity.GenreEntity;
+import com.huongcung.core.catalog.repository.GenreRepository;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -28,9 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -478,7 +475,7 @@ public class ContributorServiceImpl implements ContributorService {
     
     private boolean isPublisherReferencedByBooks(Long publisherId) {
         Query query = entityManager.createQuery(
-                "SELECT COUNT(b) FROM AbstractBookEntity b WHERE b.publisher.id = :publisherId");
+                "SELECT COUNT(b) FROM BookEntity b WHERE b.publisher.id = :publisherId");
         query.setParameter("publisherId", publisherId);
         Long count = (Long) query.getSingleResult();
         return count > 0;

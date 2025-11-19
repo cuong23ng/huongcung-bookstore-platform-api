@@ -1,4 +1,4 @@
-package com.huongcung.core.product.model.dto;
+package com.huongcung.core.catalog.model.dto;
 
 import com.huongcung.core.common.model.dto.BaseDTO;
 import com.huongcung.core.common.enumeration.Language;

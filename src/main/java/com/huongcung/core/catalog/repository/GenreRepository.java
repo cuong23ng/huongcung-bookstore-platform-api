@@ -1,6 +1,6 @@
-package com.huongcung.core.product.repository;
+package com.huongcung.core.catalog.repository;
 
-import com.huongcung.core.product.model.entity.GenreEntity;
+import com.huongcung.core.catalog.model.entity.GenreEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

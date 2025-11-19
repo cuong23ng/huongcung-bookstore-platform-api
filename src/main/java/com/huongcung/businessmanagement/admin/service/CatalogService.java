@@ -43,7 +43,7 @@ public interface CatalogService {
      * @throws IllegalArgumentException if validation fails (missing required fields, invalid bookType, etc.)
      * @throws RuntimeException if code already exists or related entities not found
      */
-    BookDetailDTO createBook(BookCreateRequest request);
+    void createBook(BookCreateRequest request);
     
     /**
      * Update existing book entry

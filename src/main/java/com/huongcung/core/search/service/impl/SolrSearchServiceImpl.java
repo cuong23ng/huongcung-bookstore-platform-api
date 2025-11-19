@@ -1,7 +1,7 @@
 package com.huongcung.core.search.service.impl;
 
-import com.huongcung.core.product.model.dto.AbstractBookDTO;
-import com.huongcung.core.product.service.AbstractBookService;
+import com.huongcung.core.catalog.model.dto.AbstractBookDTO;
+import com.huongcung.core.catalog.service.AbstractBookService;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import com.huongcung.core.search.model.dto.SearchFacet;
 import com.huongcung.core.search.model.dto.SearchRequest;

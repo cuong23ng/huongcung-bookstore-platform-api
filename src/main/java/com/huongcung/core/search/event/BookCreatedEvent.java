@@ -1,6 +1,6 @@
 package com.huongcung.core.search.event;
 
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
+import com.huongcung.core.catalog.model.entity.BookEntity;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
@@ -10,9 +10,9 @@ import org.springframework.context.ApplicationEvent;
 @Getter
 public class BookCreatedEvent extends ApplicationEvent {
     
-    private final AbstractBookEntity book;
+    private final BookEntity book;
     
-    public BookCreatedEvent(Object source, AbstractBookEntity book) {
+    public BookCreatedEvent(Object source, BookEntity book) {
         super(source);
         this.book = book;
     }

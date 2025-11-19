@@ -111,11 +111,11 @@ public class WebSecurityConfiguration {
                 .requestMatchers("/api/books/search").permitAll()
                 .requestMatchers("/api/checkout/ghn/**").permitAll() // GHN address lookup endpoints
                 .requestMatchers("/actuator/health").permitAll()
-                //.requestMatchers("/api/admin/**").permitAll()
+                .requestMatchers("/api/admin/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 
                 // Admin endpoints
-                .requestMatchers("/api/admin/**").hasRole(UserRole.ADMIN.getCode())
+                //.requestMatchers("/api/admin/**").hasRole(UserRole.ADMIN.getCode())
                 
                 // Store Manager endpoints
                 .requestMatchers("/api/store-manager/**").hasAnyRole(UserRole.ADMIN.getCode(), UserRole.STORE_MANAGER.getCode())

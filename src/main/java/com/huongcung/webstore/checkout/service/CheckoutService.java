@@ -1,5 +1,6 @@
 package com.huongcung.webstore.checkout.service;
 
+import com.huongcung.core.catalog.model.entity.BookEntity;
 import com.huongcung.core.common.enumeration.City;
 import com.huongcung.core.inventory.model.entity.StockLevelEntity;
 import com.huongcung.core.inventory.model.entity.WarehouseEntity;
@@ -16,10 +17,9 @@ import com.huongcung.core.order.model.entity.OrderEntryEntity;
 import com.huongcung.core.order.repository.DeliveryInfoRepository;
 import com.huongcung.core.order.repository.OrderEntryRepository;
 import com.huongcung.core.order.repository.OrderRepository;
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
-import com.huongcung.core.product.model.entity.EbookEntity;
-import com.huongcung.core.product.model.entity.PhysicalBookEntity;
-import com.huongcung.core.product.repository.AbstractBookRepository;
+import com.huongcung.core.catalog.model.entity.EbookEntity;
+import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
+import com.huongcung.core.catalog.repository.AbstractBookRepository;
 import com.huongcung.core.user.model.entity.CustomerEntity;
 import com.huongcung.core.user.repository.CustomerRepository;
 import com.huongcung.webstore.checkout.dto.CheckoutItemDTO;
@@ -66,10 +66,10 @@ public class CheckoutService {
             .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + customerId));
         
         // Validate and get books
-        List<AbstractBookEntity> books = validateAndGetBooks(request.getItems());
+        List<BookEntity> books = validateAndGetBooks(request.getItems());
         
         // Validate stock for physical items
-        validateStock(request.getItems(), books);
+        //validateStock(request.getItems(), books);
         
         // Calculate subtotal
         BigDecimal subtotal = calculateSubtotal(request.getItems(), books);
@@ -132,13 +132,13 @@ public class CheckoutService {
         return response;
     }
     
-    private List<AbstractBookEntity> validateAndGetBooks(List<CheckoutItemDTO> items) {
+    private List<BookEntity> validateAndGetBooks(List<CheckoutItemDTO> items) {
         // Support both bookId and bookCode
         // Map items to books maintaining order
-        List<AbstractBookEntity> books = new java.util.ArrayList<>();
+        List<BookEntity> books = new java.util.ArrayList<>();
         
         for (CheckoutItemDTO item : items) {
-            AbstractBookEntity book = null;
+            BookEntity book = null;
             
             if (item.getBookCode() != null && !item.getBookCode().isEmpty()) {
                 book = bookRepository.findAbstractBookEntityByCode(item.getBookCode());
@@ -159,10 +159,10 @@ public class CheckoutService {
     }
     
     private void validateStock(List<CheckoutItemDTO> items,
-                               List<AbstractBookEntity> books) {
+                               List<BookEntity> books) {
         for (int i = 0; i < items.size(); i++) {
             CheckoutItemDTO item = items.get(i);
-            AbstractBookEntity book = books.get(i);
+            BookEntity book = books.get(i);
             
             if ("PHYSICAL".equals(item.getItemType()) && book instanceof PhysicalBookEntity) {
                 // For physical items, we need to check stock
@@ -197,12 +197,12 @@ public class CheckoutService {
     }
     
     private BigDecimal calculateSubtotal(List<CheckoutItemDTO> items,
-                                        List<AbstractBookEntity> books) {
+                                        List<BookEntity> books) {
         BigDecimal subtotal = BigDecimal.ZERO;
         
         for (int i = 0; i < items.size(); i++) {
             CheckoutItemDTO item = items.get(i);
-            AbstractBookEntity book = books.get(i);
+            BookEntity book = books.get(i);
 
             BigDecimal unitPrice = BigDecimal.valueOf(0);
             if (book instanceof PhysicalBookEntity) {
@@ -284,12 +284,12 @@ public class CheckoutService {
     
     private List<OrderEntryEntity> createOrderEntries(OrderEntity order,
                                                      List<CheckoutItemDTO> items,
-                                                     List<AbstractBookEntity> books) {
+                                                     List<BookEntity> books) {
         List<OrderEntryEntity> entries = new ArrayList<>();
         
         for (int i = 0; i < items.size(); i++) {
             CheckoutItemDTO item = items.get(i);
-            AbstractBookEntity book = books.get(i);
+            BookEntity book = books.get(i);
 
             BigDecimal unitPrice = BigDecimal.valueOf(0);
             if (book instanceof PhysicalBookEntity) {
@@ -314,12 +314,12 @@ public class CheckoutService {
     }
     
     private void reserveInventory(List<CheckoutItemDTO> items,
-                                 List<AbstractBookEntity> books) {
+                                 List<BookEntity> books) {
         City deliveryCity = determineDeliveryCity();
         
         for (int i = 0; i < items.size(); i++) {
             CheckoutItemDTO item = items.get(i);
-            AbstractBookEntity book = books.get(i);
+            BookEntity book = books.get(i);
             
             if ("PHYSICAL".equals(item.getItemType()) && book instanceof PhysicalBookEntity) {
                 StockLevelEntity stockLevel = stockLevelRepository

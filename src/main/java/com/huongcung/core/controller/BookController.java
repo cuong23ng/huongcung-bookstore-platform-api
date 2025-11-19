@@ -1,8 +1,8 @@
 package com.huongcung.core.controller;
 
-import com.huongcung.core.product.model.dto.AbstractBookDTO;
+import com.huongcung.core.catalog.model.dto.AbstractBookDTO;
 import com.huongcung.core.common.model.response.BaseResponse;
-import com.huongcung.core.product.service.AbstractBookService;
+import com.huongcung.core.catalog.service.AbstractBookService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

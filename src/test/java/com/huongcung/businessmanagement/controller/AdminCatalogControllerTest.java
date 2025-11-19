@@ -9,8 +9,8 @@ import com.huongcung.businessmanagement.admin.service.CatalogService;
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.media.repository.BookImageRepository;
 import com.huongcung.core.media.service.ImageService;
-import com.huongcung.core.product.model.entity.PhysicalBookEntity;
-import com.huongcung.core.product.repository.AbstractBookRepository;
+import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
+import com.huongcung.core.catalog.repository.AbstractBookRepository;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import com.huongcung.webstore.auth.external.jwt.JwtConfiguration;
 import com.huongcung.core.security.external.jwt.JwtTokenBlacklistService;
@@ -269,7 +269,7 @@ class AdminCatalogControllerTest {
         request.setAuthorIds(Arrays.asList(1L));
         request.setBookType("PHYSICAL");
         request.setIsbn("9876543210");
-        request.setCurrentPrice(new BigDecimal("200000"));
+        request.setPhysicalPrice(new BigDecimal("200000"));
         
         BookDetailDTO createdBook = BookDetailDTO.builder()
                 .id(2L)
@@ -309,7 +309,7 @@ class AdminCatalogControllerTest {
         request.setFileUrl("https://example.com/ebook.pdf");
         request.setFileName("ebook.pdf");
         request.setFileFormat("PDF");
-        request.setCurrentPrice(new BigDecimal("150000"));
+        request.setPhysicalPrice(new BigDecimal("150000"));
         
         BookDetailDTO createdBook = BookDetailDTO.builder()
                 .id(3L)

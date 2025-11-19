@@ -1,9 +1,10 @@
 package com.huongcung.core.media.model.entity;
 
-import com.huongcung.core.common.model.entity.BaseEntity;
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
+import com.huongcung.core.catalog.model.entity.BookEntity;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Table(name = "book_images")
@@ -14,9 +15,13 @@ import lombok.*;
 @NoArgsConstructor
 public class BookImageEntity extends ImageEntity {
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "book_id", nullable = false)
-    private AbstractBookEntity book;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "book_images_books",
+        joinColumns = @JoinColumn(name = "image_id"),
+        inverseJoinColumns = @JoinColumn(name = "book_id")
+    )
+    private List<BookEntity> books;
     
     @Column(name = "position")
     private Integer position;

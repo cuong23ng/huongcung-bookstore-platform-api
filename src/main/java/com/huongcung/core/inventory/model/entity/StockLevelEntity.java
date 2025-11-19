@@ -1,6 +1,6 @@
 package com.huongcung.core.inventory.model.entity;
 
-import com.huongcung.core.product.model.entity.PhysicalBookEntity;
+import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
 import com.huongcung.core.common.model.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;

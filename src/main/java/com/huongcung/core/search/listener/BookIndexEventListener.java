@@ -1,6 +1,6 @@
 package com.huongcung.core.search.listener;
 
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
+import com.huongcung.core.catalog.model.entity.BookEntity;
 import com.huongcung.core.search.event.BookCreatedEvent;
 import com.huongcung.core.search.event.BookDeletedEvent;
 import com.huongcung.core.search.event.BookUpdatedEvent;
@@ -45,7 +45,7 @@ public class BookIndexEventListener {
             return;
         }
         
-        AbstractBookEntity book = event.getBook();
+        BookEntity book = event.getBook();
         if (book == null) {
             log.warn("Received BookCreatedEvent with null book");
             return;

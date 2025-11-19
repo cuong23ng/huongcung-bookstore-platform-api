@@ -1,6 +1,6 @@
-package com.huongcung.core.product.service;
+package com.huongcung.core.catalog.service;
 
-import com.huongcung.core.product.model.dto.AbstractBookDTO;
+import com.huongcung.core.catalog.model.dto.AbstractBookDTO;
 
 import java.util.List;
 

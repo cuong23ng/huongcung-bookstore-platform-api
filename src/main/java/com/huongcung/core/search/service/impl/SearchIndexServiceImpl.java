@@ -1,11 +1,11 @@
 package com.huongcung.core.search.service.impl;
 
+import com.huongcung.core.catalog.model.entity.BookEntity;
 import com.huongcung.core.contributor.model.entity.AuthorEntity;
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
-import com.huongcung.core.product.model.entity.EbookEntity;
-import com.huongcung.core.product.model.entity.GenreEntity;
-import com.huongcung.core.product.model.entity.PhysicalBookEntity;
-import com.huongcung.core.product.repository.AbstractBookRepository;
+import com.huongcung.core.catalog.model.entity.EbookEntity;
+import com.huongcung.core.catalog.model.entity.GenreEntity;
+import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
+import com.huongcung.core.catalog.repository.AbstractBookRepository;
 import com.huongcung.core.search.model.entity.BookSearchDocument;
 import com.huongcung.core.search.repository.BookSearchRepository;
 import com.huongcung.core.search.service.SearchIndexService;
@@ -36,7 +36,7 @@ public class SearchIndexServiceImpl implements SearchIndexService {
     
     @Override
     @CacheEvict(value = {"searchResults", "searchFacets", "searchSuggestions"}, allEntries = true)
-    public boolean indexBook(AbstractBookEntity book) {
+    public boolean indexBook(BookEntity book) {
         try {
             BookSearchDocument document = mapEntityToDocument(book);
             bookSearchRepository.index(document);
@@ -59,7 +59,7 @@ public class SearchIndexServiceImpl implements SearchIndexService {
             log.info("Starting bulk indexing of all books...");
             
             // Fetch all books from repository
-            List<AbstractBookEntity> allBooks = abstractBookRepository.findAll();
+            List<BookEntity> allBooks = abstractBookRepository.findAll();
             totalBooks = allBooks.size();
             
             if (totalBooks == 0) {
@@ -72,7 +72,7 @@ public class SearchIndexServiceImpl implements SearchIndexService {
             // Process books in batches
             for (int i = 0; i < allBooks.size(); i += batchSize) {
                 int endIndex = Math.min(i + batchSize, allBooks.size());
-                List<AbstractBookEntity> batch = allBooks.subList(i, endIndex);
+                List<BookEntity> batch = allBooks.subList(i, endIndex);
                 
                 try {
                     // Map entities to documents
@@ -93,7 +93,7 @@ public class SearchIndexServiceImpl implements SearchIndexService {
                     errorCount += batch.size();
                     
                     // Try to index individual books in the failed batch
-                    for (AbstractBookEntity book : batch) {
+                    for (BookEntity book : batch) {
                         if (indexBook(book)) {
                             indexedCount++;
                             errorCount--;
@@ -120,7 +120,7 @@ public class SearchIndexServiceImpl implements SearchIndexService {
     @CacheEvict(value = {"searchResults", "searchFacets", "searchSuggestions"}, allEntries = true)
     public boolean updateBookIndex(Long bookId) {
         try {
-            AbstractBookEntity book = abstractBookRepository.findById(bookId)
+            BookEntity book = abstractBookRepository.findById(bookId)
                 .orElseThrow(() -> new IllegalArgumentException("Book not found: " + bookId));
             
             return indexBook(book);
@@ -146,7 +146,7 @@ public class SearchIndexServiceImpl implements SearchIndexService {
     /**
      * Map AbstractBookEntity to BookSearchDocument
      */
-    private BookSearchDocument mapEntityToDocument(AbstractBookEntity book) {
+    private BookSearchDocument mapEntityToDocument(BookEntity book) {
         BookSearchDocument document = new BookSearchDocument();
         
         // Basic fields
@@ -155,12 +155,6 @@ public class SearchIndexServiceImpl implements SearchIndexService {
         document.setTitleText(book.getTitle()); // Same as title for Vietnamese text analysis
         document.setDescription(book.getDescription());
         document.setDescriptionText(book.getDescription()); // Same as description for Vietnamese text analysis
-        
-        // ISBN (only for physical books)
-        if (book instanceof PhysicalBookEntity) {
-            PhysicalBookEntity physicalBook = (PhysicalBookEntity) book;
-            document.setIsbn(physicalBook.getIsbn());
-        }
         
         // Authors
         if (book.getAuthors() != null) {
@@ -190,23 +184,8 @@ public class SearchIndexServiceImpl implements SearchIndexService {
             document.setLanguage(book.getLanguage().name());
         }
         
-        // Format (PHYSICAL, DIGITAL, or BOTH)
-        String format = determineFormat(book);
-        document.setFormat(format);
-        
         // Prices
         setPrices(document, book);
-        
-        // Publication date
-        if (book.getPublicationDate() != null) {
-            Date publicationDate = Date.from(
-                book.getPublicationDate().atStartOfDay(ZoneId.systemDefault()).toInstant()
-            );
-            document.setPublicationDate(publicationDate);
-        }
-        
-        // City availability
-        setCityAvailability(document, book);
         
         // Created timestamp
         if (book.getCreatedAt() != null) {
@@ -223,27 +202,9 @@ public class SearchIndexServiceImpl implements SearchIndexService {
     }
     
     /**
-     * Determine book format based on edition flags
-     */
-    private String determineFormat(AbstractBookEntity book) {
-        boolean hasPhysical = book.isHasPhysicalEdition();
-        boolean hasDigital = book.isHasElectricEdition();
-        
-        if (hasPhysical && hasDigital) {
-            return "BOTH";
-        } else if (hasPhysical) {
-            return "PHYSICAL";
-        } else if (hasDigital) {
-            return "DIGITAL";
-        } else {
-            return "PHYSICAL"; // Default fallback
-        }
-    }
-    
-    /**
      * Set prices from PhysicalBookEntity and EbookEntity
      */
-    private void setPrices(BookSearchDocument document, AbstractBookEntity book) {
+    private void setPrices(BookSearchDocument document, BookEntity book) {
         if (book instanceof PhysicalBookEntity) {
             PhysicalBookEntity physicalBook = (PhysicalBookEntity) book;
             if (physicalBook.getCurrentPrice() != null) {
@@ -261,25 +222,6 @@ public class SearchIndexServiceImpl implements SearchIndexService {
         // Handle books that have both editions
         // If book has both flags but is only one entity type, check if we need to query the other
         // For now, we'll rely on the entity type to determine which price to set
-    }
-    
-    /**
-     * Set city availability flags
-     * For now, we set all to false as a safe default
-     * This can be enhanced later by querying StockLevelEntity repository
-     */
-    private void setCityAvailability(BookSearchDocument document, AbstractBookEntity book) {
-        // Default to false for all cities
-        // TODO: Enhance this to query StockLevelEntity repository to check actual availability
-        // For now, we'll set based on whether it's a physical book
-        boolean isPhysical = book.isHasPhysicalEdition();
-        
-        // If it's a physical book, we assume it might be available (set to true)
-        // Otherwise, set to false
-        // This is a simplified approach - in production, query actual stock levels
-        document.setAvailableInHanoi(isPhysical);
-        document.setAvailableInHcmc(isPhysical);
-        document.setAvailableInDanang(isPhysical);
     }
 }
 
