@@ -1,5 +1,6 @@
 package com.huongcung.webstore.checkout.service;
 
+import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import com.huongcung.core.catalog.model.entity.BookEntity;
 import com.huongcung.core.common.enumeration.City;
 import com.huongcung.core.inventory.model.entity.StockLevelEntity;
@@ -50,7 +51,7 @@ public class CheckoutService {
     private final OrderRepository orderRepository;
     private final OrderEntryRepository orderEntryRepository;
     private final DeliveryInfoRepository deliveryInfoRepository;
-    private final AbstractBookRepository bookRepository;
+    private final AbstractBookRepository abstractBookRepository;
     private final StockLevelRepository stockLevelRepository;
     private final WarehouseRepository warehouseRepository;
     private final CustomerRepository customerRepository;
@@ -141,10 +142,25 @@ public class CheckoutService {
             BookEntity book = null;
             
             if (item.getBookCode() != null && !item.getBookCode().isEmpty()) {
-                book = bookRepository.findAbstractBookEntityByCode(item.getBookCode());
+                AbstractBookEntity abstractBook = abstractBookRepository.findByCode(item.getBookCode());
+                if (abstractBook != null) {
+                    // Get the related BookEntity (PhysicalBookEntity or EbookEntity)
+                    if (abstractBook.getPhysicalBookInfo() != null) {
+                        book = abstractBook.getPhysicalBookInfo();
+                    } else if (abstractBook.getEbookInfo() != null) {
+                        book = abstractBook.getEbookInfo();
+                    }
+                }
             } else if (item.getBookId() != null) {
-                book = bookRepository.findById(item.getBookId())
+                AbstractBookEntity abstractBook = abstractBookRepository.findById(item.getBookId())
                     .orElse(null);
+                if (abstractBook != null) {
+                    if (abstractBook.getPhysicalBookInfo() != null) {
+                        book = abstractBook.getPhysicalBookInfo();
+                    } else if (abstractBook.getEbookInfo() != null) {
+                        book = abstractBook.getEbookInfo();
+                    }
+                }
             }
             
             if (book == null) {

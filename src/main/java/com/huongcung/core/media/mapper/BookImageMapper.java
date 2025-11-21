@@ -1,9 +1,11 @@
 package com.huongcung.core.media.mapper;
 
+import com.huongcung.core.common.mapper.DomainMapper;
 import com.huongcung.core.common.mapper.EntityMapper;
 import com.huongcung.core.media.helper.FileUrlHelper;
+import com.huongcung.core.media.model.domain.BookImage;
 import com.huongcung.core.media.model.dto.BookImageDTO;
-import com.huongcung.core.media.model.entity.BookImageEntity;
+import com.huongcung.core.media.model.entity.BookImageEntityv2;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -14,26 +16,19 @@ import org.mapstruct.Mappings;
     componentModel = "spring",
     uses = { FileUrlHelper.class }
 )
-public interface BookImageMapper extends EntityMapper<BookImageDTO, BookImageEntity> {
+public interface BookImageMapper extends EntityMapper<BookImageDTO, BookImageEntityv2>, DomainMapper<BookImageEntityv2, BookImage> {
 
     @Override
     @Mappings({
-            @Mapping(target = "isCover", expression = "java(entity.isCover())"),
-            @Mapping(target = "isBackCover", expression = "java(entity.isBackCover())"),
             @Mapping(target = "url", source = "url", qualifiedByName = "buildFullUrl"),
             @Mapping(target = "altText", source = "altText")
     })
-    BookImageDTO toDto(BookImageEntity entity);
+    BookImageDTO toDto(BookImageEntityv2 entity);
 
-    @AfterMapping
-    default void fillPositionFromFlags(BookImageDTO dto, @MappingTarget BookImageEntity entity) {
-        if (dto == null || entity == null) return;
-        // Respect explicit position if provided (> 0), otherwise derive from flags
-        if (dto.getPosition() > 0) return;
-        if (dto.isCover()) {
-            entity.setPosition(1);
-        } else if (dto.isBackCover()) {
-            entity.setPosition(2);
-        }
-    }
+    @Override
+    @Mappings({
+            @Mapping(target = "url", source = "url", qualifiedByName = "buildFullUrl"),
+            @Mapping(target = "altText", source = "altText")
+    })
+    BookImage toDomain(BookImageEntityv2 entity);
 }

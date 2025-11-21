@@ -1,6 +1,6 @@
 package com.huongcung.core.search.service.impl;
 
-import com.huongcung.core.catalog.model.entity.BookEntity;
+import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import com.huongcung.core.contributor.model.entity.AuthorEntity;
 import com.huongcung.core.catalog.model.entity.EbookEntity;
 import com.huongcung.core.catalog.model.entity.GenreEntity;
@@ -36,7 +36,7 @@ public class SearchIndexServiceImpl implements SearchIndexService {
     
     @Override
     @CacheEvict(value = {"searchResults", "searchFacets", "searchSuggestions"}, allEntries = true)
-    public boolean indexBook(BookEntity book) {
+    public boolean indexBook(AbstractBookEntity book) {
         try {
             BookSearchDocument document = mapEntityToDocument(book);
             bookSearchRepository.index(document);
@@ -58,8 +58,8 @@ public class SearchIndexServiceImpl implements SearchIndexService {
         try {
             log.info("Starting bulk indexing of all books...");
             
-            // Fetch all books from repository
-            List<BookEntity> allBooks = abstractBookRepository.findAll();
+            // Fetch all books from AbstractBookRepository (new structure)
+            List<AbstractBookEntity> allBooks = abstractBookRepository.findAll();
             totalBooks = allBooks.size();
             
             if (totalBooks == 0) {
@@ -72,7 +72,7 @@ public class SearchIndexServiceImpl implements SearchIndexService {
             // Process books in batches
             for (int i = 0; i < allBooks.size(); i += batchSize) {
                 int endIndex = Math.min(i + batchSize, allBooks.size());
-                List<BookEntity> batch = allBooks.subList(i, endIndex);
+                List<AbstractBookEntity> batch = allBooks.subList(i, endIndex);
                 
                 try {
                     // Map entities to documents
@@ -93,7 +93,7 @@ public class SearchIndexServiceImpl implements SearchIndexService {
                     errorCount += batch.size();
                     
                     // Try to index individual books in the failed batch
-                    for (BookEntity book : batch) {
+                    for (AbstractBookEntity book : batch) {
                         if (indexBook(book)) {
                             indexedCount++;
                             errorCount--;
@@ -120,7 +120,7 @@ public class SearchIndexServiceImpl implements SearchIndexService {
     @CacheEvict(value = {"searchResults", "searchFacets", "searchSuggestions"}, allEntries = true)
     public boolean updateBookIndex(Long bookId) {
         try {
-            BookEntity book = abstractBookRepository.findById(bookId)
+            AbstractBookEntity book = abstractBookRepository.findById(bookId)
                 .orElseThrow(() -> new IllegalArgumentException("Book not found: " + bookId));
             
             return indexBook(book);
@@ -146,7 +146,7 @@ public class SearchIndexServiceImpl implements SearchIndexService {
     /**
      * Map AbstractBookEntity to BookSearchDocument
      */
-    private BookSearchDocument mapEntityToDocument(BookEntity book) {
+    private BookSearchDocument mapEntityToDocument(AbstractBookEntity book) {
         BookSearchDocument document = new BookSearchDocument();
         
         // Basic fields
@@ -184,8 +184,8 @@ public class SearchIndexServiceImpl implements SearchIndexService {
             document.setLanguage(book.getLanguage().name());
         }
         
-        // Prices
-        setPrices(document, book);
+        // Prices - get from related PhysicalBookEntity and EbookEntity
+        setPricesFromAbstractBook(document, book);
         
         // Created timestamp
         if (book.getCreatedAt() != null) {
@@ -202,26 +202,24 @@ public class SearchIndexServiceImpl implements SearchIndexService {
     }
     
     /**
-     * Set prices from PhysicalBookEntity and EbookEntity
+     * Set prices from AbstractBookEntity's related PhysicalBookEntity and EbookEntity
      */
-    private void setPrices(BookSearchDocument document, BookEntity book) {
-        if (book instanceof PhysicalBookEntity) {
-            PhysicalBookEntity physicalBook = (PhysicalBookEntity) book;
+    private void setPricesFromAbstractBook(BookSearchDocument document, AbstractBookEntity book) {
+        // Get physical book price
+        if (book.getPhysicalBookInfo() != null) {
+            PhysicalBookEntity physicalBook = book.getPhysicalBookInfo();
             if (physicalBook.getCurrentPrice() != null) {
                 document.setPhysicalPrice(physicalBook.getCurrentPrice().doubleValue());
             }
         }
         
-        if (book instanceof EbookEntity) {
-            EbookEntity ebook = (EbookEntity) book;
+        // Get ebook price
+        if (book.getEbookInfo() != null) {
+            EbookEntity ebook = book.getEbookInfo();
             if (ebook.getCurrentPrice() != null) {
                 document.setDigitalPrice(ebook.getCurrentPrice().doubleValue());
             }
         }
-        
-        // Handle books that have both editions
-        // If book has both flags but is only one entity type, check if we need to query the other
-        // For now, we'll rely on the entity type to determine which price to set
     }
 }
 

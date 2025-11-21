@@ -1,7 +1,7 @@
 package com.huongcung.webstore.bookstore.repository;
 
 import com.huongcung.core.contributor.model.entity.AuthorEntity;
-import com.huongcung.core.catalog.model.entity.BookEntity;
+import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import com.huongcung.webstore.bookstore.model.BookFrontPageDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,27 +13,27 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
-public interface WebBookRepository extends JpaRepository<BookEntity, Long> {
+public interface WebBookRepository extends JpaRepository<AbstractBookEntity, Long> {
 
     @Query("SELECT new com.huongcung.webstore.bookstore.model.BookFrontPageDTO(" +
-            "b.code, " +
-            "b.title, " +
-            "COALESCE((SELECT bi.url FROM BookImageEntity bi JOIN bi.books bk WHERE bk.id = b.id AND bi.position = 1), ''), " +
+            "ab.code, " +
+            "ab.title, " +
+            "COALESCE((SELECT bi.url FROM BookImageEntityv2 bi WHERE bi.book.id = ab.id AND bi.position = 1), ''), " +
             "pb.currentPrice, " +
             "eb.currentPrice" +
             ") " +
-            "FROM BookEntity b " +
-            "LEFT JOIN PhysicalBookEntity pb ON pb.id = b.id " +
-            "LEFT JOIN EbookEntity eb ON eb.id = b.id " +
-            "WHERE b.isActive = true " +
-            "ORDER BY b.code")
+            "FROM AbstractBookEntity ab " +
+            "LEFT JOIN ab.physicalBookInfo pb " +
+            "LEFT JOIN ab.ebookInfo eb " +
+            "WHERE (pb IS NULL OR pb.isAvailable = true) AND (eb IS NULL OR eb.isActive = true) " +
+            "ORDER BY ab.code")
     Page<BookFrontPageDTO> findFrontPageBookList(Pageable pageable);
 
-    @Query("SELECT b.code, a " +
-            "FROM BookEntity b " +
-            "JOIN b.authors a " +
-            "WHERE b.code IN :bookCodes " +
-            "ORDER BY b.code, a.name")
+    @Query("SELECT ab.code, a " +
+            "FROM AbstractBookEntity ab " +
+            "JOIN ab.authors a " +
+            "WHERE ab.code IN :bookCodes " +
+            "ORDER BY ab.code, a.name")
     List<Object[]> findAllAuthorsByBookCodesInRaw(List<String> bookCodes);
     
     default Map<String, List<AuthorEntity>> findAllAuthorsByBookCodesIn(List<String> bookCodes) {

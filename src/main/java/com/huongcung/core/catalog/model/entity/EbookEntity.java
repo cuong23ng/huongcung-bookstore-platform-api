@@ -17,6 +17,10 @@ import java.util.List;
 @NoArgsConstructor
 public class EbookEntity extends BookEntity {
 
+    @OneToOne
+    @JoinColumn(name = "abstract_book")
+    private AbstractBookEntity abstractBook;
+
     @Column(name = "isbn", unique = true)
     private String isbn;
 

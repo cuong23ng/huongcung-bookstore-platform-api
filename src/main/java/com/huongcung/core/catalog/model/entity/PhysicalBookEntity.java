@@ -16,6 +16,10 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class PhysicalBookEntity extends BookEntity {
 
+    @OneToOne
+    @JoinColumn(name = "abstract_book")
+    private AbstractBookEntity abstractBook;
+
     @Column(name = "isbn", unique = true)
     private String isbn;
     
@@ -40,4 +44,7 @@ public class PhysicalBookEntity extends BookEntity {
 
     @Column(name = "length_cm")
     private Integer lengthCm;
+
+    @Column(name = "is_available", nullable = false)
+    private Boolean isAvailable = false;
 }

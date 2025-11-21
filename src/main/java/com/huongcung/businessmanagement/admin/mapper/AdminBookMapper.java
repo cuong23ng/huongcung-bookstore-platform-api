@@ -31,7 +31,7 @@ import java.util.List;
     unmappedTargetPolicy = ReportingPolicy.IGNORE,
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
 )
-public interface BookMapper {
+public interface AdminBookMapper {
     
     /**
      * Maps AbstractBookEntity to BookListDTO (for paginated lists)

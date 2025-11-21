@@ -1,5 +1,6 @@
 package com.huongcung.core.search.listener;
 
+import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import com.huongcung.core.catalog.model.entity.BookEntity;
 import com.huongcung.core.search.event.BookCreatedEvent;
 import com.huongcung.core.search.event.BookDeletedEvent;
@@ -45,26 +46,35 @@ public class BookIndexEventListener {
             return;
         }
         
-        BookEntity book = event.getBook();
-        if (book == null) {
+        Object bookObj = event.getBook();
+        if (bookObj == null) {
             log.warn("Received BookCreatedEvent with null book");
             return;
         }
         
-        log.debug("Handling book creation event for book ID: {}", book.getId());
-        
-        boolean success = executeWithRetry(() -> {
-            boolean indexed = searchIndexService.indexBook(book);
-            if (!indexed) {
-                throw new RuntimeException("Failed to index book " + book.getId());
+        // Handle AbstractBookEntity (new structure)
+        if (bookObj instanceof AbstractBookEntity) {
+            AbstractBookEntity abstractBook = (AbstractBookEntity) bookObj;
+            log.debug("Handling book creation event for AbstractBookEntity ID: {}", abstractBook.getId());
+            
+            boolean success = executeWithRetry(() -> {
+                boolean indexed = searchIndexService.indexBook(abstractBook);
+                if (!indexed) {
+                    throw new RuntimeException("Failed to index book " + abstractBook.getId());
+                }
+            }, "index book " + abstractBook.getId());
+            
+            if (success) {
+                log.info("Successfully indexed book after creation: {} (ID: {})", abstractBook.getTitle(), abstractBook.getId());
+            } else {
+                log.error("Failed to index book after creation: {} (ID: {}) after {} retries", 
+                    abstractBook.getTitle(), abstractBook.getId(), maxRetryAttempts);
             }
-        }, "index book " + book.getId());
-        
-        if (success) {
-            log.info("Successfully indexed book after creation: {} (ID: {})", book.getTitle(), book.getId());
-        } else {
-            log.error("Failed to index book after creation: {} (ID: {}) after {} retries", 
-                book.getTitle(), book.getId(), maxRetryAttempts);
+        } else if (bookObj instanceof BookEntity) {
+            // Backward compatibility - convert BookEntity to AbstractBookEntity if possible
+            // For now, we'll skip indexing BookEntity directly since we're migrating to AbstractBookEntity
+            log.warn("Received BookCreatedEvent with BookEntity (old structure), skipping indexing. Book ID: {}", 
+                ((BookEntity) bookObj).getId());
         }
     }
     

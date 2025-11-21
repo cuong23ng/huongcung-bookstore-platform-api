@@ -33,53 +33,53 @@ public class DatabaseCleanupConfig implements ApplicationListener<ContextRefresh
             
             JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
             
-            // Clean up orphaned records in books_authors table
+            // Clean up orphaned records in books_authors_v2 table
             int deletedBooksAuthors = jdbcTemplate.update(
-                "DELETE ba FROM books_authors ba " +
-                "LEFT JOIN books b ON ba.book_id = b.id " +
+                "DELETE ba FROM books_authors_v2 ba " +
+                "LEFT JOIN abstract_book b ON ba.book_id = b.id " +
                 "LEFT JOIN authors a ON ba.author_id = a.id " +
                 "WHERE b.id IS NULL OR a.id IS NULL"
             );
             if (deletedBooksAuthors > 0) {
-                log.warn("Deleted {} orphaned records from books_authors table", deletedBooksAuthors);
+                log.warn("Deleted {} orphaned records from books_authors_v2 table", deletedBooksAuthors);
             }
             
-            // Clean up orphaned records in books_translators table
+            // Clean up orphaned records in books_translators_v2 table
             int deletedBooksTranslators = jdbcTemplate.update(
-                "DELETE bt FROM books_translators bt " +
-                "LEFT JOIN books b ON bt.book_id = b.id " +
+                "DELETE bt FROM books_translators_v2 bt " +
+                "LEFT JOIN abstract_book b ON bt.book_id = b.id " +
                 "LEFT JOIN translators t ON bt.translator_id = t.id " +
                 "WHERE b.id IS NULL OR t.id IS NULL"
             );
             if (deletedBooksTranslators > 0) {
-                log.warn("Deleted {} orphaned records from books_translators table", deletedBooksTranslators);
+                log.warn("Deleted {} orphaned records from books_translators_v2 table", deletedBooksTranslators);
             }
             
-            // Clean up orphaned records in books_genres table
+            // Clean up orphaned records in books_genres_v2 table
             int deletedBooksGenres = jdbcTemplate.update(
-                "DELETE bg FROM books_genres bg " +
-                "LEFT JOIN books b ON bg.book_id = b.id " +
+                "DELETE bg FROM books_genres_v2 bg " +
+                "LEFT JOIN abstract_book b ON bg.book_id = b.id " +
                 "LEFT JOIN genres g ON bg.genre_id = g.id " +
                 "WHERE b.id IS NULL OR g.id IS NULL"
             );
             if (deletedBooksGenres > 0) {
-                log.warn("Deleted {} orphaned records from books_genres table", deletedBooksGenres);
+                log.warn("Deleted {} orphaned records from books_genres_v2 table", deletedBooksGenres);
             }
             
-            // Clean up orphaned records in book_images table
+            // Clean up orphaned records in book_images_v2 table
             int deletedBookImages = jdbcTemplate.update(
-                "DELETE bi FROM book_images bi " +
-                "LEFT JOIN books b ON bi.book_id = b.id " +
+                "DELETE bi FROM book_images_v2 bi " +
+                "LEFT JOIN abstract_book b ON bi.book_id = b.id " +
                 "WHERE b.id IS NULL"
             );
             if (deletedBookImages > 0) {
-                log.warn("Deleted {} orphaned records from book_images table", deletedBookImages);
+                log.warn("Deleted {} orphaned records from book_images_v2 table", deletedBookImages);
             }
             
             // Clean up orphaned records in ebooks table
             int deletedEbooks = jdbcTemplate.update(
                 "DELETE e FROM ebooks e " +
-                "LEFT JOIN books b ON e.book_id = b.id " +
+                "LEFT JOIN abstract_book b ON e.abstract_book = b.id " +
                 "WHERE b.id IS NULL"
             );
             if (deletedEbooks > 0) {
@@ -89,16 +89,16 @@ public class DatabaseCleanupConfig implements ApplicationListener<ContextRefresh
             // Clean up orphaned records in physical_books table
             int deletedPhysicalBooks = jdbcTemplate.update(
                 "DELETE pb FROM physical_books pb " +
-                "LEFT JOIN books b ON pb.book_id = b.id " +
+                "LEFT JOIN abstract_book b ON pb.abstract_book = b.id " +
                 "WHERE b.id IS NULL"
             );
             if (deletedPhysicalBooks > 0) {
                 log.warn("Deleted {} orphaned records from physical_books table", deletedPhysicalBooks);
             }
             
-            // Clean up orphaned publisher references in books table
+            // Clean up orphaned publisher references in abstract_book table
             int updatedBooks = jdbcTemplate.update(
-                "UPDATE books b " +
+                "UPDATE abstract_book b " +
                 "LEFT JOIN publishers p ON b.publisher_id = p.id " +
                 "SET b.publisher_id = NULL " +
                 "WHERE b.publisher_id IS NOT NULL AND p.id IS NULL"

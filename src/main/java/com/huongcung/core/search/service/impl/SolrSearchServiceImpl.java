@@ -1,7 +1,7 @@
 package com.huongcung.core.search.service.impl;
 
-import com.huongcung.core.catalog.model.dto.AbstractBookDTO;
-import com.huongcung.core.catalog.service.AbstractBookService;
+import com.huongcung.core.catalog.model.dto.BookDTO;
+import com.huongcung.core.catalog.service.BookService;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import com.huongcung.core.search.model.dto.SearchFacet;
 import com.huongcung.core.search.model.dto.SearchRequest;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 public class SolrSearchServiceImpl implements SearchService {
     
     private final BookSearchRepository bookSearchRepository;
-    private final AbstractBookService abstractBookService;
+    private final BookService bookService;
     private final BookViewMapper bookViewMapper;
     private final SearchPerformanceMonitor performanceMonitor;
     
@@ -216,11 +216,11 @@ public class SolrSearchServiceImpl implements SearchService {
         }
         
         // Fetch books by IDs (efficient query)
-        List<AbstractBookDTO> books = abstractBookService.findByIds(longIds);
+        List<BookDTO> books = bookService.findByIds(longIds);
         
         // Maintain Solr result order
-        Map<Long, AbstractBookDTO> bookMap = books.stream()
-            .collect(Collectors.toMap(AbstractBookDTO::getId, book -> book));
+        Map<Long, BookDTO> bookMap = books.stream()
+            .collect(Collectors.toMap(BookDTO::getId, book -> book));
         
         return longIds.stream()
             .map(bookMap::get)
@@ -445,10 +445,10 @@ public class SolrSearchServiceImpl implements SearchService {
         
         try {
             // Get all books from database
-            List<AbstractBookDTO> allBooks = abstractBookService.findAll();
+            List<BookDTO> allBooks = bookService.findAll();
             
             // Apply basic filtering in memory
-            List<AbstractBookDTO> filteredBooks = allBooks.stream()
+            List<BookDTO> filteredBooks = allBooks.stream()
                 .filter(book -> matchesQuery(book, request.getQ()))
                 .filter(book -> matchesGenres(book, request.getGenres()))
                 .filter(book -> matchesLanguage(book, request.getLanguages()))
@@ -458,7 +458,7 @@ public class SolrSearchServiceImpl implements SearchService {
             // Apply pagination
             int start = (request.getPage() - 1) * request.getSize();
             int end = Math.min(start + request.getSize(), filteredBooks.size());
-            List<AbstractBookDTO> pagedBooks = filteredBooks.subList(
+            List<BookDTO> pagedBooks = filteredBooks.subList(
                 Math.max(0, start), 
                 Math.min(end, filteredBooks.size()));
             
@@ -497,7 +497,7 @@ public class SolrSearchServiceImpl implements SearchService {
     /**
      * Check if book matches query string (basic text matching)
      */
-    private boolean matchesQuery(AbstractBookDTO book, String query) {
+    private boolean matchesQuery(BookDTO book, String query) {
         if (query == null || query.trim().isEmpty()) {
             return true;
         }
@@ -511,7 +511,7 @@ public class SolrSearchServiceImpl implements SearchService {
      * Note: AbstractBookDTO doesn't include genres, so this is a limitation of fallback mode.
      * In production, consider adding genres to DTO or using a separate genre lookup.
      */
-    private boolean matchesGenres(AbstractBookDTO book, List<String> genres) {
+    private boolean matchesGenres(BookDTO book, List<String> genres) {
         if (genres == null || genres.isEmpty()) {
             return true;
         }
@@ -525,7 +525,7 @@ public class SolrSearchServiceImpl implements SearchService {
     /**
      * Check if book matches language filters
      */
-    private boolean matchesLanguage(AbstractBookDTO book, List<String> languages) {
+    private boolean matchesLanguage(BookDTO book, List<String> languages) {
         if (languages == null || languages.isEmpty()) {
             return true;
         }
@@ -536,7 +536,7 @@ public class SolrSearchServiceImpl implements SearchService {
     /**
      * Check if book matches format filters
      */
-    private boolean matchesFormat(AbstractBookDTO book, List<String> formats) {
+    private boolean matchesFormat(BookDTO book, List<String> formats) {
         if (formats == null || formats.isEmpty()) {
             return true;
         }

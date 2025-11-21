@@ -10,7 +10,7 @@ import com.huongcung.core.order.repository.DeliveryInfoRepository;
 import com.huongcung.core.order.repository.OrderEntryRepository;
 import com.huongcung.core.order.repository.OrderRepository;
 import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
-import com.huongcung.core.catalog.repository.AbstractBookRepository;
+import com.huongcung.core.catalog.repository.BookRepository;
 import com.huongcung.core.user.model.entity.CustomerEntity;
 import com.huongcung.webstore.checkout.dto.CheckoutItemDTO;
 import com.huongcung.webstore.checkout.dto.CheckoutRequest;
@@ -50,7 +50,7 @@ class CheckoutServiceConcurrentTest {
     private DeliveryInfoRepository deliveryInfoRepository;
     
     @Mock
-    private AbstractBookRepository bookRepository;
+    private BookRepository bookRepository;
     
     @Mock
     private StockLevelRepository stockLevelRepository;

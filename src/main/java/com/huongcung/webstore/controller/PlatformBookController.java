@@ -1,12 +1,12 @@
 package com.huongcung.webstore.controller;
 
+import com.huongcung.core.catalog.model.dto.BookFrontPageDTO;
+import com.huongcung.core.catalog.service.AbstractBookService;
 import com.huongcung.core.common.model.response.BaseResponse;
 import com.huongcung.webstore.bookstore.model.BookData;
-import com.huongcung.webstore.bookstore.model.BookFrontPageDTO;
 import com.huongcung.webstore.bookstore.service.BookService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +22,7 @@ import java.util.Map;
 public class PlatformBookController {
 
     private final BookService bookService;
+    private final AbstractBookService abstractBookService;
 
     /**
      * Get all books
@@ -29,7 +30,7 @@ public class PlatformBookController {
      */
     @GetMapping("")
     public ResponseEntity<BaseResponse> getAllBooks(Pageable pageable) {
-        Page<BookFrontPageDTO> books = bookService.getBooksForFrontPage(pageable);
+        List<BookFrontPageDTO> books = abstractBookService.getBooksForFrontPage(pageable);
         return ResponseEntity.ok(BaseResponse.builder().data(books).build());
     }
 

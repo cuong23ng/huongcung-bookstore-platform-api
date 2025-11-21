@@ -2,13 +2,12 @@ package com.huongcung.core.media.service;
 
 import com.huongcung.businessmanagement.admin.model.BookImageData;
 import com.huongcung.businessmanagement.admin.model.ImageData;
-import com.huongcung.core.media.model.entity.BookImageEntity;
+import com.huongcung.core.media.model.entity.BookImageEntityv2;
 import com.huongcung.core.media.model.entity.ImageEntity;
-import com.huongcung.core.catalog.model.entity.BookEntity;
+import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
-import java.util.List;
 
 public interface ImageService {
     /**
@@ -30,5 +29,5 @@ public interface ImageService {
     String saveImageFromStream(InputStream inputStream, String fileName, String folderPath, String contentType);
 
     // Book Image
-    BookImageEntity saveBookImageFromBase64(List<BookEntity> books, BookImageData imageData, String subFolder);
+    BookImageEntityv2 saveBookImageFromBase64(AbstractBookEntity book, BookImageData imageData, String subFolder);
 }

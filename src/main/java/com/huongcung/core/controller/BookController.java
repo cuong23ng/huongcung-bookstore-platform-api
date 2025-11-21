@@ -1,8 +1,8 @@
 package com.huongcung.core.controller;
 
-import com.huongcung.core.catalog.model.dto.AbstractBookDTO;
+import com.huongcung.core.catalog.model.dto.BookDTO;
 import com.huongcung.core.common.model.response.BaseResponse;
-import com.huongcung.core.catalog.service.AbstractBookService;
+import com.huongcung.core.catalog.service.BookService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,7 @@ import java.util.Map;
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class BookController {
 
-    private final AbstractBookService abstractBookService;
+    private final BookService bookService;
 
     /**
      * Get all books
@@ -29,7 +29,7 @@ public class BookController {
      */
     @GetMapping("")
     public ResponseEntity<BaseResponse> getAllBooks() {
-        List<AbstractBookDTO> books = abstractBookService.findAll();
+        List<BookDTO> books = bookService.findAll();
         return ResponseEntity.ok(BaseResponse.builder().data(books).build());
     }
 

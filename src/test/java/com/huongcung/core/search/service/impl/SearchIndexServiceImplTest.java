@@ -7,7 +7,7 @@ import com.huongcung.core.contributor.model.entity.PublisherEntity;
 import com.huongcung.core.catalog.model.entity.EbookEntity;
 import com.huongcung.core.catalog.model.entity.GenreEntity;
 import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
-import com.huongcung.core.catalog.repository.AbstractBookRepository;
+import com.huongcung.core.catalog.repository.BookRepository;
 import com.huongcung.core.search.model.entity.BookSearchDocument;
 import com.huongcung.core.search.repository.BookSearchRepository;
 import com.huongcung.core.search.service.SearchIndexService;
@@ -43,7 +43,7 @@ class SearchIndexServiceImplTest {
     private BookSearchRepository bookSearchRepository;
 
     @Mock
-    private AbstractBookRepository abstractBookRepository;
+    private BookRepository bookRepository;
 
     @InjectMocks
     private SearchIndexServiceImpl searchIndexService;
@@ -212,7 +212,7 @@ class SearchIndexServiceImplTest {
     void testIndexAllBooks_Success() throws Exception {
         // Given
         List<BookEntity> books = Arrays.asList(physicalBook, ebook, testBook);
-        when(abstractBookRepository.findAll()).thenReturn(books);
+        when(bookRepository.findAll()).thenReturn(books);
         doNothing().when(bookSearchRepository).indexBatch(anyList());
 
         // When
@@ -231,7 +231,7 @@ class SearchIndexServiceImplTest {
     void testIndexAllBooks_WithErrors() throws Exception {
         // Given
         List<BookEntity> books = Arrays.asList(physicalBook, ebook, testBook);
-        when(abstractBookRepository.findAll()).thenReturn(books);
+        when(bookRepository.findAll()).thenReturn(books);
         doThrow(new RuntimeException("Batch error")).when(bookSearchRepository).indexBatch(anyList());
         doNothing().when(bookSearchRepository).index(any(BookSearchDocument.class));
 
@@ -248,7 +248,7 @@ class SearchIndexServiceImplTest {
     @DisplayName("Should return empty result when no books found")
     void testIndexAllBooks_NoBooks() throws Exception {
         // Given
-        when(abstractBookRepository.findAll()).thenReturn(Collections.emptyList());
+        when(bookRepository.findAll()).thenReturn(Collections.emptyList());
 
         // When
         SearchIndexService.IndexingResult result = searchIndexService.indexAllBooks();
@@ -264,7 +264,7 @@ class SearchIndexServiceImplTest {
     @DisplayName("Should update book index successfully")
     void testUpdateBookIndex_Success() {
         // Given
-        when(abstractBookRepository.findById(1L)).thenReturn(Optional.of(physicalBook));
+        when(bookRepository.findById(1L)).thenReturn(Optional.of(physicalBook));
         try {
             doNothing().when(bookSearchRepository).index(any(BookSearchDocument.class));
         } catch (Exception e) {
@@ -276,14 +276,14 @@ class SearchIndexServiceImplTest {
 
         // Then
         assertTrue(result);
-        verify(abstractBookRepository, times(1)).findById(1L);
+        verify(bookRepository, times(1)).findById(1L);
     }
 
     @Test
     @DisplayName("Should handle update when book not found")
     void testUpdateBookIndex_BookNotFound() {
         // Given
-        when(abstractBookRepository.findById(999L)).thenReturn(Optional.empty());
+        when(bookRepository.findById(999L)).thenReturn(Optional.empty());
 
         // When
         boolean result = searchIndexService.updateBookIndex(999L);

@@ -1,10 +1,10 @@
 package com.huongcung.webstore.bookstore.service.impl;
 
+import com.huongcung.core.catalog.model.dto.BookDTO;
 import com.huongcung.core.contributor.mapper.AuthorMapper;
 import com.huongcung.core.contributor.model.dto.AuthorDTO;
 import com.huongcung.core.contributor.model.entity.AuthorEntity;
-import com.huongcung.core.catalog.model.dto.AbstractBookDTO;
-import com.huongcung.core.catalog.service.AbstractBookService;
+import com.huongcung.core.catalog.service.BookService;
 import com.huongcung.core.storage.service.StorageService;
 import com.huongcung.webstore.bookstore.converter.AuthorConverter;
 import com.huongcung.webstore.bookstore.converter.BookFrontPageConverter;
@@ -12,7 +12,6 @@ import com.huongcung.webstore.bookstore.repository.WebBookRepository;
 import com.huongcung.webstore.bookstore.mapper.BookViewMapper;
 import com.huongcung.webstore.bookstore.model.BookData;
 import com.huongcung.webstore.bookstore.model.BookFrontPageDTO;
-import com.huongcung.webstore.bookstore.service.BookService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,12 +23,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Service
+@Service("webstoreBookService")
 @Slf4j
 @RequiredArgsConstructor
-public class BookServiceImpl implements BookService {
+public class BookServiceImpl implements com.huongcung.webstore.bookstore.service.BookService {
 
-    private final AbstractBookService abstractBookService;
+    private final BookService bookService;
     private final BookViewMapper bookViewMapper;
     private final AuthorMapper authorMapper;
     private final WebBookRepository webBookRepository;
@@ -40,13 +39,13 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional(readOnly = true)
     public List<BookData> getAllBooks() {
-        List<AbstractBookDTO> bookDTOs = abstractBookService.findAll();
+        List<BookDTO> bookDTOs = bookService.findAll();
         return bookDTOs.stream().map(bookViewMapper::toBookData).toList();
     }
 
     @Override
     public BookData getBookDetails(String code) {
-        AbstractBookDTO bookDTO = abstractBookService.findBookByCode(code);
+        BookDTO bookDTO = bookService.findBookByCode(code);
         return bookViewMapper.toBookData(bookDTO);
     }
 

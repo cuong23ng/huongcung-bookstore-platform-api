@@ -18,7 +18,7 @@ import com.huongcung.core.media.service.ImageService;
 import com.huongcung.core.catalog.model.entity.EbookEntity;
 import com.huongcung.core.catalog.model.entity.GenreEntity;
 import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
-import com.huongcung.core.catalog.repository.AbstractBookRepository;
+import com.huongcung.core.catalog.repository.BookRepository;
 import com.huongcung.core.catalog.repository.GenreRepository;
 import com.huongcung.core.search.service.SearchIndexService;
 import jakarta.persistence.EntityManager;
@@ -51,7 +51,7 @@ import static org.mockito.Mockito.*;
 class CatalogServiceImplTest {
     
     @Mock
-    private AbstractBookRepository bookRepository;
+    private BookRepository bookRepository;
     
     @Mock
     private AuthorRepository authorRepository;

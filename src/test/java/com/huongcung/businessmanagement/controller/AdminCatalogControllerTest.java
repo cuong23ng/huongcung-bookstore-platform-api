@@ -10,7 +10,7 @@ import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.media.repository.BookImageRepository;
 import com.huongcung.core.media.service.ImageService;
 import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
-import com.huongcung.core.catalog.repository.AbstractBookRepository;
+import com.huongcung.core.catalog.repository.BookRepository;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import com.huongcung.webstore.auth.external.jwt.JwtConfiguration;
 import com.huongcung.core.security.external.jwt.JwtTokenBlacklistService;
@@ -60,7 +60,7 @@ class AdminCatalogControllerTest {
     private CatalogService catalogService;
     
     @MockBean
-    private AbstractBookRepository bookRepository;
+    private BookRepository bookRepository;
     
     @MockBean
     private BookImageRepository bookImageRepository;

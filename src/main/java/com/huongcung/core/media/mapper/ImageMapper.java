@@ -1,6 +1,8 @@
 package com.huongcung.core.media.mapper;
 
+import com.huongcung.core.common.mapper.DomainMapper;
 import com.huongcung.core.media.helper.FileUrlHelper;
+import com.huongcung.core.media.model.domain.Image;
 import com.huongcung.core.media.model.dto.ImageDTO;
 import com.huongcung.core.media.model.entity.ImageEntity;
 import org.mapstruct.Mapper;

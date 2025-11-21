@@ -1,7 +1,7 @@
 package com.huongcung.core.catalog.model.dto;
 
-import com.huongcung.core.common.model.dto.BaseDTO;
 import com.huongcung.core.common.enumeration.Language;
+import com.huongcung.core.common.model.dto.BaseDTO;
 import com.huongcung.core.contributor.model.dto.AuthorDTO;
 import com.huongcung.core.contributor.model.dto.PublisherDTO;
 import com.huongcung.core.contributor.model.dto.TranslatorDTO;
@@ -22,6 +22,7 @@ import java.util.List;
 public class AbstractBookDTO extends BaseDTO {
     private String code;
     private String title;
+    private String isbn;
     private List<AuthorDTO> authors;
     private List<TranslatorDTO> translators;
     private int edition;
@@ -30,8 +31,7 @@ public class AbstractBookDTO extends BaseDTO {
     private Language language;
     private int pageCount;
     private String description;
+    private String coverUrl;
     private List<BookImageDTO> images;
     private BigDecimal currentPrice;
-    private boolean hasPhysicalEdition;
-    private boolean hasElectricEdition;
 }

@@ -1,7 +1,7 @@
 package com.huongcung.webstore.bookstore.mapper;
 
+import com.huongcung.core.catalog.model.dto.BookDTO;
 import com.huongcung.core.common.mapper.CommonMapper;
-import com.huongcung.core.catalog.model.dto.AbstractBookDTO;
 import com.huongcung.core.contributor.model.dto.AuthorDTO;
 import com.huongcung.core.media.model.dto.BookImageDTO;
 import com.huongcung.core.contributor.model.dto.PublisherDTO;
@@ -26,7 +26,7 @@ public interface BookViewMapper {
 
     @Mapping(target = "publicationDate", source = "publicationDate", qualifiedByName = "dateToString")
     @Mapping(target = "language", source = "language", qualifiedByName = "languageToString")
-    BookData toBookData(AbstractBookDTO source);
+    BookData toBookData(BookDTO source);
 
     @Mapping(target = "birthDate", source = "birthDate", qualifiedByName = "dateToString")
     AuthorData toAuthorData(AuthorDTO source);
