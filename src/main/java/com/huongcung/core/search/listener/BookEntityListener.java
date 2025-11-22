@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 
 /**
- * JPA Entity Listener for AbstractBookEntity and BookEntity
+ * JPA Entity Listener for AbstractBookEntity
  * Publishes Spring events when books are created, updated, or deleted
  * 
  * Note: This listener is registered via META-INF/orm.xml

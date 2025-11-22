@@ -9,9 +9,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface BookImageRepository extends JpaRepository<BookImageEntity, Long> {
-    @Query("SELECT bi FROM BookImageEntity bi JOIN bi.books b WHERE b.id = :bookId")
+public interface BookImageEntityRepository extends JpaRepository<BookImageEntity, Long> {
+    @Query("SELECT bi FROM BookImageEntity bi WHERE bi.book.id = :bookId ORDER BY bi.position ASC")
     List<BookImageEntity> findByBookId(@Param("bookId") Long bookId);
 }
-
 

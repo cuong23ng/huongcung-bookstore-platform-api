@@ -1,15 +1,10 @@
 package com.huongcung.core.media.model.dto;
 
-import com.huongcung.core.common.model.dto.BaseDTO;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-@Getter
-@Setter
-@SuperBuilder
-@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@Data
 public class BookImageDTO extends ImageDTO {
     private int position;
     private boolean isCover;

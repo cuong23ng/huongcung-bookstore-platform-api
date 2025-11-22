@@ -15,7 +15,7 @@ import com.huongcung.core.contributor.repository.TranslatorRepository;
 import com.huongcung.core.media.model.entity.ImageEntity;
 import com.huongcung.core.media.repository.ImageRepository;
 import com.huongcung.core.media.service.ImageService;
-import com.huongcung.core.catalog.model.entity.GenreEntity;
+import com.huongcung.core.contributor.model.entity.GenreEntity;
 import com.huongcung.core.catalog.repository.GenreRepository;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import jakarta.persistence.EntityManager;
@@ -343,7 +343,7 @@ public class ContributorServiceImpl implements ContributorService {
         List<GenreEntity> filtered = page.getContent().stream()
                 .filter(genre -> name == null || name.isBlank() || (genre.getCode() != null && genre.getCode().toLowerCase().contains(name.toLowerCase())))
                 .filter(genre -> parentId == null || (genre.getParent() != null && genre.getParent().getId().equals(parentId)))
-                .filter(genre -> isActive == null || genre.getIsActive().equals(isActive))
+                .filter(genre -> isActive == null)
                 .collect(Collectors.toList());
         
         List<GenreListDTO> genres = filtered.stream()
@@ -388,8 +388,6 @@ public class ContributorServiceImpl implements ContributorService {
             genre.setParent(parent);
         }
         
-        genre.setIsActive(true); // Default to active
-        
         GenreEntity savedGenre = genreRepository.save(genre);
         
         log.info("Genre created successfully with ID: {}", savedGenre.getId());
@@ -415,11 +413,6 @@ public class ContributorServiceImpl implements ContributorService {
         } else if (request.getParentId() != null && request.getParentId() == 0) {
             // Explicitly remove parent
             genre.setParent(null);
-        }
-        
-        // Update isActive if provided
-        if (request.getIsActive() != null) {
-            genre.setIsActive(request.getIsActive());
         }
         
         GenreEntity updatedGenre = genreRepository.save(genre);
@@ -475,7 +468,7 @@ public class ContributorServiceImpl implements ContributorService {
     
     private boolean isPublisherReferencedByBooks(Long publisherId) {
         Query query = entityManager.createQuery(
-                "SELECT COUNT(b) FROM BookEntity b WHERE b.publisher.id = :publisherId");
+                "SELECT COUNT(b) FROM AbstractBookEntity b WHERE b.publisher.id = :publisherId");
         query.setParameter("publisherId", publisherId);
         Long count = (Long) query.getSingleResult();
         return count > 0;

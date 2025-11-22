@@ -1,6 +1,6 @@
 package com.huongcung.core.catalog.mapper;
 
-import com.huongcung.core.catalog.model.entity.BookEntity;
+import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import com.huongcung.core.common.mapper.EntityMapper;
 import com.huongcung.core.contributor.mapper.AuthorMapper;
 import com.huongcung.core.contributor.mapper.PublisherMapper;
@@ -11,5 +11,5 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring",
         uses = { AuthorMapper.class, TranslatorMapper.class, PublisherMapper.class, BookImageMapper.class })
-public interface BookMapper extends EntityMapper<BookDTO, BookEntity> {
+public interface BookMapper extends EntityMapper<BookDTO, AbstractBookEntity> {
 }

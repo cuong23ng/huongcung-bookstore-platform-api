@@ -77,9 +77,10 @@ public class DatabaseCleanupConfig implements ApplicationListener<ContextRefresh
             }
             
             // Clean up orphaned records in ebooks table
+            // With @PrimaryKeyJoinColumn, ebooks.id = abstract_book.id, so we join on id
             int deletedEbooks = jdbcTemplate.update(
                 "DELETE e FROM ebooks e " +
-                "LEFT JOIN abstract_book b ON e.abstract_book = b.id " +
+                "LEFT JOIN abstract_book b ON e.id = b.id " +
                 "WHERE b.id IS NULL"
             );
             if (deletedEbooks > 0) {
@@ -87,9 +88,10 @@ public class DatabaseCleanupConfig implements ApplicationListener<ContextRefresh
             }
             
             // Clean up orphaned records in physical_books table
+            // With @PrimaryKeyJoinColumn, physical_books.id = abstract_book.id, so we join on id
             int deletedPhysicalBooks = jdbcTemplate.update(
                 "DELETE pb FROM physical_books pb " +
-                "LEFT JOIN abstract_book b ON pb.abstract_book = b.id " +
+                "LEFT JOIN abstract_book b ON pb.id = b.id " +
                 "WHERE b.id IS NULL"
             );
             if (deletedPhysicalBooks > 0) {

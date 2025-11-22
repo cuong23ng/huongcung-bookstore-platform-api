@@ -7,7 +7,6 @@ import com.huongcung.businessmanagement.admin.model.BookListDTO;
 import com.huongcung.businessmanagement.admin.model.BookUpdateRequest;
 import com.huongcung.businessmanagement.admin.service.CatalogService;
 import com.huongcung.core.common.enumeration.Language;
-import com.huongcung.core.media.repository.BookImageRepository;
 import com.huongcung.core.media.service.ImageService;
 import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
 import com.huongcung.core.catalog.repository.BookRepository;

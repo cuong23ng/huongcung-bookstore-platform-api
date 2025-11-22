@@ -1,15 +1,8 @@
 package com.huongcung.core.media.model.dto;
 
-import com.huongcung.core.common.model.dto.BaseDTO;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
+import lombok.Data;
 
-@Getter
-@Setter
-@SuperBuilder
-@NoArgsConstructor
+@Data
 public class ImageDTO {
     private String url;
     private String altText;

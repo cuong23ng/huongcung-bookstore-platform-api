@@ -2,6 +2,7 @@ package com.huongcung.core.catalog.model.domain;
 
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.contributor.model.domain.Author;
+import com.huongcung.core.contributor.model.domain.Genre;
 import com.huongcung.core.contributor.model.domain.Publisher;
 import com.huongcung.core.contributor.model.domain.Translator;
 import com.huongcung.core.media.model.domain.BookImage;
@@ -19,6 +20,7 @@ public class AbstractBook {
     private String title;
     private List<Author> authors;
     private List<Translator> translators;
+    private List<Genre> genres;
     private int edition;
     private Publisher publisher;
     private Language language;
@@ -30,4 +32,12 @@ public class AbstractBook {
     private PhysicalBookInformation physicalBookInfo;
 
     private Boolean isAvailable;
+
+    public boolean hasPhysicalEdition() {
+        return physicalBookInfo != null;
+    }
+
+    public boolean hasEbookEdition() {
+        return ebookInfo != null;
+    }
 }

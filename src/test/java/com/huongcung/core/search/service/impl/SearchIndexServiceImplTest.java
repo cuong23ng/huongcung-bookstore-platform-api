@@ -5,7 +5,7 @@ import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.contributor.model.entity.AuthorEntity;
 import com.huongcung.core.contributor.model.entity.PublisherEntity;
 import com.huongcung.core.catalog.model.entity.EbookEntity;
-import com.huongcung.core.catalog.model.entity.GenreEntity;
+import com.huongcung.core.contributor.model.entity.GenreEntity;
 import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
 import com.huongcung.core.catalog.repository.BookRepository;
 import com.huongcung.core.search.model.entity.BookSearchDocument;

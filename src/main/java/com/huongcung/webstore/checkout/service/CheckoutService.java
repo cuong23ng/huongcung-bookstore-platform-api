@@ -1,7 +1,6 @@
 package com.huongcung.webstore.checkout.service;
 
 import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
-import com.huongcung.core.catalog.model.entity.BookEntity;
 import com.huongcung.core.common.enumeration.City;
 import com.huongcung.core.inventory.model.entity.StockLevelEntity;
 import com.huongcung.core.inventory.model.entity.WarehouseEntity;
@@ -18,7 +17,6 @@ import com.huongcung.core.order.model.entity.OrderEntryEntity;
 import com.huongcung.core.order.repository.DeliveryInfoRepository;
 import com.huongcung.core.order.repository.OrderEntryRepository;
 import com.huongcung.core.order.repository.OrderRepository;
-import com.huongcung.core.catalog.model.entity.EbookEntity;
 import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
 import com.huongcung.core.catalog.repository.AbstractBookRepository;
 import com.huongcung.core.user.model.entity.CustomerEntity;
@@ -67,7 +65,7 @@ public class CheckoutService {
             .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + customerId));
         
         // Validate and get books
-        List<BookEntity> books = validateAndGetBooks(request.getItems());
+        List<AbstractBookEntity> books = validateAndGetBooks(request.getItems());
         
         // Validate stock for physical items
         //validateStock(request.getItems(), books);
@@ -133,34 +131,19 @@ public class CheckoutService {
         return response;
     }
     
-    private List<BookEntity> validateAndGetBooks(List<CheckoutItemDTO> items) {
+    private List<AbstractBookEntity> validateAndGetBooks(List<CheckoutItemDTO> items) {
         // Support both bookId and bookCode
         // Map items to books maintaining order
-        List<BookEntity> books = new java.util.ArrayList<>();
+        List<AbstractBookEntity> books = new java.util.ArrayList<>();
         
         for (CheckoutItemDTO item : items) {
-            BookEntity book = null;
+            AbstractBookEntity book = null;
             
             if (item.getBookCode() != null && !item.getBookCode().isEmpty()) {
-                AbstractBookEntity abstractBook = abstractBookRepository.findByCode(item.getBookCode());
-                if (abstractBook != null) {
-                    // Get the related BookEntity (PhysicalBookEntity or EbookEntity)
-                    if (abstractBook.getPhysicalBookInfo() != null) {
-                        book = abstractBook.getPhysicalBookInfo();
-                    } else if (abstractBook.getEbookInfo() != null) {
-                        book = abstractBook.getEbookInfo();
-                    }
-                }
+                book = abstractBookRepository.findByCode(item.getBookCode());
             } else if (item.getBookId() != null) {
-                AbstractBookEntity abstractBook = abstractBookRepository.findById(item.getBookId())
+                book = abstractBookRepository.findById(item.getBookId())
                     .orElse(null);
-                if (abstractBook != null) {
-                    if (abstractBook.getPhysicalBookInfo() != null) {
-                        book = abstractBook.getPhysicalBookInfo();
-                    } else if (abstractBook.getEbookInfo() != null) {
-                        book = abstractBook.getEbookInfo();
-                    }
-                }
             }
             
             if (book == null) {
@@ -175,12 +158,13 @@ public class CheckoutService {
     }
     
     private void validateStock(List<CheckoutItemDTO> items,
-                               List<BookEntity> books) {
+                               List<AbstractBookEntity> books) {
         for (int i = 0; i < items.size(); i++) {
             CheckoutItemDTO item = items.get(i);
-            BookEntity book = books.get(i);
+            AbstractBookEntity abstractBook = books.get(i);
             
-            if ("PHYSICAL".equals(item.getItemType()) && book instanceof PhysicalBookEntity) {
+            if ("PHYSICAL".equals(item.getItemType()) && abstractBook.getPhysicalBookInfo() != null) {
+                PhysicalBookEntity physicalBook = abstractBook.getPhysicalBookInfo();
                 // For physical items, we need to check stock
                 // For now, we'll check stock in the first available warehouse
                 // In a real scenario, you'd determine which warehouse to use based on delivery address
@@ -192,15 +176,15 @@ public class CheckoutService {
                     .orElseThrow(() -> new IllegalStateException("No warehouse found for city: " + deliveryCity));
                 
                 StockLevelEntity stockLevel = stockLevelRepository
-                    .findByBookIdAndWarehouseCity(book.getId(), deliveryCity)
+                    .findByBookIdAndWarehouseCity(physicalBook.getId(), deliveryCity)
                     .orElseThrow(() -> new IllegalStateException(
-                        "Stock level not found for book: " + book.getId() + " in city: " + deliveryCity));
+                        "Stock level not found for book: " + physicalBook.getId() + " in city: " + deliveryCity));
                 
                 int availableQuantity = stockLevel.getQuantity() - stockLevel.getReservedQuantity();
                 if (availableQuantity < item.getQuantity()) {
                     throw new IllegalArgumentException(
                         String.format("Insufficient stock for book %s. Available: %d, Requested: %d",
-                            book.getTitle(), availableQuantity, item.getQuantity()));
+                            abstractBook.getTitle(), availableQuantity, item.getQuantity()));
                 }
             }
         }
@@ -213,18 +197,18 @@ public class CheckoutService {
     }
     
     private BigDecimal calculateSubtotal(List<CheckoutItemDTO> items,
-                                        List<BookEntity> books) {
+                                        List<AbstractBookEntity> books) {
         BigDecimal subtotal = BigDecimal.ZERO;
         
         for (int i = 0; i < items.size(); i++) {
             CheckoutItemDTO item = items.get(i);
-            BookEntity book = books.get(i);
+            AbstractBookEntity abstractBook = books.get(i);
 
             BigDecimal unitPrice = BigDecimal.valueOf(0);
-            if (book instanceof PhysicalBookEntity) {
-                unitPrice = ((PhysicalBookEntity) book).getCurrentPrice();
-            } else if (book instanceof EbookEntity) {
-                unitPrice = ((EbookEntity) book).getCurrentPrice();
+            if (abstractBook.getPhysicalBookInfo() != null) {
+                unitPrice = abstractBook.getPhysicalBookInfo().getCurrentPrice();
+            } else if (abstractBook.getEbookInfo() != null) {
+                unitPrice = abstractBook.getEbookInfo().getCurrentPrice();
             }
 
             BigDecimal itemTotal = unitPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
@@ -300,24 +284,24 @@ public class CheckoutService {
     
     private List<OrderEntryEntity> createOrderEntries(OrderEntity order,
                                                      List<CheckoutItemDTO> items,
-                                                     List<BookEntity> books) {
+                                                     List<AbstractBookEntity> books) {
         List<OrderEntryEntity> entries = new ArrayList<>();
         
         for (int i = 0; i < items.size(); i++) {
             CheckoutItemDTO item = items.get(i);
-            BookEntity book = books.get(i);
+            AbstractBookEntity abstractBook = books.get(i);
 
             BigDecimal unitPrice = BigDecimal.valueOf(0);
-            if (book instanceof PhysicalBookEntity) {
-                unitPrice = ((PhysicalBookEntity) book).getCurrentPrice();
-            } else if (book instanceof EbookEntity) {
-                unitPrice = ((EbookEntity) book).getCurrentPrice();
+            if (abstractBook.getPhysicalBookInfo() != null) {
+                unitPrice = abstractBook.getPhysicalBookInfo().getCurrentPrice();
+            } else if (abstractBook.getEbookInfo() != null) {
+                unitPrice = abstractBook.getEbookInfo().getCurrentPrice();
             }
             BigDecimal totalPrice = unitPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
             
             OrderEntryEntity entry = new OrderEntryEntity();
             entry.setOrder(order);
-            entry.setBook(book);
+            entry.setBook(abstractBook);
             entry.setItemType(ItemType.valueOf(item.getItemType()));
             entry.setQuantity(item.getQuantity());
             entry.setUnitPrice(unitPrice);
@@ -330,22 +314,23 @@ public class CheckoutService {
     }
     
     private void reserveInventory(List<CheckoutItemDTO> items,
-                                 List<BookEntity> books) {
+                                 List<AbstractBookEntity> books) {
         City deliveryCity = determineDeliveryCity();
         
         for (int i = 0; i < items.size(); i++) {
             CheckoutItemDTO item = items.get(i);
-            BookEntity book = books.get(i);
+            AbstractBookEntity abstractBook = books.get(i);
             
-            if ("PHYSICAL".equals(item.getItemType()) && book instanceof PhysicalBookEntity) {
+            if ("PHYSICAL".equals(item.getItemType()) && abstractBook.getPhysicalBookInfo() != null) {
+                PhysicalBookEntity physicalBook = abstractBook.getPhysicalBookInfo();
                 StockLevelEntity stockLevel = stockLevelRepository
-                    .findByBookIdAndWarehouseCity(book.getId(), deliveryCity)
+                    .findByBookIdAndWarehouseCity(physicalBook.getId(), deliveryCity)
                     .orElse(null);
                 
                 if (stockLevel != null) {
                     // Use pessimistic lock to prevent race conditions
                     StockLevelEntity lockedStock = stockLevelRepository
-                        .findByBookAndCityWithLock((PhysicalBookEntity) book, deliveryCity)
+                        .findByBookAndCityWithLock(physicalBook, deliveryCity)
                         .orElse(stockLevel);
                     
                     int newReserved = lockedStock.getReservedQuantity() + item.getQuantity();
@@ -353,7 +338,7 @@ public class CheckoutService {
                     stockLevelRepository.save(lockedStock);
                     
                     log.debug("Reserved {} units of book {} in city {}", 
-                        item.getQuantity(), book.getId(), deliveryCity);
+                        item.getQuantity(), physicalBook.getId(), deliveryCity);
                 }
             }
         }

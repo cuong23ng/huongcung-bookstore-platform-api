@@ -1,6 +1,6 @@
 package com.huongcung.core.search.service;
 
-import com.huongcung.core.catalog.model.entity.BookEntity;
+import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import com.huongcung.core.search.event.BookCreatedEvent;
 import com.huongcung.core.search.event.BookDeletedEvent;
 import com.huongcung.core.search.event.BookUpdatedEvent;
@@ -25,7 +25,7 @@ public class BookIndexEventPublisher {
      * 
      * @param book The created book entity
      */
-    public void publishBookCreated(BookEntity book) {
+    public void publishBookCreated(AbstractBookEntity book) {
         log.debug("Publishing BookCreatedEvent for book ID: {}", book.getId());
         eventPublisher.publishEvent(new BookCreatedEvent(this, book));
     }
@@ -36,7 +36,7 @@ public class BookIndexEventPublisher {
      * @param bookId The ID of the updated book
      * @param book The updated book entity (can be null if only ID is available)
      */
-    public void publishBookUpdated(Long bookId, BookEntity book) {
+    public void publishBookUpdated(Long bookId, AbstractBookEntity book) {
         log.debug("Publishing BookUpdatedEvent for book ID: {}", bookId);
         eventPublisher.publishEvent(new BookUpdatedEvent(this, bookId, book));
     }

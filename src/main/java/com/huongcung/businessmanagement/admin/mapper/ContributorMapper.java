@@ -9,7 +9,7 @@ import com.huongcung.core.contributor.model.entity.AuthorEntity;
 import com.huongcung.core.contributor.model.entity.PublisherEntity;
 import com.huongcung.core.contributor.model.entity.TranslatorEntity;
 import com.huongcung.core.media.mapper.ImageMapper;
-import com.huongcung.core.catalog.model.entity.GenreEntity;
+import com.huongcung.core.contributor.model.entity.GenreEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -85,7 +85,6 @@ public interface ContributorMapper {
     @Mapping(target = "parent", ignore = true) // Set in service from parentId
     @Mapping(target = "children", ignore = true)
     @Mapping(target = "books", ignore = true)
-    @Mapping(target = "isActive", ignore = true) // Set to true by default
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     GenreEntity toEntity(GenreCreateRequest request);

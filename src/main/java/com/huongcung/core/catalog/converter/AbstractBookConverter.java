@@ -29,7 +29,6 @@ public class AbstractBookConverter implements Converter<AbstractBook, BookFrontP
         target.setAuthors(source.getAuthors().parallelStream().map(a -> {
             AuthorDTO authorDTO = new AuthorDTO();
             authorDTO.setName(a.getName());
-            authorDTO.setId(a.getId());
             return authorDTO;
         }).toList());
         target.setCoverUrl(source.getImages()

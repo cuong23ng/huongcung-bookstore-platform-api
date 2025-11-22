@@ -18,7 +18,7 @@ public interface WebBookRepository extends JpaRepository<AbstractBookEntity, Lon
     @Query("SELECT new com.huongcung.webstore.bookstore.model.BookFrontPageDTO(" +
             "ab.code, " +
             "ab.title, " +
-            "COALESCE((SELECT bi.url FROM BookImageEntityv2 bi WHERE bi.book.id = ab.id AND bi.position = 1), ''), " +
+            "COALESCE((SELECT bi.url FROM BookImageEntity bi WHERE bi.book.id = ab.id AND bi.position = 1), ''), " +
             "pb.currentPrice, " +
             "eb.currentPrice" +
             ") " +

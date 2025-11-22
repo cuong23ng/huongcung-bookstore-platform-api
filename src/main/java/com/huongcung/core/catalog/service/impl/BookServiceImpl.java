@@ -3,15 +3,14 @@ package com.huongcung.core.catalog.service.impl;
 import com.huongcung.core.catalog.mapper.BookMapper;
 import com.huongcung.core.catalog.model.dto.BookDTO;
 import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
-import com.huongcung.core.catalog.model.entity.BookEntity;
 import com.huongcung.core.catalog.repository.AbstractBookRepository;
 import com.huongcung.core.catalog.service.BookService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service("coreBookService")
 @Slf4j
@@ -25,29 +24,17 @@ public class BookServiceImpl implements BookService {
     public List<BookDTO> findAll() {
         // Get all AbstractBookEntity and convert to BookDTO
         List<AbstractBookEntity> abstractBooks = abstractBookRepository.findAll();
-        List<BookDTO> bookDTOs = new ArrayList<>();
-        
-        for (AbstractBookEntity abstractBook : abstractBooks) {
-            // Get the related BookEntity (PhysicalBookEntity or EbookEntity)
-            BookEntity bookEntity = getRelatedBookEntity(abstractBook);
-            if (bookEntity != null) {
-                bookDTOs.add(bookMapper.toDto(bookEntity));
-            }
-        }
-        
-        return bookDTOs;
+        return abstractBooks.stream()
+                .map(bookMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public BookDTO findBookByCode(String code) {
         AbstractBookEntity abstractBook = abstractBookRepository.findByCode(code);
         if (abstractBook != null) {
-            BookEntity bookEntity = getRelatedBookEntity(abstractBook);
-            if (bookEntity != null) {
-                return bookMapper.toDto(bookEntity);
-            }
+            return bookMapper.toDto(abstractBook);
         }
-        
         return null;
     }
 
@@ -59,28 +46,8 @@ public class BookServiceImpl implements BookService {
         
         // Get from AbstractBookRepository
         List<AbstractBookEntity> abstractBooks = abstractBookRepository.findAllById(ids);
-        List<BookDTO> bookDTOs = new ArrayList<>();
-        
-        for (AbstractBookEntity abstractBook : abstractBooks) {
-            BookEntity bookEntity = getRelatedBookEntity(abstractBook);
-            if (bookEntity != null) {
-                bookDTOs.add(bookMapper.toDto(bookEntity));
-            }
-        }
-        
-        return bookDTOs;
+        return abstractBooks.stream()
+                .map(bookMapper::toDto)
+                .collect(Collectors.toList());
     }
-    
-    /**
-     * Get the related BookEntity (PhysicalBookEntity or EbookEntity) from AbstractBookEntity
-     */
-    private BookEntity getRelatedBookEntity(AbstractBookEntity abstractBook) {
-        if (abstractBook.getPhysicalBookInfo() != null) {
-            return abstractBook.getPhysicalBookInfo();
-        } else if (abstractBook.getEbookInfo() != null) {
-            return abstractBook.getEbookInfo();
-        }
-        return null;
-    }
-
 }

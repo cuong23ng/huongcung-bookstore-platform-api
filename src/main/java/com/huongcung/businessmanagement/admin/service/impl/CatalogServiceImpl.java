@@ -8,7 +8,6 @@ import com.huongcung.businessmanagement.admin.model.BookListDTO;
 import com.huongcung.businessmanagement.admin.model.BookUpdateRequest;
 import com.huongcung.businessmanagement.admin.service.CatalogService;
 import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
-import com.huongcung.core.catalog.model.entity.BookEntity;
 import com.huongcung.core.catalog.repository.EbookRepository;
 import com.huongcung.core.catalog.repository.PhysicalBookRepository;
 import com.huongcung.core.common.enumeration.Language;
@@ -18,14 +17,12 @@ import com.huongcung.core.contributor.model.entity.TranslatorEntity;
 import com.huongcung.core.contributor.repository.AuthorRepository;
 import com.huongcung.core.contributor.repository.PublisherRepository;
 import com.huongcung.core.contributor.repository.TranslatorRepository;
-import com.huongcung.core.media.model.entity.BookImageEntityv2;
-import com.huongcung.core.media.repository.BookImageEntityv2Repository;
-import com.huongcung.core.media.repository.ImageRepository;
-import com.huongcung.core.media.service.ImageService;
+import com.huongcung.core.media.model.entity.BookImageEntity;
+import com.huongcung.core.media.repository.BookImageEntityRepository;
 import com.huongcung.core.media.enumeration.FileType;
 import com.huongcung.core.storage.service.StorageService;
 import com.huongcung.core.catalog.model.entity.EbookEntity;
-import com.huongcung.core.catalog.model.entity.GenreEntity;
+import com.huongcung.core.contributor.model.entity.GenreEntity;
 import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
 import com.huongcung.core.catalog.repository.AbstractBookRepository;
 import com.huongcung.core.catalog.repository.GenreRepository;
@@ -66,7 +63,7 @@ public class CatalogServiceImpl implements CatalogService {
     private final TranslatorRepository translatorRepository;
     private final GenreRepository genreRepository;
     private final AdminBookMapper bookMapper;
-    private final BookImageEntityv2Repository bookImageEntityv2Repository;
+    private final BookImageEntityRepository bookImageEntityRepository;
     private final StorageService storageService;
     
     @PersistenceContext
@@ -106,7 +103,7 @@ public class CatalogServiceImpl implements CatalogService {
         }
         
         // Note: AbstractBookEntity doesn't have isActive field, filter through related entities if needed
-        // For now, we'll filter through the related BookEntity if needed
+        // For now, we'll filter through the related PhysicalBookEntity or EbookEntity if needed
         
         query.where(predicates.toArray(new Predicate[0]));
         
@@ -123,19 +120,8 @@ public class CatalogServiceImpl implements CatalogService {
                 .getResultList();
         
         // Convert AbstractBookEntity to BookListDTO
-        // We need to get the related BookEntity (PhysicalBookEntity or EbookEntity) for mapping
         List<BookListDTO> bookDTOs = books.stream()
-                .map(abstractBook -> {
-                    // Get the related BookEntity (PhysicalBookEntity or EbookEntity)
-                    BookEntity bookEntity = null;
-                    if (abstractBook.getPhysicalBookInfo() != null) {
-                        bookEntity = abstractBook.getPhysicalBookInfo();
-                    } else if (abstractBook.getEbookInfo() != null) {
-                        bookEntity = abstractBook.getEbookInfo();
-                    }
-                    // If we have a BookEntity, use it for mapping, otherwise map from AbstractBookEntity
-                    return bookEntity != null ? bookMapper.toListDTO(bookEntity) : mapAbstractBookToListDTO(abstractBook);
-                })
+                .map(bookMapper::toListDTO)
                 .collect(Collectors.toList());
         
         // Convert Spring Data Page (0-based) to PaginationInfo (1-based)
@@ -154,7 +140,7 @@ public class CatalogServiceImpl implements CatalogService {
     }
     
     private BookListDTO mapAbstractBookToListDTO(AbstractBookEntity abstractBook) {
-        // Helper method to map AbstractBookEntity to BookListDTO when no BookEntity is available
+        // Helper method to map AbstractBookEntity to BookListDTO
         BookListDTO dto = new BookListDTO();
         dto.setId(abstractBook.getId());
         dto.setCode(abstractBook.getCode());
@@ -178,19 +164,7 @@ public class CatalogServiceImpl implements CatalogService {
         AbstractBookEntity abstractBook = abstractBookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
         
-        // Get the related BookEntity (PhysicalBookEntity or EbookEntity) for mapping
-        BookEntity bookEntity = null;
-        if (abstractBook.getPhysicalBookInfo() != null) {
-            bookEntity = abstractBook.getPhysicalBookInfo();
-        } else if (abstractBook.getEbookInfo() != null) {
-            bookEntity = abstractBook.getEbookInfo();
-        }
-        
-        if (bookEntity == null) {
-            throw new RuntimeException("Book entity not found for AbstractBookEntity ID: " + id);
-        }
-        
-        return bookMapper.toDetailDTO(bookEntity);
+        return bookMapper.toDetailDTO(abstractBook);
     }
     
     @Override
@@ -225,19 +199,6 @@ public class CatalogServiceImpl implements CatalogService {
         // Create PhysicalBookEntity if requested
         if (request.getHasPhysicalEdition()) {
             PhysicalBookEntity physicalBook = new PhysicalBookEntity();
-            // Set common fields from request
-            physicalBook.setCode(savedAbstractBook.getCode());
-            physicalBook.setTitle(savedAbstractBook.getTitle());
-            physicalBook.setDescription(savedAbstractBook.getDescription());
-            physicalBook.setLanguage(savedAbstractBook.getLanguage());
-            physicalBook.setPageCount(savedAbstractBook.getPageCount());
-            physicalBook.setEdition(savedAbstractBook.getEdition());
-            // Create new collections to avoid shared references
-            physicalBook.setAuthors(savedAbstractBook.getAuthors() != null ? new ArrayList<>(savedAbstractBook.getAuthors()) : null);
-            physicalBook.setTranslators(savedAbstractBook.getTranslators() != null ? new ArrayList<>(savedAbstractBook.getTranslators()) : null);
-            physicalBook.setPublisher(savedAbstractBook.getPublisher());
-            physicalBook.setGenres(savedAbstractBook.getGenres() != null ? new ArrayList<>(savedAbstractBook.getGenres()) : null);
-            physicalBook.setIsActive(false);
             
             // Set PhysicalBookEntity specific fields
             physicalBook.setPublicationDate(request.getPublicationDate());
@@ -259,18 +220,6 @@ public class CatalogServiceImpl implements CatalogService {
         // Create EbookEntity if requested
         if (request.getHasElectricEdition()) {
             EbookEntity ebook = new EbookEntity();
-            // Set common fields from request
-            ebook.setCode(savedAbstractBook.getCode());
-            ebook.setTitle(savedAbstractBook.getTitle());
-            ebook.setDescription(savedAbstractBook.getDescription());
-            ebook.setLanguage(savedAbstractBook.getLanguage());
-            ebook.setPageCount(savedAbstractBook.getPageCount());
-            ebook.setEdition(savedAbstractBook.getEdition());
-            // Create new collections to avoid shared references
-            ebook.setAuthors(savedAbstractBook.getAuthors() != null ? new ArrayList<>(savedAbstractBook.getAuthors()) : null);
-            ebook.setTranslators(savedAbstractBook.getTranslators() != null ? new ArrayList<>(savedAbstractBook.getTranslators()) : null);
-            ebook.setPublisher(savedAbstractBook.getPublisher());
-            ebook.setGenres(savedAbstractBook.getGenres() != null ? new ArrayList<>(savedAbstractBook.getGenres()) : null);
             ebook.setIsActive(false);
             
             // Set EbookEntity specific fields
@@ -353,18 +302,6 @@ public class CatalogServiceImpl implements CatalogService {
         AbstractBookEntity abstractBook = abstractBookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
         
-        // Get the related BookEntity (PhysicalBookEntity or EbookEntity)
-        BookEntity book = null;
-        if (abstractBook.getPhysicalBookInfo() != null) {
-            book = abstractBook.getPhysicalBookInfo();
-        } else if (abstractBook.getEbookInfo() != null) {
-            book = abstractBook.getEbookInfo();
-        }
-        
-        if (book == null) {
-            throw new RuntimeException("Book entity not found for AbstractBookEntity ID: " + id);
-        }
-        
         // Track changes for audit logging
         StringBuilder changes = new StringBuilder();
         
@@ -378,8 +315,6 @@ public class CatalogServiceImpl implements CatalogService {
             if (!Objects.equals(abstractBook.getAuthors(), authors)) {
                 changes.append("authors updated; ");
                 abstractBook.setAuthors(authors);
-                // Also update in BookEntity - create new collection to avoid shared reference
-                book.setAuthors(authors != null ? new ArrayList<>(authors) : null);
             }
         }
         
@@ -391,8 +326,6 @@ public class CatalogServiceImpl implements CatalogService {
             if (!Objects.equals(abstractBook.getTranslators(), translators)) {
                 changes.append("translators updated; ");
                 abstractBook.setTranslators(translators);
-                // Create new collection to avoid shared reference
-                book.setTranslators(translators != null ? new ArrayList<>(translators) : null);
             }
         }
         
@@ -402,7 +335,6 @@ public class CatalogServiceImpl implements CatalogService {
             if (!Objects.equals(abstractBook.getPublisher() != null ? abstractBook.getPublisher().getId() : null, publisher.getId())) {
                 changes.append("publisher updated; ");
                 abstractBook.setPublisher(publisher);
-                book.setPublisher(publisher);
             }
         }
         
@@ -414,8 +346,6 @@ public class CatalogServiceImpl implements CatalogService {
             if (!Objects.equals(abstractBook.getGenres(), genres)) {
                 changes.append("genres updated; ");
                 abstractBook.setGenres(genres);
-                // Create new collection to avoid shared reference
-                book.setGenres(genres != null ? new ArrayList<>(genres) : null);
             }
         }
         
@@ -442,7 +372,8 @@ public class CatalogServiceImpl implements CatalogService {
         }
         
         // Update subtype-specific fields
-        if (book instanceof PhysicalBookEntity physicalBook) {
+        if (abstractBook.getPhysicalBookInfo() != null) {
+            PhysicalBookEntity physicalBook = abstractBook.getPhysicalBookInfo();
             if (request.getIsbn() != null && !Objects.equals(physicalBook.getIsbn(), request.getIsbn())) {
                 changes.append("isbn updated; ");
                 physicalBook.setIsbn(request.getIsbn());
@@ -475,7 +406,12 @@ public class CatalogServiceImpl implements CatalogService {
                 changes.append("publicationDate updated; ");
                 physicalBook.setPublicationDate(request.getPublicationDate());
             }
-        } else if (book instanceof EbookEntity ebook) {
+            if (request.getIsActive() != null && !Objects.equals(physicalBook.getIsAvailable(), request.getIsActive())) {
+                changes.append("isAvailable updated; ");
+                physicalBook.setIsAvailable(request.getIsActive());
+            }
+        } else if (abstractBook.getEbookInfo() != null) {
+            EbookEntity ebook = abstractBook.getEbookInfo();
             if (request.getCurrentPrice() != null && !Objects.equals(ebook.getCurrentPrice(), request.getCurrentPrice())) {
                 changes.append("currentPrice updated; ");
                 ebook.setCurrentPrice(request.getCurrentPrice());
@@ -484,35 +420,17 @@ public class CatalogServiceImpl implements CatalogService {
                 changes.append("publicationDate updated; ");
                 ebook.setPublicationDate(request.getPublicationDate());
             }
+            if (request.getIsActive() != null && !Objects.equals(ebook.getIsActive(), request.getIsActive())) {
+                changes.append("isActive updated; ");
+                ebook.setIsActive(request.getIsActive());
+            }
         }
         
-        // Apply updates using mapper (handles common fields in BookEntity)
-        bookMapper.updateEntityFromRequest(request, book);
-        
-        // Update common fields in BookEntity
-        if (request.getTitle() != null) {
-            book.setTitle(request.getTitle());
-        }
-        if (request.getDescription() != null) {
-            book.setDescription(request.getDescription());
-        }
-        if (request.getLanguage() != null) {
-            book.setLanguage(request.getLanguage());
-        }
-        if (request.getPageCount() != null) {
-            book.setPageCount(request.getPageCount());
-        }
-        if (request.getEdition() != null) {
-            book.setEdition(request.getEdition());
-        }
-        if (request.getIsActive() != null) {
-            book.setIsActive(request.getIsActive());
-        }
+        // Apply updates using mapper (handles common fields in AbstractBookEntity)
+        bookMapper.updateEntityFromRequest(request, abstractBook);
         
         // Save updated entities
-        abstractBookRepository.save(abstractBook);
-        // Note: BookEntity (PhysicalBookEntity/EbookEntity) is saved via cascade from AbstractBookEntity
-        BookEntity updatedBook = book;
+        AbstractBookEntity updatedBook = abstractBookRepository.save(abstractBook);
         
         // Audit logging
         String changeLog = !changes.isEmpty() ? changes.toString() : "no changes";
@@ -529,7 +447,7 @@ public class CatalogServiceImpl implements CatalogService {
             }
         }
         
-        return bookMapper.toDetailDTO(updatedBook);
+        return bookMapper.toDetailDTO(abstractBook);
     }
 
     @Override
@@ -541,32 +459,28 @@ public class CatalogServiceImpl implements CatalogService {
         AbstractBookEntity abstractBook = abstractBookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
         
-        // Get the related BookEntity (PhysicalBookEntity or EbookEntity)
-        BookEntity book = null;
+        // Deactivate PhysicalBookEntity if exists
         if (abstractBook.getPhysicalBookInfo() != null) {
-            book = abstractBook.getPhysicalBookInfo();
-        } else if (abstractBook.getEbookInfo() != null) {
-            book = abstractBook.getEbookInfo();
+            PhysicalBookEntity physicalBook = abstractBook.getPhysicalBookInfo();
+            if (Boolean.TRUE.equals(physicalBook.getIsAvailable())) {
+                physicalBook.setIsAvailable(false);
+            } else {
+                log.warn("Physical book ID: {} is already deactivated", id);
+            }
         }
         
-        if (book == null) {
-            throw new RuntimeException("Book entity not found for AbstractBookEntity ID: " + id);
+        // Deactivate EbookEntity if exists
+        if (abstractBook.getEbookInfo() != null) {
+            EbookEntity ebook = abstractBook.getEbookInfo();
+            if (Boolean.TRUE.equals(ebook.getIsActive())) {
+                ebook.setIsActive(false);
+            } else {
+                log.warn("Ebook ID: {} is already deactivated", id);
+            }
         }
         
-        if (!book.getIsActive()) {
-            log.warn("Book ID: {} is already deactivated", id);
-        }
-        
-        book.setIsActive(false);
-        
-        // For EbookEntity, also set isActive flag
-        if (book instanceof EbookEntity) {
-            ((EbookEntity) book).setIsActive(false);
-        }
-        
-        // Save via AbstractBookEntity (cascade will save BookEntity)
+        // Save via AbstractBookEntity (cascade will save related entities)
         abstractBookRepository.save(abstractBook);
-        BookEntity deactivatedBook = book;
         
         // Audit logging
         log.info("Book deactivated: bookId={}, deactivatedBy={}, timestamp={}", 
@@ -582,7 +496,7 @@ public class CatalogServiceImpl implements CatalogService {
             }
         }
         
-        return bookMapper.toDetailDTO(deactivatedBook);
+        return bookMapper.toDetailDTO(abstractBook);
     }
 
     @Override
@@ -623,7 +537,7 @@ public class CatalogServiceImpl implements CatalogService {
                 );
 
                 // Create BookImageEntityv2
-                BookImageEntityv2 bookImage = new BookImageEntityv2();
+                BookImageEntity bookImage = new BookImageEntity();
                 bookImage.setBook(abstractBook);
                 bookImage.setUrl(relativePath);
                 bookImage.setAltText(fileName);
@@ -631,7 +545,7 @@ public class CatalogServiceImpl implements CatalogService {
                 bookImage.setFileType(FileType.findFileTypeByCode(contentType));
                 bookImage.setPosition(i + 1); // Position starts from 1
 
-                bookImageEntityv2Repository.save(bookImage);
+                bookImageEntityRepository.save(bookImage);
 
                 // Add to abstractBook's images list
                 if (abstractBook.getImages() == null) {
@@ -709,7 +623,7 @@ public class CatalogServiceImpl implements CatalogService {
                 );
 
                 // Create BookImageEntityv2
-                BookImageEntityv2 bookImage = new BookImageEntityv2();
+                BookImageEntity bookImage = new BookImageEntity();
                 bookImage.setBook(abstractBook);
                 bookImage.setUrl(relativePath);
                 bookImage.setAltText(fileName);
@@ -718,7 +632,7 @@ public class CatalogServiceImpl implements CatalogService {
                 bookImage.setPosition(position);
 
                 // Save the image entity
-                BookImageEntityv2 savedImage = bookImageEntityv2Repository.save(bookImage);
+                BookImageEntity savedImage = bookImageEntityRepository.save(bookImage);
                 
                 // Add to abstractBook's images list if not already there
                 if (abstractBook.getImages() == null) {

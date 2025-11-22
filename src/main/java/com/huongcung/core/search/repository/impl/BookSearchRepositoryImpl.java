@@ -79,7 +79,7 @@ public class BookSearchRepositoryImpl implements BookSearchRepository {
                 }
                 solrQuery.setFacetMinCount(1);
             }
-            
+            log.info("searchWithFacets fallbackResponse: {}", solrQuery.toQueryString());
             return getSolrClient().query(solrConfig.getCore(), solrQuery);
         } catch (SolrServerException | IOException | RuntimeException e) {
             log.error("Solr faceted search failed: {}", e.getMessage());

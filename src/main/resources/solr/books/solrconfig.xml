@@ -12,6 +12,9 @@
   
   <codecFactory class="solr.SchemaCodecFactory"/>
   
+  <!-- Use classic schema.xml instead of managed schema -->
+  <schemaFactory class="ClassicIndexSchemaFactory"/>
+  
   <indexConfig>
     <!-- Lock factory for index -->
     <lockType>${solr.lock.type:native}</lockType>
@@ -20,14 +23,10 @@
     <infoStream>false</infoStream>
     
     <!-- Merge policy -->
-    <mergePolicyFactory class="org.apache.solr.index.SortingMergePolicyFactory">
-      <str name="sort">publicationDate desc</str>
-      <str name="wrapped.prefix">internal</str>
-      <str name="wrapped.class">org.apache.solr.index.TieredMergePolicyFactory</str>
-      <int name="wrapped.maxMergeAtOnce">10</int>
-      <int name="wrapped.segmentsPerTier">10</int>
-      <double name="wrapped.reclaimDeletesWeight">2.0</double>
-      <int name="wrapped.maxMergedSegmentMB">512</int>
+    <mergePolicyFactory class="org.apache.solr.index.TieredMergePolicyFactory">
+      <int name="maxMergeAtOnce">10</int>
+      <int name="segmentsPerTier">10</int>
+      <int name="maxMergedSegmentMB">512</int>
     </mergePolicyFactory>
     
     <!-- Merge scheduler -->
@@ -134,18 +133,16 @@
       <str name="name">bookSuggester</str>
       <str name="lookupImpl">FuzzyLookupFactory</str>
       <str name="dictionaryImpl">DocumentDictionaryFactory</str>
-      <str name="field">titleText</str>
+      <str name="field">title</str>
       <str name="suggestAnalyzerFieldType">text_vi</str>
-      <str name="buildOnStartup">false</str>
+      <str name="buildOnStartup">true</str>
       <str name="buildOnCommit">true</str>
       <str name="weightField">averageRating</str>
     </lst>
   </searchComponent>
   
   <!-- Query parsers -->
-  <queryParser name="lucene" class="solr.LuceneQParserPlugin"/>
-  <queryParser name="dismax" class="solr.DisMaxQParserPlugin"/>
-  <queryParser name="edismax" class="solr.ExtendedDisMaxQParserPlugin"/>
+  <!-- Note: ExtendedDisMax parser is available by default in Solr 9.x, no need to declare -->
   
   <!-- Caching -->
   

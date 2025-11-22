@@ -3,7 +3,7 @@ package com.huongcung.core.search.service.impl;
 import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import com.huongcung.core.contributor.model.entity.AuthorEntity;
 import com.huongcung.core.catalog.model.entity.EbookEntity;
-import com.huongcung.core.catalog.model.entity.GenreEntity;
+import com.huongcung.core.contributor.model.entity.GenreEntity;
 import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
 import com.huongcung.core.catalog.repository.AbstractBookRepository;
 import com.huongcung.core.search.model.entity.BookSearchDocument;
@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZoneId;
 import java.util.Date;
@@ -35,6 +36,7 @@ public class SearchIndexServiceImpl implements SearchIndexService {
     private int batchSize;
     
     @Override
+    @Transactional
     @CacheEvict(value = {"searchResults", "searchFacets", "searchSuggestions"}, allEntries = true)
     public boolean indexBook(AbstractBookEntity book) {
         try {
@@ -49,6 +51,7 @@ public class SearchIndexServiceImpl implements SearchIndexService {
     }
     
     @Override
+    @Transactional
     public IndexingResult indexAllBooks() {
         long startTime = System.currentTimeMillis();
         long totalBooks = 0;
@@ -58,9 +61,14 @@ public class SearchIndexServiceImpl implements SearchIndexService {
         try {
             log.info("Starting bulk indexing of all books...");
             
-            // Fetch all books from AbstractBookRepository (new structure)
+            // Fetch all books (lazy collections will be initialized in transaction)
             List<AbstractBookEntity> allBooks = abstractBookRepository.findAll();
             totalBooks = allBooks.size();
+            
+            // Initialize all lazy collections for all books within transaction
+            for (AbstractBookEntity book : allBooks) {
+                initializeLazyCollections(book);
+            }
             
             if (totalBooks == 0) {
                 log.warn("No books found in database to index");
@@ -117,11 +125,16 @@ public class SearchIndexServiceImpl implements SearchIndexService {
     }
     
     @Override
+    @Transactional
     @CacheEvict(value = {"searchResults", "searchFacets", "searchSuggestions"}, allEntries = true)
     public boolean updateBookIndex(Long bookId) {
         try {
+            // Fetch book (lazy collections will be initialized in transaction)
             AbstractBookEntity book = abstractBookRepository.findById(bookId)
                 .orElseThrow(() -> new IllegalArgumentException("Book not found: " + bookId));
+            
+            // Initialize all lazy collections needed for indexing within transaction
+            initializeLazyCollections(book);
             
             return indexBook(book);
         } catch (Exception e) {
@@ -199,6 +212,32 @@ public class SearchIndexServiceImpl implements SearchIndexService {
         document.setReviewCount(null);
         
         return document;
+    }
+    
+    /**
+     * Initialize all lazy collections needed for indexing
+     * This method triggers lazy loading within the transaction to avoid LazyInitializationException
+     * 
+     * @param book The book entity to initialize lazy collections for
+     */
+    private void initializeLazyCollections(AbstractBookEntity book) {
+        // Initialize authors collection
+        if (book.getAuthors() != null) {
+            book.getAuthors().size(); // Trigger lazy loading
+        }
+        
+        // Initialize genres collection
+        if (book.getGenres() != null) {
+            book.getGenres().size(); // Trigger lazy loading
+        }
+        
+        // Initialize publisher (ManyToOne relationship)
+        if (book.getPublisher() != null) {
+            book.getPublisher().getName(); // Trigger lazy loading by accessing a property
+        }
+        
+        // Note: translators and images are not needed for indexing, so we skip them
+        // physicalBookInfo and ebookInfo are EAGER, so they're already loaded
     }
     
     /**

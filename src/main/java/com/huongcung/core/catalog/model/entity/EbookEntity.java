@@ -1,5 +1,6 @@
 package com.huongcung.core.catalog.model.entity;
 
+import com.huongcung.core.common.model.entity.BaseEntity;
 import com.huongcung.core.media.model.entity.EbookFileEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,15 +11,14 @@ import java.util.List;
 
 @Entity
 @Table(name = "ebooks")
-@PrimaryKeyJoinColumn(name = "book_id")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class EbookEntity extends BookEntity {
+public class EbookEntity extends BaseEntity {
 
     @OneToOne
-    @JoinColumn(name = "abstract_book")
+    @PrimaryKeyJoinColumn
     private AbstractBookEntity abstractBook;
 
     @Column(name = "isbn", unique = true)

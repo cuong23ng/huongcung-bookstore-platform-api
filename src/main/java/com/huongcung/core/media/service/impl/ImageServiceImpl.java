@@ -3,9 +3,9 @@ package com.huongcung.core.media.service.impl;
 import com.huongcung.businessmanagement.admin.model.BookImageData;
 import com.huongcung.businessmanagement.admin.model.ImageData;
 import com.huongcung.core.media.enumeration.FileType;
-import com.huongcung.core.media.model.entity.BookImageEntityv2;
+import com.huongcung.core.media.model.entity.BookImageEntity;
 import com.huongcung.core.media.model.entity.ImageEntity;
-import com.huongcung.core.media.repository.BookImageEntityv2Repository;
+import com.huongcung.core.media.repository.BookImageEntityRepository;
 import com.huongcung.core.media.repository.ImageRepository;
 import com.huongcung.core.media.service.ImageService;
 import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
@@ -27,7 +27,7 @@ import static com.huongcung.core.media.constant.FolderConstants.IMAGES;
 public class ImageServiceImpl implements ImageService {
 
     private final ImageRepository imageRepository;
-    private final BookImageEntityv2Repository bookImageEntityv2Repository;
+    private final BookImageEntityRepository bookImageEntityRepository;
     private final StorageService storageService;
 
     @Override
@@ -75,7 +75,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public BookImageEntityv2 saveBookImageFromBase64(AbstractBookEntity book, BookImageData imageData, String subFolder) {
+    public BookImageEntity saveBookImageFromBase64(AbstractBookEntity book, BookImageData imageData, String subFolder) {
         if (book == null) {
             return null;
         }
@@ -96,7 +96,7 @@ public class ImageServiceImpl implements ImageService {
         String relativePath = storageService.save(imageData.getBase64Data(), fileName, folderPath, imageData.getFileType());
 
         // Create BookImageEntityv2
-        BookImageEntityv2 image = new BookImageEntityv2();
+        BookImageEntity image = new BookImageEntity();
         image.setUrl(relativePath);
         image.setAltText(fileName);
         image.setFileName(fileName);
@@ -104,7 +104,7 @@ public class ImageServiceImpl implements ImageService {
         image.setBook(book);
         image.setPosition(imageData.getPosition());
 
-        BookImageEntityv2 savedImage = bookImageEntityv2Repository.save(image);
+        BookImageEntity savedImage = bookImageEntityRepository.save(image);
 
         log.info("Book Image uploaded successfully; imageId: {}, url: {}",
                 savedImage.getId(), relativePath);

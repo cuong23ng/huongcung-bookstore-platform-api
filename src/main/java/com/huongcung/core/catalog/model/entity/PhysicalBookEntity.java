@@ -1,6 +1,7 @@
 package com.huongcung.core.catalog.model.entity;
 
 import com.huongcung.core.catalog.enumeration.CoverType;
+import com.huongcung.core.common.model.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,15 +10,14 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "physical_books")
-@PrimaryKeyJoinColumn(name = "book_id")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PhysicalBookEntity extends BookEntity {
+public class PhysicalBookEntity extends BaseEntity {
 
     @OneToOne
-    @JoinColumn(name = "abstract_book")
+    @PrimaryKeyJoinColumn
     private AbstractBookEntity abstractBook;
 
     @Column(name = "isbn", unique = true)

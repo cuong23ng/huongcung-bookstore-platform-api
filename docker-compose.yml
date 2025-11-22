@@ -71,10 +71,21 @@ services:
     environment:
       SOLR_HEAP: 512m
       SOLR_CORE_NAME: ${SOLR_CORE_NAME:-books}
-    entrypoint:
-      - docker-entrypoint.sh
-      - solr-precreate
-      - ${SOLR_CORE_NAME:-books}
+    command:
+      - bash
+      - -c
+      - |
+        # Create core with default config first (if it doesn't exist)
+        if [ ! -d "/var/solr/data/${SOLR_CORE_NAME:-books}" ]; then
+          docker-entrypoint.sh solr-precreate ${SOLR_CORE_NAME:-books}
+        fi
+        
+        # Copy custom config files
+        echo "Copying custom schema and config..."
+        cp -r /opt/solr-config/* /var/solr/data/${SOLR_CORE_NAME:-books}/conf/
+        
+        # Start Solr
+        exec docker-entrypoint.sh solr-foreground
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8983/solr/admin/ping || exit 1"]
       interval: 30s

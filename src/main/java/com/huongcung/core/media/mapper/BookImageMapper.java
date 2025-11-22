@@ -5,30 +5,28 @@ import com.huongcung.core.common.mapper.EntityMapper;
 import com.huongcung.core.media.helper.FileUrlHelper;
 import com.huongcung.core.media.model.domain.BookImage;
 import com.huongcung.core.media.model.dto.BookImageDTO;
-import com.huongcung.core.media.model.entity.BookImageEntityv2;
-import org.mapstruct.AfterMapping;
+import com.huongcung.core.media.model.entity.BookImageEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 import org.mapstruct.Mappings;
 
 @Mapper(
     componentModel = "spring",
     uses = { FileUrlHelper.class }
 )
-public interface BookImageMapper extends EntityMapper<BookImageDTO, BookImageEntityv2>, DomainMapper<BookImageEntityv2, BookImage> {
+public interface BookImageMapper extends EntityMapper<BookImageDTO, BookImageEntity>, DomainMapper<BookImageEntity, BookImage> {
 
     @Override
     @Mappings({
             @Mapping(target = "url", source = "url", qualifiedByName = "buildFullUrl"),
             @Mapping(target = "altText", source = "altText")
     })
-    BookImageDTO toDto(BookImageEntityv2 entity);
+    BookImageDTO toDto(BookImageEntity entity);
 
     @Override
     @Mappings({
             @Mapping(target = "url", source = "url", qualifiedByName = "buildFullUrl"),
             @Mapping(target = "altText", source = "altText")
     })
-    BookImage toDomain(BookImageEntityv2 entity);
+    BookImage toDomain(BookImageEntity entity);
 }

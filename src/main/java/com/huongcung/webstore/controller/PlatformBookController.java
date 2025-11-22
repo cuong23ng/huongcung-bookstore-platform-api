@@ -1,10 +1,9 @@
 package com.huongcung.webstore.controller;
 
+import com.huongcung.core.catalog.model.dto.AbstractBookDTO;
 import com.huongcung.core.catalog.model.dto.BookFrontPageDTO;
 import com.huongcung.core.catalog.service.AbstractBookService;
 import com.huongcung.core.common.model.response.BaseResponse;
-import com.huongcung.webstore.bookstore.model.BookData;
-import com.huongcung.webstore.bookstore.service.BookService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +20,6 @@ import java.util.Map;
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class PlatformBookController {
 
-    private final BookService bookService;
     private final AbstractBookService abstractBookService;
 
     /**
@@ -40,7 +38,7 @@ public class PlatformBookController {
      */
     @GetMapping("/{code}")
     public ResponseEntity<BaseResponse> getBookDetails(@PathVariable String code) {
-       BookData book = bookService.getBookDetails(code);
+        AbstractBookDTO book = abstractBookService.getBookDetails(code);
         return ResponseEntity.ok(BaseResponse.builder().data(book).build());
     }
 
