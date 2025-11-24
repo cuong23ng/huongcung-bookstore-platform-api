@@ -1,6 +1,6 @@
 package com.huongcung.webstore.controller;
 
-import com.huongcung.core.common.model.response.BaseResponse;
+import com.huongcung.core.common.model.dto.response.BaseResponse;
 import com.huongcung.core.search.model.dto.SearchRequest;
 import com.huongcung.core.search.model.dto.SearchResponse;
 import com.huongcung.core.search.service.SearchService;

@@ -1,9 +1,9 @@
 package com.huongcung.businessmanagement.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huongcung.businessmanagement.admin.model.StaffCreateRequest;
+import com.huongcung.businessmanagement.admin.model.request.StaffCreateRequest;
 import com.huongcung.businessmanagement.admin.model.StaffDTO;
-import com.huongcung.businessmanagement.admin.model.StaffUpdateRequest;
+import com.huongcung.businessmanagement.admin.model.request.StaffUpdateRequest;
 import com.huongcung.businessmanagement.admin.service.StaffService;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import com.huongcung.core.user.enumeration.StaffType;

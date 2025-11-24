@@ -1,4 +1,4 @@
-package com.huongcung.businessmanagement.admin.model;
+package com.huongcung.businessmanagement.admin.model.request;
 
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -8,13 +8,13 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 /**
- * Request DTO for updating an existing author
+ * Request DTO for updating an existing translator
  * All fields are optional for partial updates
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthorUpdateRequest {
+public class TranslatorUpdateRequest {
     
     @Size(min = 1, max = 255, message = "Name must be between 1 and 255 characters")
     private String name;
@@ -25,8 +25,5 @@ public class AuthorUpdateRequest {
     private String photoUrl;
     
     private LocalDate birthDate;
-    
-    @Size(max = 100, message = "Nationality must not exceed 100 characters")
-    private String nationality;
 }
 

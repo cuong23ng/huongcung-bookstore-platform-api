@@ -6,7 +6,8 @@ import java.util.Arrays;
 
 @Getter
 public enum FileType {
-    JPG("image/jpeg");
+    JPG("image/jpeg"),
+    EPUB("application/epub+zip");
 
     private final String code;
 

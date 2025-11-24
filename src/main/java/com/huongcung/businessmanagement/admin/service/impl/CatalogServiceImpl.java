@@ -1,15 +1,16 @@
 package com.huongcung.businessmanagement.admin.service.impl;
 
 import com.huongcung.businessmanagement.admin.mapper.AdminBookMapper;
-import com.huongcung.businessmanagement.admin.model.BookCreateRequest;
+import com.huongcung.businessmanagement.admin.model.request.BookCreateRequest;
 import com.huongcung.businessmanagement.admin.model.BookDetailDTO;
 import com.huongcung.businessmanagement.admin.model.BookImageData;
 import com.huongcung.businessmanagement.admin.model.BookListDTO;
-import com.huongcung.businessmanagement.admin.model.BookUpdateRequest;
+import com.huongcung.businessmanagement.admin.model.request.BookUpdateRequest;
 import com.huongcung.businessmanagement.admin.service.CatalogService;
 import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import com.huongcung.core.catalog.repository.EbookRepository;
 import com.huongcung.core.catalog.repository.PhysicalBookRepository;
+import com.huongcung.core.catalog.service.AbstractBookService;
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.contributor.model.entity.AuthorEntity;
 import com.huongcung.core.contributor.model.entity.PublisherEntity;
@@ -18,8 +19,10 @@ import com.huongcung.core.contributor.repository.AuthorRepository;
 import com.huongcung.core.contributor.repository.PublisherRepository;
 import com.huongcung.core.contributor.repository.TranslatorRepository;
 import com.huongcung.core.media.model.entity.BookImageEntity;
+import com.huongcung.core.media.model.entity.EbookFileEntity;
 import com.huongcung.core.media.repository.BookImageEntityRepository;
 import com.huongcung.core.media.enumeration.FileType;
+import com.huongcung.core.media.service.EbookFileService;
 import com.huongcung.core.storage.service.StorageService;
 import com.huongcung.core.catalog.model.entity.EbookEntity;
 import com.huongcung.core.contributor.model.entity.GenreEntity;
@@ -41,7 +44,9 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.text.Normalizer;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -65,6 +70,8 @@ public class CatalogServiceImpl implements CatalogService {
     private final AdminBookMapper bookMapper;
     private final BookImageEntityRepository bookImageEntityRepository;
     private final StorageService storageService;
+    private final AbstractBookService abstractBookService;
+    private final EbookFileService ebookFileService;
     
     @PersistenceContext
     private EntityManager entityManager;
@@ -503,7 +510,6 @@ public class CatalogServiceImpl implements CatalogService {
     public void uploadBookImages(Long id, MultipartFile[] files) {
         log.info("Uploading {} images for book ID: {}", files.length, id);
 
-        // Try to find as AbstractBookEntity first
         AbstractBookEntity abstractBook = abstractBookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
 
@@ -560,6 +566,67 @@ public class CatalogServiceImpl implements CatalogService {
                 throw new RuntimeException("Failed to upload image: " + e.getMessage());
             }
         }
+    }
+
+    @Override
+    public void addEbookEdition(Long id, String isbn, Double currentPrice, LocalDate publicationDate, String fileName, MultipartFile[] files) {
+        log.info("Uploading Ebook {} for book ID: {}", fileName, id);
+
+        AbstractBookEntity book = abstractBookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
+
+        EbookEntity ebookInfo;
+        boolean isNew = book.getEbookInfo() == null;
+        
+        if (isNew) {
+            ebookInfo = new EbookEntity();
+            ebookInfo.setAbstractBook(book);
+        } else {
+            ebookInfo = book.getEbookInfo();
+            if (ebookInfo.getAbstractBook() == null) {
+                ebookInfo.setAbstractBook(book);
+            }
+        }
+        
+        // Update fields
+        ebookInfo.setIsbn(isbn);
+        ebookInfo.setCurrentPrice(BigDecimal.valueOf(currentPrice));
+        ebookInfo.setPublicationDate(publicationDate);
+        
+        // Initialize files list if null
+        if (ebookInfo.getFiles() == null) {
+            ebookInfo.setFiles(new ArrayList<>());
+        }
+        
+        if (isNew) {
+            ebookInfo = ebookRepository.save(ebookInfo);
+        } else {
+            ebookInfo = entityManager.merge(ebookInfo);
+        }
+
+        // Now add files after ebookInfo has been saved and has an ID
+        for (MultipartFile file : files) {
+            if (file.isEmpty()) {
+                continue;
+            }
+
+            try {
+                // Create ebook file entity (don't save yet - will be saved via cascade)
+                EbookFileEntity ebookFile = ebookFileService.saveEbookFromStream(
+                    file.getInputStream(), fileName, book.getCode(), file.getContentType());
+                
+                // Set the book reference (ebookInfo now has an ID)
+                ebookFile.setBook(ebookInfo);
+                
+                // Add to files list - will be saved via cascade when ebookInfo is saved again
+                ebookInfo.getFiles().add(ebookFile);
+            } catch (Exception e) {
+                log.error("Failed to upload ebook file for book ID: {}", id, e);
+                throw new RuntimeException("Failed to upload ebook: " + e.getMessage());
+            }
+        }
+
+        ebookRepository.save(ebookInfo);
     }
 
     private String generateBookCode(String title, Integer edition) {

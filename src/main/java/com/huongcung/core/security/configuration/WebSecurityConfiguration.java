@@ -109,7 +109,7 @@ public class WebSecurityConfiguration {
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api/books/**").permitAll()
                 .requestMatchers("/api/books/search").permitAll()
-                .requestMatchers("/api/checkout/ghn/**").permitAll() // GHN address lookup endpoints
+                .requestMatchers("/api/checkout/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/api/admin/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()

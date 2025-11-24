@@ -1,14 +1,16 @@
 package com.huongcung.businessmanagement.admin.service;
 
-import com.huongcung.businessmanagement.admin.model.BookCreateRequest;
+import com.huongcung.businessmanagement.admin.model.request.BookCreateRequest;
 import com.huongcung.businessmanagement.admin.model.BookDetailDTO;
 import com.huongcung.businessmanagement.admin.model.BookListDTO;
-import com.huongcung.businessmanagement.admin.model.BookUpdateRequest;
+import com.huongcung.businessmanagement.admin.model.request.BookUpdateRequest;
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -57,6 +59,8 @@ public interface CatalogService {
     BookDetailDTO updateBook(Long id, BookUpdateRequest request, String updatedBy);
 
     void uploadBookImages(Long id, MultipartFile[] files);
+
+    void addEbookEdition(Long id, String isbn, Double currentPrice, LocalDate publicationDate, String fileName, MultipartFile[] files);
     
     /**
      * Deactivate book entry (soft delete)

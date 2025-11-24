@@ -92,8 +92,10 @@ public class BookSearchRepositoryImpl implements BookSearchRepository {
         try {
             SolrQuery solrQuery = new SolrQuery();
             solrQuery.setRequestHandler("/suggest");
-            solrQuery.setParam("q", query);
+            // Use suggest.q instead of q for suggest queries
+            solrQuery.setParam("suggest.q", query);
             solrQuery.setParam("suggest.count", String.valueOf(limit));
+            solrQuery.setParam("suggest.dictionary", "bookSuggester");
             
             QueryResponse response = getSolrClient().query(solrConfig.getCore(), solrQuery);
             return response.getSuggesterResponse();

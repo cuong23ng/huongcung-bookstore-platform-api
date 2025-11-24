@@ -1,4 +1,4 @@
-package com.huongcung.core.common.model.response;
+package com.huongcung.core.common.model.dto.response;
 
 import lombok.*;
 

@@ -1,10 +1,10 @@
 package com.huongcung.businessmanagement.admin.service.impl;
 
 import com.huongcung.businessmanagement.admin.mapper.BookMapper;
-import com.huongcung.businessmanagement.admin.model.BookCreateRequest;
+import com.huongcung.businessmanagement.admin.model.request.BookCreateRequest;
 import com.huongcung.businessmanagement.admin.model.BookDetailDTO;
 import com.huongcung.businessmanagement.admin.model.BookImageData;
-import com.huongcung.businessmanagement.admin.model.BookUpdateRequest;
+import com.huongcung.businessmanagement.admin.model.request.BookUpdateRequest;
 import com.huongcung.core.catalog.model.entity.BookEntity;
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.contributor.model.entity.AuthorEntity;

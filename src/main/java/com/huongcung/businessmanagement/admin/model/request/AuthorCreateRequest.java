@@ -1,5 +1,7 @@
-package com.huongcung.businessmanagement.admin.model;
+package com.huongcung.businessmanagement.admin.model.request;
 
+import com.huongcung.businessmanagement.admin.model.ImageData;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,22 +10,26 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 /**
- * Request DTO for updating an existing translator
- * All fields are optional for partial updates
+ * Request DTO for creating a new author
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TranslatorUpdateRequest {
+public class AuthorCreateRequest {
     
+    @NotBlank(message = "Name is required")
     @Size(min = 1, max = 255, message = "Name must be between 1 and 255 characters")
     private String name;
     
     @Size(max = 5000, message = "Biography must not exceed 5000 characters")
     private String biography;
-    
-    private String photoUrl;
+
+    // Avatar
+    private ImageData image;
     
     private LocalDate birthDate;
+    
+    @Size(max = 100, message = "Nationality must not exceed 100 characters")
+    private String nationality;
 }
 

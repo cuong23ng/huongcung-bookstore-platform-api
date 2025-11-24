@@ -37,7 +37,7 @@ public class SearchIndexServiceImpl implements SearchIndexService {
     
     @Override
     @Transactional
-    @CacheEvict(value = {"searchResults", "searchFacets", "searchSuggestions"}, allEntries = true)
+    @CacheEvict(value = {"searchResults", "searchFacets", "searchSuggestions", "frontPage"}, allEntries = true)
     public boolean indexBook(AbstractBookEntity book) {
         try {
             BookSearchDocument document = mapEntityToDocument(book);
@@ -126,7 +126,7 @@ public class SearchIndexServiceImpl implements SearchIndexService {
     
     @Override
     @Transactional
-    @CacheEvict(value = {"searchResults", "searchFacets", "searchSuggestions"}, allEntries = true)
+    @CacheEvict(value = {"searchResults", "searchFacets", "searchSuggestions", "frontPage"}, allEntries = true)
     public boolean updateBookIndex(Long bookId) {
         try {
             // Fetch book (lazy collections will be initialized in transaction)
@@ -144,7 +144,7 @@ public class SearchIndexServiceImpl implements SearchIndexService {
     }
     
     @Override
-    @CacheEvict(value = {"searchResults", "searchFacets", "searchSuggestions"}, allEntries = true)
+    @CacheEvict(value = {"searchResults", "searchFacets", "searchSuggestions", "frontPage"}, allEntries = true)
     public boolean deleteBookFromIndex(Long bookId) {
         try {
             bookSearchRepository.deleteById(String.valueOf(bookId));

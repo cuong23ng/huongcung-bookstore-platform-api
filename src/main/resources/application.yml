@@ -12,12 +12,24 @@ spring:
     username: ${JDBC_DATABASE_USERNAME:}
     password: ${JDBC_DATABASE_PASSWORD:}
   cache:
-    type: simple
-    cache-names:
-      - searchResults
-      - searchFacets
-      - searchSuggestions
-
+    type: redis
+    redis:
+      time-to-live: 3600000  # 1 hour in milliseconds
+      cache-null-values: false
+      use-key-prefix: true
+      key-prefix: "bookstore:cache:"
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
 # Server Configuration
 server:
   port: 8082

@@ -1,5 +1,6 @@
-package com.huongcung.businessmanagement.admin.model;
+package com.huongcung.businessmanagement.admin.model.request;
 
+import com.huongcung.businessmanagement.admin.model.BookImageData;
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.catalog.enumeration.CoverType;
 import jakarta.validation.constraints.NotBlank;

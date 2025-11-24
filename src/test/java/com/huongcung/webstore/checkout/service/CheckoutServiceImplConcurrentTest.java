@@ -16,6 +16,7 @@ import com.huongcung.webstore.checkout.dto.CheckoutItemDTO;
 import com.huongcung.webstore.checkout.dto.CheckoutRequest;
 import com.huongcung.webstore.checkout.dto.ShippingAddressDTO;
 import com.huongcung.webstore.checkout.external.ghn.GhnApiClient;
+import com.huongcung.webstore.checkout.service.impl.CheckoutServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CheckoutService Concurrent Tests")
-class CheckoutServiceConcurrentTest {
+class CheckoutServiceImplConcurrentTest {
     
     @Mock
     private OrderRepository orderRepository;
@@ -68,7 +69,7 @@ class CheckoutServiceConcurrentTest {
     private ObjectMapper objectMapper;
     
     @InjectMocks
-    private CheckoutService checkoutService;
+    private CheckoutServiceImpl checkoutServiceImpl;
     
     private CustomerEntity testCustomer;
     private PhysicalBookEntity testPhysicalBook;
@@ -179,7 +180,7 @@ class CheckoutServiceConcurrentTest {
         for (int i = 0; i < concurrentRequests; i++) {
             executor.submit(() -> {
                 try {
-                    checkoutService.createOrder(request, 1L);
+                    checkoutServiceImpl.createOrder(request, 1L);
                     successCount.incrementAndGet();
                 } catch (IllegalArgumentException e) {
                     failureCount.incrementAndGet();

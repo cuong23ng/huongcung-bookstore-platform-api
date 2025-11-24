@@ -12,6 +12,7 @@ import java.util.List;
 
 @Data
 public class AbstractBookDTO {
+    private Long id;
     private String code;
     private String title;
     private List<AuthorDTO> authors;

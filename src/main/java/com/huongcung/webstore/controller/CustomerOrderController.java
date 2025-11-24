@@ -1,6 +1,6 @@
 package com.huongcung.webstore.controller;
 
-import com.huongcung.core.common.model.response.BaseResponse;
+import com.huongcung.core.common.model.dto.response.BaseResponse;
 import com.huongcung.core.security.model.dto.CustomUserDetails;
 import com.huongcung.webstore.customer.dto.OrderDetailsDTO;
 import com.huongcung.webstore.customer.dto.OrderHistoryDTO;

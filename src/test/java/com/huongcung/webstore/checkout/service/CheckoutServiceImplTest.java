@@ -23,6 +23,7 @@ import com.huongcung.webstore.checkout.dto.CheckoutResponse;
 import com.huongcung.webstore.checkout.dto.ShippingAddressDTO;
 import com.huongcung.webstore.checkout.external.ghn.GhnApiClient;
 import com.huongcung.webstore.checkout.external.ghn.dto.CalculateFeeResponse;
+import com.huongcung.webstore.checkout.service.impl.CheckoutServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CheckoutService Unit Tests")
-class CheckoutServiceTest {
+class CheckoutServiceImplTest {
     
     @Mock
     private OrderRepository orderRepository;
@@ -73,7 +74,7 @@ class CheckoutServiceTest {
     private ObjectMapper objectMapper;
     
     @InjectMocks
-    private CheckoutService checkoutService;
+    private CheckoutServiceImpl checkoutServiceImpl;
     
     private CustomerEntity testCustomer;
     private PhysicalBookEntity testPhysicalBook;
@@ -159,7 +160,7 @@ class CheckoutServiceTest {
         when(orderRepository.save(any(OrderEntity.class))).thenReturn(savedOrder);
         
         // When
-        CheckoutResponse response = checkoutService.createOrder(request, 1L);
+        CheckoutResponse response = checkoutServiceImpl.createOrder(request, 1L);
         
         // Then
         assertNotNull(response);
@@ -183,7 +184,7 @@ class CheckoutServiceTest {
         
         // When & Then
         assertThrows(IllegalArgumentException.class, () -> {
-            checkoutService.createOrder(request, 1L);
+            checkoutServiceImpl.createOrder(request, 1L);
         });
     }
     
@@ -204,7 +205,7 @@ class CheckoutServiceTest {
         
         // When & Then
         assertThrows(IllegalArgumentException.class, () -> {
-            checkoutService.createOrder(request, 1L);
+            checkoutServiceImpl.createOrder(request, 1L);
         });
     }
     
@@ -235,7 +236,7 @@ class CheckoutServiceTest {
         
         // When & Then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            checkoutService.createOrder(request, 1L);
+            checkoutServiceImpl.createOrder(request, 1L);
         });
         
         assertTrue(exception.getMessage().contains("Insufficient stock"));
@@ -273,7 +274,7 @@ class CheckoutServiceTest {
         when(orderRepository.save(any(OrderEntity.class))).thenReturn(savedOrder);
         
         // When
-        CheckoutResponse response = checkoutService.createOrder(request, 1L);
+        CheckoutResponse response = checkoutServiceImpl.createOrder(request, 1L);
         
         // Then
         assertNotNull(response);
@@ -320,7 +321,7 @@ class CheckoutServiceTest {
         when(orderRepository.save(any(OrderEntity.class))).thenReturn(savedOrder);
         
         // When
-        CheckoutResponse response = checkoutService.createOrder(request, 1L);
+        CheckoutResponse response = checkoutServiceImpl.createOrder(request, 1L);
         
         // Then
         assertNotNull(response);
@@ -368,7 +369,7 @@ class CheckoutServiceTest {
         when(orderRepository.save(any(OrderEntity.class))).thenReturn(savedOrder);
         
         // When
-        checkoutService.createOrder(request, 1L);
+        checkoutServiceImpl.createOrder(request, 1L);
         
         // Then
         ArgumentCaptor<StockLevelEntity> stockCaptor = ArgumentCaptor.forClass(StockLevelEntity.class);
@@ -422,7 +423,7 @@ class CheckoutServiceTest {
         when(orderRepository.save(any(OrderEntity.class))).thenReturn(savedOrder);
         
         // When
-        checkoutService.createOrder(request, 1L);
+        checkoutServiceImpl.createOrder(request, 1L);
         
         // Then
         ArgumentCaptor<OrderEntity> orderCaptor = ArgumentCaptor.forClass(OrderEntity.class);

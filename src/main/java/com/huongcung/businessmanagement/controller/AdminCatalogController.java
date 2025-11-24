@@ -1,10 +1,11 @@
 package com.huongcung.businessmanagement.controller;
 
 import com.huongcung.businessmanagement.admin.model.*;
+import com.huongcung.businessmanagement.admin.model.request.*;
 import com.huongcung.businessmanagement.admin.service.CatalogService;
 import com.huongcung.businessmanagement.admin.service.ContributorService;
 import com.huongcung.core.common.enumeration.Language;
-import com.huongcung.core.common.model.response.BaseResponse;
+import com.huongcung.core.common.model.dto.response.BaseResponse;
 import com.huongcung.core.contributor.model.dto.AuthorDTO;
 import com.huongcung.core.contributor.model.dto.PublisherDTO;
 import com.huongcung.core.contributor.model.dto.TranslatorDTO;
@@ -20,6 +21,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Map;
 
 /**
@@ -163,6 +166,22 @@ public class AdminCatalogController {
 
         return ResponseEntity.ok(BaseResponse.builder()
                 .message("Images uploaded successfully")
+                .build());
+    }
+
+    @PostMapping("/{id}/ebook")
+    public ResponseEntity<BaseResponse> addEbookEdition(
+            @PathVariable Long id,
+            @RequestParam("fileName") String fileName,
+            @RequestParam("isbn") String isbn,
+            @RequestParam("currentPrice") Double currentPrice,
+            @RequestParam("publicationDate") LocalDate publicationDate,
+            @RequestParam("files") MultipartFile[] files) {
+
+        catalogService.addEbookEdition(id, isbn, currentPrice, publicationDate, fileName, files);
+
+        return ResponseEntity.ok(BaseResponse.builder()
+                .message("Ebook uploaded successfully")
                 .build());
     }
     

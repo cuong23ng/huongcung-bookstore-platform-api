@@ -92,6 +92,22 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+  
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - platform-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   platform-app:
     build:
@@ -132,6 +148,7 @@ volumes:
   mysql-data:
   minio-data:
   solr-data:
+  redis-data:
 
 networks:
   platform-network:

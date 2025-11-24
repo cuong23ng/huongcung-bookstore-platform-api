@@ -1,4 +1,4 @@
-package com.huongcung.businessmanagement.admin.model;
+package com.huongcung.businessmanagement.admin.model.request;
 
 import com.huongcung.core.user.enumeration.StaffType;
 import jakarta.validation.constraints.Email;

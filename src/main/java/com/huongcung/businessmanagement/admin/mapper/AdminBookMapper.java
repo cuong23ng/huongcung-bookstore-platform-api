@@ -1,9 +1,9 @@
 package com.huongcung.businessmanagement.admin.mapper;
 
-import com.huongcung.businessmanagement.admin.model.BookCreateRequest;
+import com.huongcung.businessmanagement.admin.model.request.BookCreateRequest;
 import com.huongcung.businessmanagement.admin.model.BookDetailDTO;
 import com.huongcung.businessmanagement.admin.model.BookListDTO;
-import com.huongcung.businessmanagement.admin.model.BookUpdateRequest;
+import com.huongcung.businessmanagement.admin.model.request.BookUpdateRequest;
 import com.huongcung.core.catalog.enumeration.CoverType;
 import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import com.huongcung.core.contributor.mapper.AuthorMapper;

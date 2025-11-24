@@ -1,6 +1,7 @@
 package com.huongcung.businessmanagement.admin.mapper;
 
 import com.huongcung.businessmanagement.admin.model.*;
+import com.huongcung.businessmanagement.admin.model.request.*;
 import com.huongcung.core.common.mapper.CommonMapper;
 import com.huongcung.core.contributor.model.dto.AuthorDTO;
 import com.huongcung.core.contributor.model.dto.PublisherDTO;

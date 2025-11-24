@@ -7,7 +7,7 @@ import com.huongcung.core.security.external.jwt.JwtTokenProvider;
 import com.huongcung.webstore.checkout.dto.*;
 import com.huongcung.webstore.checkout.external.ghn.GhnApiClient;
 import com.huongcung.webstore.checkout.external.ghn.dto.*;
-import com.huongcung.webstore.checkout.service.CheckoutService;
+import com.huongcung.webstore.checkout.service.impl.CheckoutServiceImpl;
 import com.huongcung.webstore.controller.CheckoutController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,7 +48,7 @@ class CheckoutControllerTest {
     
     @SuppressWarnings("removal")
     @MockBean
-    private CheckoutService checkoutService;
+    private CheckoutServiceImpl checkoutServiceImpl;
     
     // Mock beans required by JwtAuthenticationFilter and WebSecurityConfiguration
     @SuppressWarnings("removal")
@@ -198,7 +198,7 @@ class CheckoutControllerTest {
         
         // Note: In a real test, we'd need to mock the authentication principal
         // For now, this test structure is set up but may need adjustment based on security setup
-        when(checkoutService.createOrder(any(CheckoutRequest.class), anyLong()))
+        when(checkoutServiceImpl.createOrder(any(CheckoutRequest.class), anyLong()))
             .thenReturn(response);
         
         // When & Then

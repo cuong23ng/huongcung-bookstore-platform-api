@@ -1,10 +1,10 @@
 package com.huongcung.businessmanagement.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huongcung.businessmanagement.admin.model.BookCreateRequest;
+import com.huongcung.businessmanagement.admin.model.request.BookCreateRequest;
 import com.huongcung.businessmanagement.admin.model.BookDetailDTO;
 import com.huongcung.businessmanagement.admin.model.BookListDTO;
-import com.huongcung.businessmanagement.admin.model.BookUpdateRequest;
+import com.huongcung.businessmanagement.admin.model.request.BookUpdateRequest;
 import com.huongcung.businessmanagement.admin.service.CatalogService;
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.media.service.ImageService;

@@ -1,19 +1,20 @@
-package com.huongcung.businessmanagement.admin.model;
+package com.huongcung.businessmanagement.admin.model.request;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Request DTO for updating an existing genre
- * All fields are optional for partial updates
+ * Request DTO for creating a new genre
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GenreUpdateRequest {
+public class GenreCreateRequest {
     
+    @NotBlank(message = "Name is required")
     @Size(min = 1, max = 100, message = "Name must be between 1 and 100 characters")
     private String name;
     
@@ -21,7 +22,5 @@ public class GenreUpdateRequest {
     private String description;
     
     private Long parentId; // Optional parent genre ID for hierarchical genres
-    
-    private Boolean isActive;
 }
 

@@ -13,7 +13,7 @@ import jakarta.validation.constraints.NotNull;
 @AllArgsConstructor
 public class CalculateFeeRequestDTO {
     @NotNull(message = "District ID is required")
-    private Integer districtId;
+    private String districtId;
     
     @NotNull(message = "Ward code is required")
     private String wardCode;
@@ -21,6 +21,6 @@ public class CalculateFeeRequestDTO {
     @NotNull(message = "Weight is required")
     private Integer weight; // in grams
     
-    private Integer serviceTypeId; // Optional, defaults to standard
+    private String serviceTypeId; // Optional, defaults to standard
 }
 

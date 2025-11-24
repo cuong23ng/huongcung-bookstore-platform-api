@@ -1,9 +1,9 @@
 package com.huongcung.businessmanagement.admin.service.impl;
 
 import com.huongcung.businessmanagement.admin.mapper.StaffMapper;
-import com.huongcung.businessmanagement.admin.model.StaffCreateRequest;
+import com.huongcung.businessmanagement.admin.model.request.StaffCreateRequest;
 import com.huongcung.businessmanagement.admin.model.StaffDTO;
-import com.huongcung.businessmanagement.admin.model.StaffUpdateRequest;
+import com.huongcung.businessmanagement.admin.model.request.StaffUpdateRequest;
 import com.huongcung.businessmanagement.admin.service.StaffService;
 import com.huongcung.core.common.enumeration.City;
 import com.huongcung.core.search.model.dto.PaginationInfo;

@@ -87,6 +87,7 @@
       <str name="suggest">true</str>
       <str name="suggest.count">10</str>
       <str name="suggest.dictionary">bookSuggester</str>
+      <str name="suggest.build">false</str>
     </lst>
     <arr name="components">
       <str>suggest</str>
@@ -134,9 +135,10 @@
       <str name="lookupImpl">FuzzyLookupFactory</str>
       <str name="dictionaryImpl">DocumentDictionaryFactory</str>
       <str name="field">title</str>
-      <str name="suggestAnalyzerFieldType">text_vi</str>
+      <str name="suggestAnalyzerFieldType">text_general</str>
       <str name="buildOnStartup">true</str>
       <str name="buildOnCommit">true</str>
+      <str name="buildOnOptimize">true</str>
       <str name="weightField">averageRating</str>
     </lst>
   </searchComponent>

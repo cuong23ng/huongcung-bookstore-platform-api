@@ -1,6 +1,7 @@
 package com.huongcung.core.catalog.model.domain;
 
 import com.huongcung.core.common.enumeration.Language;
+import com.huongcung.core.common.model.domain.BaseDomain;
 import com.huongcung.core.contributor.model.domain.Author;
 import com.huongcung.core.contributor.model.domain.Genre;
 import com.huongcung.core.contributor.model.domain.Publisher;
@@ -15,7 +16,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AbstractBook {
+public class AbstractBook extends BaseDomain {
     private String code;
     private String title;
     private List<Author> authors;

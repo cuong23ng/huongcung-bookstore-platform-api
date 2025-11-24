@@ -17,8 +17,12 @@ import java.util.List;
 @NoArgsConstructor
 public class EbookEntity extends BaseEntity {
 
+    @Id
+    @Column(name = "book_id")
+    private Long id;
+
     @OneToOne
-    @PrimaryKeyJoinColumn
+    @MapsId
     private AbstractBookEntity abstractBook;
 
     @Column(name = "isbn", unique = true)

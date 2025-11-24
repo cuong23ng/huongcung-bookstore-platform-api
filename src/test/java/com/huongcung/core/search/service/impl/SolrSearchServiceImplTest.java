@@ -2,7 +2,6 @@ package com.huongcung.core.search.service.impl;
 
 import com.huongcung.core.catalog.model.dto.BookDTO;
 import com.huongcung.core.common.enumeration.Language;
-import com.huongcung.core.catalog.service.BookService;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import com.huongcung.core.search.model.dto.SearchFacet;
 import com.huongcung.core.search.model.dto.SearchRequest;

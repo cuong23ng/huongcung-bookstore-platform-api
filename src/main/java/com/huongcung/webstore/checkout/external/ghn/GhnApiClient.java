@@ -5,11 +5,13 @@ import com.huongcung.webstore.checkout.external.ghn.config.GhnApiConfig;
 import com.huongcung.webstore.checkout.external.ghn.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -21,6 +23,29 @@ public class GhnApiClient {
     private final GhnApiConfig ghnApiConfig;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+
+    /**
+     * Get all provinces from GHN API
+     */
+    public List<GhnServiceDTO> getServices() {
+        // API lỗi nên mock data
+        GhnServiceDTO service1 = GhnServiceDTO.builder()
+                .serviceTypeId(2)
+                .serviceId(53320)
+                .shortName("Tiêu chuẩn")
+                .build();
+        GhnServiceDTO service2 = GhnServiceDTO.builder()
+                .serviceTypeId(1)
+                .serviceId(53319)
+                .shortName("Nhanh")
+                .build();
+        GhnServiceDTO service3 = GhnServiceDTO.builder()
+                .serviceTypeId(3)
+                .serviceId(53321)
+                .shortName("Tiết kiệm")
+                .build();
+        return List.of(service1, service2, service3);
+    }
     
     /**
      * Get all provinces from GHN API
@@ -37,7 +62,8 @@ public class GhnApiClient {
                 url,
                 HttpMethod.GET,
                 entity,
-                new org.springframework.core.ParameterizedTypeReference<GhnApiResponse<List<GhnProvinceDTO>>>() {}
+                    new ParameterizedTypeReference<>() {
+                    }
             );
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
@@ -80,7 +106,8 @@ public class GhnApiClient {
                 url,
                 HttpMethod.POST,
                 entity,
-                new org.springframework.core.ParameterizedTypeReference<GhnApiResponse<List<GhnDistrictDTO>>>() {}
+                    new ParameterizedTypeReference<>() {
+                    }
             );
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
@@ -123,7 +150,8 @@ public class GhnApiClient {
                 url,
                 HttpMethod.POST,
                 entity,
-                new org.springframework.core.ParameterizedTypeReference<GhnApiResponse<List<GhnWardDTO>>>() {}
+                    new ParameterizedTypeReference<>() {
+                    }
             );
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {

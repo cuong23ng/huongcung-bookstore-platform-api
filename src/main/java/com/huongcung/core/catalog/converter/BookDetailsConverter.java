@@ -2,6 +2,7 @@ package com.huongcung.core.catalog.converter;
 
 import com.huongcung.core.catalog.model.domain.AbstractBook;
 import com.huongcung.core.catalog.model.dto.AbstractBookDTO;
+import com.huongcung.core.contributor.converter.GenreConverter;
 import com.huongcung.core.contributor.model.dto.AuthorDTO;
 import com.huongcung.core.contributor.model.dto.PublisherDTO;
 import com.huongcung.core.contributor.model.dto.TranslatorDTO;
@@ -21,6 +22,7 @@ public class BookDetailsConverter implements Converter<AbstractBook, AbstractBoo
 
     private final PhysicalBookInformationConverter physicalBookInformationConverter;
     private final EbookInformationConverter ebookInformationConverter;
+    private final GenreConverter genreConverter;
     private final ImageConverter imageConverter;
 
     @Override
@@ -37,6 +39,8 @@ public class BookDetailsConverter implements Converter<AbstractBook, AbstractBoo
         target.setLanguage(source.getLanguage());
         target.setPageCount(source.getPageCount());
         target.setDescription(source.getDescription());
+
+        target.setGenres(source.getGenres().parallelStream().map(genreConverter::convert).toList());
 
         target.setAuthors(source.getAuthors().parallelStream().map(a -> {
             AuthorDTO authorDTO = new AuthorDTO();
