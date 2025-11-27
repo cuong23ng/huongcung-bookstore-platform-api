@@ -16,12 +16,12 @@ import javax.sql.DataSource;
  * tries to create foreign key constraints.
  * This runs before JPA initialization to prevent foreign key constraint violations.
  */
-@Component
+//@Component
 @Slf4j
 @Order(1) // Run before other components
 public class DatabaseCleanupConfig implements ApplicationListener<ContextRefreshedEvent> {
 
-    @Autowired
+    //@Autowired
     private DataSource dataSource;
     
     private boolean cleanupExecuted = false;
@@ -76,6 +76,18 @@ public class DatabaseCleanupConfig implements ApplicationListener<ContextRefresh
                 log.warn("Deleted {} orphaned records from book_images_v2 table", deletedBookImages);
             }
             
+            // Clean up orphaned records that reference ebooks before deleting ebooks
+            // ebook_files table references ebooks
+            int deletedEbookFiles = jdbcTemplate.update(
+                "DELETE ef FROM ebook_files ef " +
+                "LEFT JOIN ebooks e ON ef.book = e.id " +
+                "LEFT JOIN abstract_book b ON e.id = b.id " +
+                "WHERE e.id IS NULL OR b.id IS NULL"
+            );
+            if (deletedEbookFiles > 0) {
+                log.warn("Deleted {} orphaned records from ebook_files table", deletedEbookFiles);
+            }
+            
             // Clean up orphaned records in ebooks table
             // With @PrimaryKeyJoinColumn, ebooks.id = abstract_book.id, so we join on id
             int deletedEbooks = jdbcTemplate.update(
@@ -85,6 +97,18 @@ public class DatabaseCleanupConfig implements ApplicationListener<ContextRefresh
             );
             if (deletedEbooks > 0) {
                 log.warn("Deleted {} orphaned records from ebooks table", deletedEbooks);
+            }
+            
+            // Clean up orphaned records that reference physical_books before deleting physical_books
+            // stock_levels table references physical_books (book_id)
+            int deletedStockLevels = jdbcTemplate.update(
+                "DELETE sl FROM stock_levels sl " +
+                "LEFT JOIN physical_books pb ON sl.book_id = pb.id " +
+                "LEFT JOIN abstract_book b ON pb.id = b.id " +
+                "WHERE pb.id IS NULL OR b.id IS NULL"
+            );
+            if (deletedStockLevels > 0) {
+                log.warn("Deleted {} orphaned records from stock_levels table", deletedStockLevels);
             }
             
             // Clean up orphaned records in physical_books table

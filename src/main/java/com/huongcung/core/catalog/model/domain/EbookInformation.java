@@ -13,7 +13,8 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class EbookInformation extends AbstractBook {
+public class EbookInformation {
+    private AbstractBook abstractBook;
     private String isbn;
     private Date publicationDate;
     private BigDecimal currentPrice;

@@ -148,7 +148,7 @@ class CatalogServiceImplTest {
         testEbook.setFile(ebookFile);
         
         testEbook.setCurrentPrice(new BigDecimal("100000"));
-        testEbook.setIsActive(true);
+        testEbook.setIsAvailable(true);
     }
     
     @Test

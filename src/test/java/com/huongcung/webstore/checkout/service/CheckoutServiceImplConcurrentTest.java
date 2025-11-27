@@ -151,7 +151,7 @@ class CheckoutServiceImplConcurrentTest {
         lockedStock.setQuantity(availableStock);
         lockedStock.setReservedQuantity(0);
         
-        when(stockLevelRepository.findByBookAndCityWithLock(eq(testPhysicalBook), eq(City.HANOI)))
+        when(stockLevelRepository.findByBookAndWarehouseCityWithLock(eq(testPhysicalBook), eq(City.HANOI)))
             .thenAnswer(invocation -> {
                 // Simulate checking and updating stock
                 StockLevelEntity stock = lockedStock;

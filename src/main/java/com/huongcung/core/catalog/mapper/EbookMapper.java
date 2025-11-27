@@ -7,6 +7,6 @@ import com.huongcung.core.media.mapper.EbookFileMapper;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring",
-        uses = {EbookFileMapper.class})
+        uses = { EbookFileMapper.class, AbstractBookMapper.class })
 public interface EbookMapper extends DomainMapper<EbookEntity, EbookInformation> {
 }

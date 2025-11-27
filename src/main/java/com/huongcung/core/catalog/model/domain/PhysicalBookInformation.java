@@ -11,7 +11,8 @@ import java.util.Date;
 @Getter
 @Setter
 @NoArgsConstructor
-public class PhysicalBookInformation extends AbstractBook {
+public class PhysicalBookInformation {
+    private AbstractBook abstractBook;
     private String isbn;
     private Date publicationDate;
     private BigDecimal currentPrice;

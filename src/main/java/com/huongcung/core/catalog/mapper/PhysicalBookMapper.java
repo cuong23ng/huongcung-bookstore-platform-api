@@ -5,6 +5,7 @@ import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
 import com.huongcung.core.common.mapper.DomainMapper;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring",
+        uses = { AbstractBookMapper.class })
 public interface PhysicalBookMapper extends DomainMapper<PhysicalBookEntity, PhysicalBookInformation> {
 }

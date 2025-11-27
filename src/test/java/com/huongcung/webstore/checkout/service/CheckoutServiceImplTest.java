@@ -145,7 +145,7 @@ class CheckoutServiceImplTest {
         when(warehouseRepository.findByCity(City.HANOI)).thenReturn(Collections.singletonList(testWarehouse));
         when(stockLevelRepository.findByBookIdAndWarehouseCity(1L, City.HANOI))
             .thenReturn(Optional.of(testStockLevel));
-        when(stockLevelRepository.findByBookAndCityWithLock(eq(testPhysicalBook), eq(City.HANOI)))
+        when(stockLevelRepository.findByBookAndWarehouseCityWithLock(eq(testPhysicalBook), eq(City.HANOI)))
             .thenReturn(Optional.of(testStockLevel));
         
         CalculateFeeResponse feeResponse = new CalculateFeeResponse();
@@ -309,7 +309,7 @@ class CheckoutServiceImplTest {
         when(warehouseRepository.findByCity(City.HANOI)).thenReturn(Collections.singletonList(testWarehouse));
         when(stockLevelRepository.findByBookIdAndWarehouseCity(1L, City.HANOI))
             .thenReturn(Optional.of(testStockLevel));
-        when(stockLevelRepository.findByBookAndCityWithLock(eq(testPhysicalBook), eq(City.HANOI)))
+        when(stockLevelRepository.findByBookAndWarehouseCityWithLock(eq(testPhysicalBook), eq(City.HANOI)))
             .thenReturn(Optional.of(testStockLevel));
         
         when(ghnApiClient.calculateFee(any())).thenThrow(new GhnApiClient.GhnApiException("GHN API unavailable"));
@@ -357,7 +357,7 @@ class CheckoutServiceImplTest {
         when(warehouseRepository.findByCity(City.HANOI)).thenReturn(Collections.singletonList(testWarehouse));
         when(stockLevelRepository.findByBookIdAndWarehouseCity(1L, City.HANOI))
             .thenReturn(Optional.of(testStockLevel));
-        when(stockLevelRepository.findByBookAndCityWithLock(eq(testPhysicalBook), eq(City.HANOI)))
+        when(stockLevelRepository.findByBookAndWarehouseCityWithLock(eq(testPhysicalBook), eq(City.HANOI)))
             .thenReturn(Optional.of(testStockLevel));
         
         when(ghnApiClient.calculateFee(any())).thenThrow(new GhnApiClient.GhnApiException("GHN API unavailable"));
@@ -411,7 +411,7 @@ class CheckoutServiceImplTest {
         when(warehouseRepository.findByCity(City.HANOI)).thenReturn(Collections.singletonList(testWarehouse));
         when(stockLevelRepository.findByBookIdAndWarehouseCity(1L, City.HANOI))
             .thenReturn(Optional.of(testStockLevel));
-        when(stockLevelRepository.findByBookAndCityWithLock(eq(testPhysicalBook), eq(City.HANOI)))
+        when(stockLevelRepository.findByBookAndWarehouseCityWithLock(eq(testPhysicalBook), eq(City.HANOI)))
             .thenReturn(Optional.of(testStockLevel));
         
         when(ghnApiClient.calculateFee(any())).thenThrow(new GhnApiClient.GhnApiException("GHN API unavailable"));

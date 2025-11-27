@@ -1,7 +1,7 @@
 package com.huongcung.core.user.service;
 
-import org.springframework.security.core.userdetails.UserDetails;
+import com.huongcung.core.security.model.dto.CustomUserDetails;
 
 public interface UserService {
-    UserDetails getCurrentUser();
+    CustomUserDetails getCurrentUser();
 }

@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,7 +14,7 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService {
 
     @Override
-    public UserDetails getCurrentUser() {
+    public CustomUserDetails getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getPrincipal() == null) {
             return null;
@@ -23,8 +22,8 @@ public class UserServiceImpl implements UserService {
         
         Object principal = authentication.getPrincipal();
 
-        if (principal instanceof UserDetails) {
-            return (UserDetails) principal;
+        if (principal instanceof CustomUserDetails) {
+            return (CustomUserDetails) principal;
         }
 
         return null;

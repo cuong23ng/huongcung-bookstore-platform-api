@@ -16,8 +16,12 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class PhysicalBookEntity extends BaseEntity {
 
+    @Id
+    @Column(name = "book_id")
+    private Long id;
+
     @OneToOne
-    @PrimaryKeyJoinColumn
+    @JoinColumn(name = "abstract_book_id", nullable = false, unique = true)
     private AbstractBookEntity abstractBook;
 
     @Column(name = "isbn", unique = true)

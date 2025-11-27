@@ -227,7 +227,7 @@ public class CatalogServiceImpl implements CatalogService {
         // Create EbookEntity if requested
         if (request.getHasElectricEdition()) {
             EbookEntity ebook = new EbookEntity();
-            ebook.setIsActive(false);
+            ebook.setIsAvailable(false);
             
             // Set EbookEntity specific fields
             ebook.setPublicationDate(request.getPublicationDate());
@@ -427,9 +427,9 @@ public class CatalogServiceImpl implements CatalogService {
                 changes.append("publicationDate updated; ");
                 ebook.setPublicationDate(request.getPublicationDate());
             }
-            if (request.getIsActive() != null && !Objects.equals(ebook.getIsActive(), request.getIsActive())) {
+            if (request.getIsActive() != null && !Objects.equals(ebook.getIsAvailable(), request.getIsActive())) {
                 changes.append("isActive updated; ");
-                ebook.setIsActive(request.getIsActive());
+                ebook.setIsAvailable(request.getIsActive());
             }
         }
         
@@ -479,8 +479,8 @@ public class CatalogServiceImpl implements CatalogService {
         // Deactivate EbookEntity if exists
         if (abstractBook.getEbookInfo() != null) {
             EbookEntity ebook = abstractBook.getEbookInfo();
-            if (Boolean.TRUE.equals(ebook.getIsActive())) {
-                ebook.setIsActive(false);
+            if (Boolean.TRUE.equals(ebook.getIsAvailable())) {
+                ebook.setIsAvailable(false);
             } else {
                 log.warn("Ebook ID: {} is already deactivated", id);
             }

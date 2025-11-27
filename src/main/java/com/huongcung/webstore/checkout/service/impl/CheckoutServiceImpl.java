@@ -1,10 +1,10 @@
 package com.huongcung.webstore.checkout.service.impl;
 
+import com.huongcung.core.inventory.service.InventoryService;
 import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import com.huongcung.core.common.enumeration.City;
-import com.huongcung.core.inventory.model.entity.StockLevelEntity;
+import com.huongcung.core.inventory.model.domain.StockLevel;
 import com.huongcung.core.inventory.model.entity.WarehouseEntity;
-import com.huongcung.core.inventory.repository.StockLevelRepository;
 import com.huongcung.core.inventory.repository.WarehouseRepository;
 import com.huongcung.core.order.enumeration.ItemType;
 import com.huongcung.core.order.enumeration.OrderStatus;
@@ -17,16 +17,14 @@ import com.huongcung.core.order.model.entity.OrderEntryEntity;
 import com.huongcung.core.order.repository.DeliveryInfoRepository;
 import com.huongcung.core.order.repository.OrderEntryRepository;
 import com.huongcung.core.order.repository.OrderRepository;
-import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
 import com.huongcung.core.catalog.repository.AbstractBookRepository;
+import com.huongcung.core.order.service.OrderConfirmationService;
 import com.huongcung.core.security.model.dto.CustomUserDetails;
 import com.huongcung.core.user.model.entity.CustomerEntity;
 import com.huongcung.core.user.repository.CustomerRepository;
 import com.huongcung.core.user.service.CustomerService;
 import com.huongcung.webstore.checkout.dto.*;
 import com.huongcung.webstore.checkout.external.ghn.GhnApiClient;
-import com.huongcung.webstore.checkout.external.ghn.dto.CalculateFeeRequest;
-import com.huongcung.webstore.checkout.external.ghn.dto.CalculateFeeResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huongcung.webstore.checkout.service.CheckoutService;
 import com.huongcung.webstore.checkout.service.DeliveryService;
@@ -38,10 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -52,13 +47,14 @@ public class CheckoutServiceImpl implements CheckoutService {
     private final OrderEntryRepository orderEntryRepository;
     private final DeliveryInfoRepository deliveryInfoRepository;
     private final AbstractBookRepository abstractBookRepository;
-    private final StockLevelRepository stockLevelRepository;
-    private final WarehouseRepository warehouseRepository;
     private final CustomerRepository customerRepository;
     private final CustomerService customerService;
     private final DeliveryService deliveryService;
+    private final InventoryService inventoryService;
+    private final OrderConfirmationService orderConfirmationService;
     private final ObjectMapper objectMapper;
-    
+    private final WarehouseRepository warehouseRepository;
+
     @Transactional
     public CheckoutResponse createOrder(CheckoutRequest request) {
 
@@ -81,7 +77,7 @@ public class CheckoutServiceImpl implements CheckoutService {
                 .toList();
         
         // Validate stock for physical items
-        //validateStock(request.getItems(), books);
+        validateStock(request.getItems(), books);
         
         // Calculate subtotal
         BigDecimal subtotal = calculateSubtotal(request.getItems(), books);
@@ -135,6 +131,11 @@ public class CheckoutServiceImpl implements CheckoutService {
         }
         
         log.info("Order created successfully: {}", orderNumber);
+
+        // Immediate confirm for COD
+        if (order.getPaymentMethod() == PaymentMethod.COD) {
+            orderConfirmationService.autoConfirmOrder(order.getId());
+        }
         
         CheckoutResponse response = new CheckoutResponse();
         response.setOrderId(order.getId());
@@ -177,27 +178,19 @@ public class CheckoutServiceImpl implements CheckoutService {
             AbstractBookEntity abstractBook = books.get(i);
             
             if ("PHYSICAL".equals(item.getItemType()) && abstractBook.getPhysicalBookInfo() != null) {
-                PhysicalBookEntity physicalBook = abstractBook.getPhysicalBookInfo();
                 // For physical items, we need to check stock
                 // For now, we'll check stock in the first available warehouse
                 // In a real scenario, you'd determine which warehouse to use based on delivery address
-                City deliveryCity = determineDeliveryCity(); // Simplified - should use GHN address
-                
-                WarehouseEntity warehouse = warehouseRepository.findByCity(deliveryCity)
-                    .stream()
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("No warehouse found for city: " + deliveryCity));
-                
-                StockLevelEntity stockLevel = stockLevelRepository
-                    .findByBookIdAndWarehouseCity(physicalBook.getId(), deliveryCity)
-                    .orElseThrow(() -> new IllegalStateException(
-                        "Stock level not found for book: " + physicalBook.getId() + " in city: " + deliveryCity));
-                
-                int availableQuantity = stockLevel.getQuantity() - stockLevel.getReservedQuantity();
-                if (availableQuantity < item.getQuantity()) {
+                City deliveryCity = determineDeliveryCity();
+                WarehouseEntity warehouse = warehouseRepository.findByCity(deliveryCity).get(0);
+
+                StockLevel stockLevel = inventoryService.findStockLevelByBookIdAndWarehouse(abstractBook.getId(), warehouse.getId());
+                log.info("Book {} - Available Qty: {} - Reserved Qty: {}", abstractBook.getTitle(), stockLevel.getAvailableQuantity(), item.getQuantity());
+
+                if (stockLevel.getAvailableQuantity() < item.getQuantity()) {
                     throw new IllegalArgumentException(
                         String.format("Insufficient stock for book %s. Available: %d, Requested: %d",
-                            abstractBook.getTitle(), availableQuantity, item.getQuantity()));
+                            abstractBook.getTitle(), stockLevel.getAvailableQuantity(), item.getQuantity()));
                 }
             }
         }
@@ -321,32 +314,16 @@ public class CheckoutServiceImpl implements CheckoutService {
     private void reserveInventory(List<CheckoutItemDTO> items,
                                  List<AbstractBookEntity> books) {
         City deliveryCity = determineDeliveryCity();
+        WarehouseEntity warehouse = warehouseRepository.findByCity(deliveryCity).get(0);
         
         for (int i = 0; i < items.size(); i++) {
             CheckoutItemDTO item = items.get(i);
             AbstractBookEntity abstractBook = books.get(i);
             
             if ("PHYSICAL".equals(item.getItemType()) && abstractBook.getPhysicalBookInfo() != null) {
-                PhysicalBookEntity physicalBook = abstractBook.getPhysicalBookInfo();
-                StockLevelEntity stockLevel = stockLevelRepository
-                    .findByBookIdAndWarehouseCity(physicalBook.getId(), deliveryCity)
-                    .orElse(null);
-                
-                if (stockLevel != null) {
-                    // Use pessimistic lock to prevent race conditions
-                    StockLevelEntity lockedStock = stockLevelRepository
-                        .findByBookAndCityWithLock(physicalBook, deliveryCity)
-                        .orElse(stockLevel);
-                    
-                    int newReserved = lockedStock.getReservedQuantity() + item.getQuantity();
-                    lockedStock.setReservedQuantity(newReserved);
-                    stockLevelRepository.save(lockedStock);
-                    
-                    log.debug("Reserved {} units of book {} in city {}", 
-                        item.getQuantity(), physicalBook.getId(), deliveryCity);
+                    inventoryService.reserveBookInventory(abstractBook.getId(), warehouse.getId(), item.getQuantity());
                 }
             }
         }
-    }
 }
 

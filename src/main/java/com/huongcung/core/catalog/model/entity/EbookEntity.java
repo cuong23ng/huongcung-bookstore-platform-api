@@ -22,7 +22,7 @@ public class EbookEntity extends BaseEntity {
     private Long id;
 
     @OneToOne
-    @MapsId
+    @JoinColumn(name = "abstract_book_id", nullable = false, unique = true)
     private AbstractBookEntity abstractBook;
 
     @Column(name = "isbn", unique = true)
@@ -37,6 +37,6 @@ public class EbookEntity extends BaseEntity {
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<EbookFileEntity> files;
 
-    @Column(name = "is_active")
-    private Boolean isActive = true;
+    @Column(name = "is_available")
+    private Boolean isAvailable = true;
 }
