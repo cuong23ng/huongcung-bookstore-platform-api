@@ -26,7 +26,7 @@ public class EmailServiceImpl implements EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setTo(order.getCustomer().getEmail());
+            helper.setTo(order.getOrderCustomer().getEmail());
             helper.setSubject("Hương Cung Bookstore - Xác nhận đơn hàng #" + order.getOrderNumber());
 
             // TODO: Template Engine (như Thymeleaf) để tạo nội dung HTML
@@ -37,7 +37,7 @@ public class EmailServiceImpl implements EmailService {
             helper.setText(htmlContent, true);
 
             mailSender.send(message);
-            log.info("Email sent successfully to {}", order.getCustomer().getEmail());
+            log.info("Email sent successfully to {}", order.getOrderCustomer().getEmail());
         } catch (MessagingException e) {
             log.error("Failed to send email for order {}", order.getOrderNumber(), e);
         }

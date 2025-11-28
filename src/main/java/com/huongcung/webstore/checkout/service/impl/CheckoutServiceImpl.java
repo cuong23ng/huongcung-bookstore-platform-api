@@ -1,20 +1,19 @@
 package com.huongcung.webstore.checkout.service.impl;
 
+import com.huongcung.core.catalog.enumeration.BookType;
 import com.huongcung.core.inventory.service.InventoryService;
 import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import com.huongcung.core.common.enumeration.City;
 import com.huongcung.core.inventory.model.domain.StockLevel;
 import com.huongcung.core.inventory.model.entity.WarehouseEntity;
 import com.huongcung.core.inventory.repository.WarehouseRepository;
-import com.huongcung.core.order.enumeration.ItemType;
-import com.huongcung.core.order.enumeration.OrderStatus;
-import com.huongcung.core.order.enumeration.OrderType;
-import com.huongcung.core.order.enumeration.PaymentMethod;
-import com.huongcung.core.order.enumeration.PaymentStatus;
+import com.huongcung.core.order.enumeration.*;
 import com.huongcung.core.order.model.entity.DeliveryInfoEntity;
+import com.huongcung.core.order.model.entity.OrderCustomerEntity;
 import com.huongcung.core.order.model.entity.OrderEntity;
 import com.huongcung.core.order.model.entity.OrderEntryEntity;
 import com.huongcung.core.order.repository.DeliveryInfoRepository;
+import com.huongcung.core.order.repository.OrderCustomerRepository;
 import com.huongcung.core.order.repository.OrderEntryRepository;
 import com.huongcung.core.order.repository.OrderRepository;
 import com.huongcung.core.catalog.repository.AbstractBookRepository;
@@ -54,22 +53,39 @@ public class CheckoutServiceImpl implements CheckoutService {
     private final OrderConfirmationService orderConfirmationService;
     private final ObjectMapper objectMapper;
     private final WarehouseRepository warehouseRepository;
+    private final OrderCustomerRepository orderCustomerRepository;
 
     @Transactional
     public CheckoutResponse createOrder(CheckoutRequest request) {
 
+        CustomerType customerType;
+
         // Get customer if logged in
-        CustomUserDetails customUserDetails = (CustomUserDetails) customerService.getCurrentUser();
+        CustomUserDetails customUserDetails = customerService.getCurrentUser();
         CustomerEntity customer = null;
         if (customUserDetails != null) {
+            customerType = CustomerType.REGISTERED;
             customer = customerRepository.findById(customUserDetails.getId()).orElse(null);
+        } else {
+            customerType = CustomerType.GUEST;
         }
+
+        OrderCustomerEntity orderCustomer = OrderCustomerEntity.builder()
+                .customerType(customerType)
+                .customer(customer)
+                .email(request.getEmail())
+                .fullName(request.getFullName())
+                .phone(request.getPhone())
+                .build();
 
         // Validate and get books
         List<AbstractBookEntity> books = validateAndGetBooks(request.getItems());
         List<String> physicalItems = request.getItems()
                 .stream()
-                .filter(i -> i.getItemType().equals("PHYSICAL"))
+                .filter(i -> {
+                    BookType bookType = BookType.valueOf(i.getItemType().toUpperCase());
+                    return bookType == BookType.PHYSICAL;
+                })
                 .map(CheckoutItemDTO::getBookCode).toList();
         List<AbstractBookEntity> physicalBooks = books
                 .stream()
@@ -94,6 +110,8 @@ public class CheckoutServiceImpl implements CheckoutService {
                 // Continue without delivery info for backward compatibility
             }
         }
+
+        //TODO: Process ebook checkout
         
         // Calculate total
         BigDecimal totalAmount = subtotal.add(shippingAmount);
@@ -105,6 +123,7 @@ public class CheckoutServiceImpl implements CheckoutService {
         OrderEntity order = new OrderEntity();
         order.setOrderNumber(orderNumber);
         order.setCustomer(customer);
+        order.setOrderCustomer(orderCustomer);
         order.setOrderType(determineOrderType(request.getItems()));
         order.setSubtotal(subtotal);
         order.setShippingAmount(shippingAmount);
@@ -113,8 +132,11 @@ public class CheckoutServiceImpl implements CheckoutService {
         order.setPaymentStatus(PaymentStatus.PENDING);
         order.setPaymentMethod(PaymentMethod.COD); // TODO: Payment method
         order.setShippingAddress(serializeShippingAddress(request.getShippingAddress()));
-        
+
+        orderCustomer.setOrder(order);
+
         order = orderRepository.save(order);
+        orderCustomerRepository.save(orderCustomer);
         
         // Create order entries and reserve inventory
         List<OrderEntryEntity> entries = createOrderEntries(order, request.getItems(), books);

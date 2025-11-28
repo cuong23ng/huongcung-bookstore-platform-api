@@ -1,5 +1,6 @@
 package com.huongcung.webstore.checkout.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,5 +25,15 @@ public class CheckoutRequest {
     private ShippingAddressDTO shippingAddress;
     
     private String shippingMethod; // standard or express
+
+    // Information for GUEST
+    @NotBlank(message = "Email is required")
+    private String email;
+
+    @NotBlank(message = "fullName is required")
+    private String fullName;
+
+    @NotBlank(message = "Phone is required")
+    private String phone;
 }
 

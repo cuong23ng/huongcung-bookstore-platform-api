@@ -27,6 +27,9 @@ public class OrderEntity extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "customer_id")
     private CustomerEntity customer;
+
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private OrderCustomerEntity orderCustomer;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "order_type", nullable = false)
@@ -74,6 +77,6 @@ public class OrderEntity extends BaseEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ConsignmentEntity> consignments;
     
-    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private DeliveryInfoEntity deliveryInfo;
 }

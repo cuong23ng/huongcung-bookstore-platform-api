@@ -4,10 +4,7 @@ import com.huongcung.core.common.model.entity.BaseEntity;
 import com.huongcung.core.order.enumeration.CustomerType;
 import com.huongcung.core.user.model.entity.CustomerEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "order_customer")
@@ -15,7 +12,12 @@ import lombok.Setter;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class OrderCustomerEntity extends BaseEntity {
+
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    private CustomerEntity customer;
 
     @OneToOne
     @JoinColumn(name = "order_id", nullable = false, unique = true)
@@ -25,13 +27,12 @@ public class OrderCustomerEntity extends BaseEntity {
     @Column(name = "customer_type")
     private CustomerType customerType;
 
-    @ManyToOne
-    @JoinColumn(name = "customer_id")
-    private CustomerEntity customer;
-
     @Column(name = "email")
     private String email;
 
-    @Column(name = "fullName")
+    @Column(name = "full_name")
     private String fullName;
+
+    @Column(name = "phone")
+    private String phone;
 }
