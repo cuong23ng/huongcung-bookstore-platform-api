@@ -1,6 +1,6 @@
 package com.huongcung.core.search.model.dto;
 
-import com.huongcung.platform.bookstore.model.BookData;
+import com.huongcung.core.catalog.model.dto.BookFrontPageDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +21,7 @@ public class SearchResponse {
     /**
      * List of book search results
      */
-    private List<BookData> books;
+    private List<BookFrontPageDTO> books;
     
     /**
      * Facet counts by field name

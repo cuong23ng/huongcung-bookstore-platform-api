@@ -7,8 +7,6 @@ import lombok.*;
 
 @Entity
 @Table(name = "customers")
-@DiscriminatorValue("CUSTOMER")
-@PrimaryKeyJoinColumn(name = "user_id")
 @Getter
 @Setter
 @AllArgsConstructor

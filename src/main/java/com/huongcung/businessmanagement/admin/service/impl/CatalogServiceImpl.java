@@ -1,12 +1,16 @@
 package com.huongcung.businessmanagement.admin.service.impl;
 
-import com.huongcung.businessmanagement.admin.mapper.BookMapper;
-import com.huongcung.businessmanagement.admin.model.BookCreateRequest;
+import com.huongcung.businessmanagement.admin.mapper.AdminBookMapper;
+import com.huongcung.businessmanagement.admin.model.request.BookCreateRequest;
 import com.huongcung.businessmanagement.admin.model.BookDetailDTO;
 import com.huongcung.businessmanagement.admin.model.BookImageData;
 import com.huongcung.businessmanagement.admin.model.BookListDTO;
-import com.huongcung.businessmanagement.admin.model.BookUpdateRequest;
+import com.huongcung.businessmanagement.admin.model.request.BookUpdateRequest;
 import com.huongcung.businessmanagement.admin.service.CatalogService;
+import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
+import com.huongcung.core.catalog.repository.EbookRepository;
+import com.huongcung.core.catalog.repository.PhysicalBookRepository;
+import com.huongcung.core.catalog.service.AbstractBookService;
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.contributor.model.entity.AuthorEntity;
 import com.huongcung.core.contributor.model.entity.PublisherEntity;
@@ -15,14 +19,16 @@ import com.huongcung.core.contributor.repository.AuthorRepository;
 import com.huongcung.core.contributor.repository.PublisherRepository;
 import com.huongcung.core.contributor.repository.TranslatorRepository;
 import com.huongcung.core.media.model.entity.BookImageEntity;
-import com.huongcung.core.media.repository.BookImageRepository;
-import com.huongcung.core.media.service.ImageService;
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
-import com.huongcung.core.product.model.entity.EbookEntity;
-import com.huongcung.core.product.model.entity.GenreEntity;
-import com.huongcung.core.product.model.entity.PhysicalBookEntity;
-import com.huongcung.core.product.repository.AbstractBookRepository;
-import com.huongcung.core.product.repository.GenreRepository;
+import com.huongcung.core.media.model.entity.EbookFileEntity;
+import com.huongcung.core.media.repository.BookImageEntityRepository;
+import com.huongcung.core.media.enumeration.FileType;
+import com.huongcung.core.media.service.EbookFileService;
+import com.huongcung.core.storage.service.StorageService;
+import com.huongcung.core.catalog.model.entity.EbookEntity;
+import com.huongcung.core.contributor.model.entity.GenreEntity;
+import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
+import com.huongcung.core.catalog.repository.AbstractBookRepository;
+import com.huongcung.core.catalog.repository.GenreRepository;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import com.huongcung.core.search.service.SearchIndexService;
 import jakarta.persistence.EntityManager;
@@ -36,27 +42,36 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
+import java.text.Normalizer;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static com.huongcung.core.media.constant.FolderConstants.BOOKS;
+import static com.huongcung.core.media.constant.FolderConstants.IMAGES;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class CatalogServiceImpl implements CatalogService {
     
-    private final AbstractBookRepository bookRepository;
+    private final AbstractBookRepository abstractBookRepository;
+    private final PhysicalBookRepository physicalBookRepository;
+    private final EbookRepository ebookRepository;
     private final AuthorRepository authorRepository;
     private final PublisherRepository publisherRepository;
     private final TranslatorRepository translatorRepository;
     private final GenreRepository genreRepository;
-    private final BookMapper bookMapper;
-    private final ImageService imageService;
-    private final BookImageRepository bookImageRepository;
+    private final AdminBookMapper bookMapper;
+    private final BookImageEntityRepository bookImageEntityRepository;
+    private final StorageService storageService;
+    private final AbstractBookService abstractBookService;
+    private final EbookFileService ebookFileService;
     
     @PersistenceContext
     private EntityManager entityManager;
@@ -71,7 +86,7 @@ public class CatalogServiceImpl implements CatalogService {
         log.debug("Fetching books list - page: {}, size: {}, title: {}, language: {}, bookType: {}, isActive: {}", 
                 pageable.getPageNumber(), pageable.getPageSize(), title, language, bookType, isActive);
         
-        // Use Criteria API for dynamic filtering
+        // Use Criteria API for dynamic filtering with AbstractBookEntity
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<AbstractBookEntity> query = cb.createQuery(AbstractBookEntity.class);
         Root<AbstractBookEntity> root = query.from(AbstractBookEntity.class);
@@ -88,15 +103,14 @@ public class CatalogServiceImpl implements CatalogService {
         
         if (bookType != null && !bookType.isBlank()) {
             if ("PHYSICAL".equalsIgnoreCase(bookType)) {
-                predicates.add(cb.equal(root.type(), PhysicalBookEntity.class));
+                predicates.add(cb.isNotNull(root.get("physicalBookInfo")));
             } else if ("EBOOK".equalsIgnoreCase(bookType)) {
-                predicates.add(cb.equal(root.type(), EbookEntity.class));
+                predicates.add(cb.isNotNull(root.get("ebookInfo")));
             }
         }
         
-        if (isActive != null) {
-            predicates.add(cb.equal(root.get("isActive"), isActive));
-        }
+        // Note: AbstractBookEntity doesn't have isActive field, filter through related entities if needed
+        // For now, we'll filter through the related PhysicalBookEntity or EbookEntity if needed
         
         query.where(predicates.toArray(new Predicate[0]));
         
@@ -112,6 +126,7 @@ public class CatalogServiceImpl implements CatalogService {
                 .setMaxResults(pageable.getPageSize())
                 .getResultList();
         
+        // Convert AbstractBookEntity to BookListDTO
         List<BookListDTO> bookDTOs = books.stream()
                 .map(bookMapper::toListDTO)
                 .collect(Collectors.toList());
@@ -131,21 +146,39 @@ public class CatalogServiceImpl implements CatalogService {
         return new PaginatedBookResponse(bookDTOs, pagination);
     }
     
+    private BookListDTO mapAbstractBookToListDTO(AbstractBookEntity abstractBook) {
+        // Helper method to map AbstractBookEntity to BookListDTO
+        BookListDTO dto = new BookListDTO();
+        dto.setId(abstractBook.getId());
+        dto.setCode(abstractBook.getCode());
+        dto.setTitle(abstractBook.getTitle());
+        dto.setLanguage(abstractBook.getLanguage());
+        // Determine book type
+        if (abstractBook.getPhysicalBookInfo() != null) {
+            dto.setBookType("PHYSICAL");
+        } else if (abstractBook.getEbookInfo() != null) {
+            dto.setBookType("EBOOK");
+        }
+        return dto;
+    }
+    
     @Override
     @Transactional(readOnly = true)
     public BookDetailDTO getBookById(Long id) {
         log.debug("Fetching book by ID: {}", id);
         
-        AbstractBookEntity book = bookRepository.findById(id)
+        // Get AbstractBookEntity
+        AbstractBookEntity abstractBook = abstractBookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
         
-        return bookMapper.toDetailDTO(book);
+        return bookMapper.toDetailDTO(abstractBook);
     }
     
     @Override
     @Transactional
-    public BookDetailDTO createBook(BookCreateRequest request) {
-        log.info("Creating book: title={}, bookType={}", request.getTitle(), request.getBookType());
+    public void createBook(BookCreateRequest request) {
+        log.info("Creating book: title={}, physical={}, ebook={}",
+                request.getTitle(), request.getHasPhysicalEdition(), request.getHasElectricEdition());
         
         // Validate required fields
         if (request.getTitle() == null || request.getTitle().isBlank()) {
@@ -159,130 +192,136 @@ public class CatalogServiceImpl implements CatalogService {
         if (request.getAuthorIds() == null || request.getAuthorIds().isEmpty()) {
             throw new IllegalArgumentException("At least one author is required");
         }
+
+        // Create AbstractBookEntity first (main entity with relationships)
+        AbstractBookEntity abstractBook = new AbstractBookEntity();
+        populateAbstractBook(request, abstractBook);
         
-        if (request.getBookType() == null || request.getBookType().isBlank()) {
-            throw new IllegalArgumentException("Book type is required (PHYSICAL or EBOOK)");
-        }
+        // Save AbstractBookEntity first
+        AbstractBookEntity savedAbstractBook = abstractBookRepository.save(abstractBook);
         
-        // Validate bookType
-        if (!"PHYSICAL".equalsIgnoreCase(request.getBookType()) && !"EBOOK".equalsIgnoreCase(request.getBookType())) {
-            throw new IllegalArgumentException("Book type must be either PHYSICAL or EBOOK");
-        }
-        
-        // Generate unique book code
-        String bookCode = generateBookCode(request.getTitle());
-        
-        // Load related entities
-        List<AuthorEntity> authors = authorRepository.findByIdIn(request.getAuthorIds());
-        if (authors.size() != request.getAuthorIds().size()) {
-            throw new RuntimeException("One or more author IDs not found");
-        }
-        
-        List<TranslatorEntity> translators = null;
-        if (request.getTranslatorIds() != null && !request.getTranslatorIds().isEmpty()) {
-            translators = translatorRepository.findByIdIn(request.getTranslatorIds());
-            if (translators.size() != request.getTranslatorIds().size()) {
-                throw new RuntimeException("One or more translator IDs not found");
-            }
-        }
-        
-        PublisherEntity publisher = null;
-        if (request.getPublisherId() != null) {
-            publisher = publisherRepository.findById(request.getPublisherId())
-                    .orElseThrow(() -> new RuntimeException("Publisher not found with ID: " + request.getPublisherId()));
-        }
-        
-        List<GenreEntity> genres = null;
-        if (request.getGenreIds() != null && !request.getGenreIds().isEmpty()) {
-            genres = genreRepository.findByIdIn(request.getGenreIds());
-            if (genres.size() != request.getGenreIds().size()) {
-                throw new RuntimeException("One or more genre IDs not found");
-            }
-        }
-        
-        // Create base book entity
-        AbstractBookEntity book;
-        
-        if ("PHYSICAL".equalsIgnoreCase(request.getBookType())) {
+        List<AbstractBookEntity> savedAbstractBooks = new ArrayList<>();
+        savedAbstractBooks.add(savedAbstractBook);
+
+        // Create PhysicalBookEntity if requested
+        if (request.getHasPhysicalEdition()) {
             PhysicalBookEntity physicalBook = new PhysicalBookEntity();
+            
+            // Set PhysicalBookEntity specific fields
+            physicalBook.setPublicationDate(request.getPublicationDate());
             physicalBook.setIsbn(request.getIsbn());
-            physicalBook.setCoverType(request.getCoverType());
             physicalBook.setWeightGrams(request.getWeightGrams());
-            physicalBook.setDimensions(request.getDimensions());
-            physicalBook.setCurrentPrice(request.getCurrentPrice());
-            book = physicalBook;
-        } else {
-            EbookEntity ebook = new EbookEntity();
-            ebook.setFileUrl(request.getFileUrl());
-            ebook.setFileName(request.getFileName());
-            ebook.setFileSize(request.getFileSize());
-            ebook.setFileFormat(request.getFileFormat());
-            ebook.setDownloadCount(0);
-            ebook.setCurrentPrice(request.getCurrentPrice());
-            ebook.setIsActive(true);
-            book = ebook;
+            physicalBook.setHeightCm(request.getHeightCm());
+            physicalBook.setWidthCm(request.getWidthCm());
+            physicalBook.setLengthCm(request.getLengthCm());
+            physicalBook.setCurrentPrice(request.getPhysicalBookPrice());
+            physicalBook.setCoverType(request.getCoverType());
+            
+            // Link to AbstractBookEntity
+            physicalBook.setAbstractBook(savedAbstractBook);
+            savedAbstractBook.setPhysicalBookInfo(physicalBook);
+
+            physicalBookRepository.save(physicalBook);
         }
-        
-        // Set common fields
-        book.setCode(bookCode);
-        book.setTitle(request.getTitle());
-        book.setDescription(request.getDescription());
-        book.setLanguage(request.getLanguage());
-        book.setPublicationDate(request.getPublicationDate());
-        book.setPageCount(request.getPageCount());
-        book.setEdition(request.getEdition());
-        book.setAuthors(authors);
-        book.setTranslators(translators);
-        book.setPublisher(publisher);
-        book.setGenres(genres);
-        book.setHasPhysicalEdition(request.getHasPhysicalEdition() != null ? request.getHasPhysicalEdition() : false);
-        book.setHasElectricEdition(request.getHasElectricEdition() != null ? request.getHasElectricEdition() : false);
-        book.setIsActive(true);
-        
-        // Save book
-        AbstractBookEntity savedBook = bookRepository.save(book);
-        
-        log.info("Book created successfully with ID: {}, code: {}", savedBook.getId(), savedBook.getCode());
+
+        // Create EbookEntity if requested
+        if (request.getHasElectricEdition()) {
+            EbookEntity ebook = new EbookEntity();
+            ebook.setIsAvailable(false);
+            
+            // Set EbookEntity specific fields
+            ebook.setPublicationDate(request.getPublicationDate());
+            ebook.setCurrentPrice(request.getEbookPrice());
+            if (request.getEisbn() != null) {
+                ebook.setIsbn(request.getEisbn());
+            }
+
+            // Link to AbstractBookEntity
+            ebook.setAbstractBook(savedAbstractBook);
+            savedAbstractBook.setEbookInfo(ebook);
+
+            // Save via AbstractBookEntity (cascade will save EbookEntity)
+            ebookRepository.save(ebook);
+        }
+
+        if (searchIndexService != null) {
+            searchIndexService.indexBook(savedAbstractBook);
+            log.debug("Book indexed in search service: {}", savedAbstractBook.getId());
+        }
         
         // Handle image uploads if provided
         if (!CollectionUtils.isEmpty(request.getImages())) {
-            uploadBookImages(savedBook, request.getImages());
+            uploadBookImagesToAbstractBook(savedAbstractBooks, request.getImages());
         }
-        
-        // Trigger search index update if service is available
-        if (searchIndexService != null) {
-            try {
-                searchIndexService.indexBook(savedBook);
-                log.debug("Book indexed in search service: {}", savedBook.getId());
-            } catch (Exception e) {
-                log.warn("Failed to index book in search service: {}", e.getMessage());
-                // Don't fail the operation if indexing fails
+
+    }
+
+    private void populateAbstractBook(BookCreateRequest source, AbstractBookEntity target) {
+        // Generate unique book code
+        String bookCode = generateBookCode(source.getTitle(), source.getEdition());
+
+        // Load related entities
+        List<AuthorEntity> authors = authorRepository.findByIdIn(source.getAuthorIds());
+        if (authors.size() != source.getAuthorIds().size()) {
+            throw new RuntimeException("One or more author IDs not found");
+        }
+
+        List<TranslatorEntity> translators = null;
+        if (source.getTranslatorIds() != null && !source.getTranslatorIds().isEmpty()) {
+            translators = translatorRepository.findByIdIn(source.getTranslatorIds());
+            if (translators.size() != source.getTranslatorIds().size()) {
+                throw new RuntimeException("One or more translator IDs not found");
             }
         }
-        
-        return bookMapper.toDetailDTO(savedBook);
+
+        PublisherEntity publisher = null;
+        if (source.getPublisherId() != null) {
+            publisher = publisherRepository.findById(source.getPublisherId())
+                    .orElseThrow(() -> new RuntimeException("Publisher not found with ID: " + source.getPublisherId()));
+        }
+
+        List<GenreEntity> genres = null;
+        if (source.getGenreIds() != null && !source.getGenreIds().isEmpty()) {
+            genres = genreRepository.findByIdIn(source.getGenreIds());
+            if (genres.size() != source.getGenreIds().size()) {
+                throw new RuntimeException("One or more genre IDs not found");
+            }
+        }
+
+        target.setCode(bookCode);
+        target.setTitle(source.getTitle());
+        target.setDescription(source.getDescription());
+        target.setLanguage(source.getLanguage());
+        target.setPageCount(source.getPageCount());
+        target.setEdition(source.getEdition());
+        target.setAuthors(authors);
+        target.setTranslators(translators);
+        target.setPublisher(publisher);
+        target.setGenres(genres);
     }
-    
+
     @Override
     @Transactional
     public BookDetailDTO updateBook(Long id, BookUpdateRequest request, String updatedBy) {
         log.info("Updating book ID: {}, updatedBy: {}", id, updatedBy);
         
-        AbstractBookEntity book = bookRepository.findById(id)
+        // Get AbstractBookEntity
+        AbstractBookEntity abstractBook = abstractBookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
         
         // Track changes for audit logging
         StringBuilder changes = new StringBuilder();
         
+        // Update AbstractBookEntity relationships
         // Update relationships if provided
         if (request.getAuthorIds() != null) {
             List<AuthorEntity> authors = authorRepository.findByIdIn(request.getAuthorIds());
             if (authors.size() != request.getAuthorIds().size()) {
                 throw new RuntimeException("One or more author IDs not found");
             }
-            if (!Objects.equals(book.getAuthors(), authors)) {
+            if (!Objects.equals(abstractBook.getAuthors(), authors)) {
                 changes.append("authors updated; ");
-                book.setAuthors(authors);
+                abstractBook.setAuthors(authors);
             }
         }
         
@@ -291,18 +330,18 @@ public class CatalogServiceImpl implements CatalogService {
             if (translators.size() != request.getTranslatorIds().size()) {
                 throw new RuntimeException("One or more translator IDs not found");
             }
-            if (!Objects.equals(book.getTranslators(), translators)) {
+            if (!Objects.equals(abstractBook.getTranslators(), translators)) {
                 changes.append("translators updated; ");
-                book.setTranslators(translators);
+                abstractBook.setTranslators(translators);
             }
         }
         
         if (request.getPublisherId() != null) {
             PublisherEntity publisher = publisherRepository.findById(request.getPublisherId())
                     .orElseThrow(() -> new RuntimeException("Publisher not found with ID: " + request.getPublisherId()));
-            if (!Objects.equals(book.getPublisher() != null ? book.getPublisher().getId() : null, publisher.getId())) {
+            if (!Objects.equals(abstractBook.getPublisher() != null ? abstractBook.getPublisher().getId() : null, publisher.getId())) {
                 changes.append("publisher updated; ");
-                book.setPublisher(publisher);
+                abstractBook.setPublisher(publisher);
             }
         }
         
@@ -311,15 +350,37 @@ public class CatalogServiceImpl implements CatalogService {
             if (genres.size() != request.getGenreIds().size()) {
                 throw new RuntimeException("One or more genre IDs not found");
             }
-            if (!Objects.equals(book.getGenres(), genres)) {
+            if (!Objects.equals(abstractBook.getGenres(), genres)) {
                 changes.append("genres updated; ");
-                book.setGenres(genres);
+                abstractBook.setGenres(genres);
             }
         }
         
+        // Update common fields in AbstractBookEntity
+        if (request.getTitle() != null && !Objects.equals(abstractBook.getTitle(), request.getTitle())) {
+            changes.append("title updated; ");
+            abstractBook.setTitle(request.getTitle());
+        }
+        if (request.getDescription() != null && !Objects.equals(abstractBook.getDescription(), request.getDescription())) {
+            changes.append("description updated; ");
+            abstractBook.setDescription(request.getDescription());
+        }
+        if (request.getLanguage() != null && !Objects.equals(abstractBook.getLanguage(), request.getLanguage())) {
+            changes.append("language updated; ");
+            abstractBook.setLanguage(request.getLanguage());
+        }
+        if (request.getPageCount() != null && !Objects.equals(abstractBook.getPageCount(), request.getPageCount())) {
+            changes.append("pageCount updated; ");
+            abstractBook.setPageCount(request.getPageCount());
+        }
+        if (request.getEdition() != null && !Objects.equals(abstractBook.getEdition(), request.getEdition())) {
+            changes.append("edition updated; ");
+            abstractBook.setEdition(request.getEdition());
+        }
+        
         // Update subtype-specific fields
-        if (book instanceof PhysicalBookEntity) {
-            PhysicalBookEntity physicalBook = (PhysicalBookEntity) book;
+        if (abstractBook.getPhysicalBookInfo() != null) {
+            PhysicalBookEntity physicalBook = abstractBook.getPhysicalBookInfo();
             if (request.getIsbn() != null && !Objects.equals(physicalBook.getIsbn(), request.getIsbn())) {
                 changes.append("isbn updated; ");
                 physicalBook.setIsbn(request.getIsbn());
@@ -332,46 +393,54 @@ public class CatalogServiceImpl implements CatalogService {
                 changes.append("weightGrams updated; ");
                 physicalBook.setWeightGrams(request.getWeightGrams());
             }
-            if (request.getDimensions() != null && !Objects.equals(physicalBook.getDimensions(), request.getDimensions())) {
-                changes.append("dimensions updated; ");
-                physicalBook.setDimensions(request.getDimensions());
+            if (request.getHeightCm() != null && !Objects.equals(physicalBook.getHeightCm(), request.getHeightCm())) {
+                changes.append("heightCm updated; ");
+                physicalBook.setHeightCm(request.getHeightCm());
+            }
+            if (request.getWidthCm() != null && !Objects.equals(physicalBook.getWidthCm(), request.getWidthCm())) {
+                changes.append("widthCm updated; ");
+                physicalBook.setWidthCm(request.getWidthCm());
+            }
+            if (request.getLengthCm() != null && !Objects.equals(physicalBook.getLengthCm(), request.getLengthCm())) {
+                changes.append("lengthCm updated; ");
+                physicalBook.setLengthCm(request.getLengthCm());
             }
             if (request.getCurrentPrice() != null && !Objects.equals(physicalBook.getCurrentPrice(), request.getCurrentPrice())) {
                 changes.append("currentPrice updated; ");
                 physicalBook.setCurrentPrice(request.getCurrentPrice());
             }
-        } else if (book instanceof EbookEntity) {
-            EbookEntity ebook = (EbookEntity) book;
-            if (request.getFileUrl() != null && !Objects.equals(ebook.getFileUrl(), request.getFileUrl())) {
-                changes.append("fileUrl updated; ");
-                ebook.setFileUrl(request.getFileUrl());
+            if (request.getPublicationDate() != null && !Objects.equals(physicalBook.getPublicationDate(), request.getPublicationDate())) {
+                changes.append("publicationDate updated; ");
+                physicalBook.setPublicationDate(request.getPublicationDate());
             }
-            if (request.getFileName() != null && !Objects.equals(ebook.getFileName(), request.getFileName())) {
-                changes.append("fileName updated; ");
-                ebook.setFileName(request.getFileName());
+            if (request.getIsActive() != null && !Objects.equals(physicalBook.getIsAvailable(), request.getIsActive())) {
+                changes.append("isAvailable updated; ");
+                physicalBook.setIsAvailable(request.getIsActive());
             }
-            if (request.getFileSize() != null && !Objects.equals(ebook.getFileSize(), request.getFileSize())) {
-                changes.append("fileSize updated; ");
-                ebook.setFileSize(request.getFileSize());
-            }
-            if (request.getFileFormat() != null && !Objects.equals(ebook.getFileFormat(), request.getFileFormat())) {
-                changes.append("fileFormat updated; ");
-                ebook.setFileFormat(request.getFileFormat());
-            }
+        } else if (abstractBook.getEbookInfo() != null) {
+            EbookEntity ebook = abstractBook.getEbookInfo();
             if (request.getCurrentPrice() != null && !Objects.equals(ebook.getCurrentPrice(), request.getCurrentPrice())) {
                 changes.append("currentPrice updated; ");
                 ebook.setCurrentPrice(request.getCurrentPrice());
             }
+            if (request.getPublicationDate() != null && !Objects.equals(ebook.getPublicationDate(), request.getPublicationDate())) {
+                changes.append("publicationDate updated; ");
+                ebook.setPublicationDate(request.getPublicationDate());
+            }
+            if (request.getIsActive() != null && !Objects.equals(ebook.getIsAvailable(), request.getIsActive())) {
+                changes.append("isActive updated; ");
+                ebook.setIsAvailable(request.getIsActive());
+            }
         }
         
-        // Apply updates using mapper (handles common fields)
-        bookMapper.updateEntityFromRequest(request, book);
+        // Apply updates using mapper (handles common fields in AbstractBookEntity)
+        bookMapper.updateEntityFromRequest(request, abstractBook);
         
-        // Save updated entity
-        AbstractBookEntity updatedBook = bookRepository.save(book);
+        // Save updated entities
+        AbstractBookEntity updatedBook = abstractBookRepository.save(abstractBook);
         
         // Audit logging
-        String changeLog = changes.length() > 0 ? changes.toString() : "no changes";
+        String changeLog = !changes.isEmpty() ? changes.toString() : "no changes";
         log.info("Book updated: bookId={}, updatedBy={}, changes={}, timestamp={}", 
                 id, updatedBy, changeLog, LocalDateTime.now());
         
@@ -385,29 +454,40 @@ public class CatalogServiceImpl implements CatalogService {
             }
         }
         
-        return bookMapper.toDetailDTO(updatedBook);
+        return bookMapper.toDetailDTO(abstractBook);
     }
-    
+
     @Override
     @Transactional
     public BookDetailDTO deactivateBook(Long id, String deactivatedBy) {
         log.info("Deactivating book ID: {}, deactivatedBy: {}", id, deactivatedBy);
         
-        AbstractBookEntity book = bookRepository.findById(id)
+        // Get AbstractBookEntity
+        AbstractBookEntity abstractBook = abstractBookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
         
-        if (!book.getIsActive()) {
-            log.warn("Book ID: {} is already deactivated", id);
+        // Deactivate PhysicalBookEntity if exists
+        if (abstractBook.getPhysicalBookInfo() != null) {
+            PhysicalBookEntity physicalBook = abstractBook.getPhysicalBookInfo();
+            if (Boolean.TRUE.equals(physicalBook.getIsAvailable())) {
+                physicalBook.setIsAvailable(false);
+            } else {
+                log.warn("Physical book ID: {} is already deactivated", id);
+            }
         }
         
-        book.setIsActive(false);
-        
-        // For EbookEntity, also set isActive flag
-        if (book instanceof EbookEntity) {
-            ((EbookEntity) book).setIsActive(false);
+        // Deactivate EbookEntity if exists
+        if (abstractBook.getEbookInfo() != null) {
+            EbookEntity ebook = abstractBook.getEbookInfo();
+            if (Boolean.TRUE.equals(ebook.getIsAvailable())) {
+                ebook.setIsAvailable(false);
+            } else {
+                log.warn("Ebook ID: {} is already deactivated", id);
+            }
         }
         
-        AbstractBookEntity deactivatedBook = bookRepository.save(book);
+        // Save via AbstractBookEntity (cascade will save related entities)
+        abstractBookRepository.save(abstractBook);
         
         // Audit logging
         log.info("Book deactivated: bookId={}, deactivatedBy={}, timestamp={}", 
@@ -423,43 +503,166 @@ public class CatalogServiceImpl implements CatalogService {
             }
         }
         
-        return bookMapper.toDetailDTO(deactivatedBook);
+        return bookMapper.toDetailDTO(abstractBook);
     }
-    
-    /**
-     * Generate unique book code from title
-     * Format: BK-{first 3 uppercase letters of title}-{UUID first 8 chars}
-     */
-    private String generateBookCode(String title) {
-        String prefix = title.length() >= 3 
-                ? title.substring(0, 3).toUpperCase().replaceAll("[^A-Z0-9]", "")
-                : "BK";
-        if (prefix.isEmpty()) {
-            prefix = "BK";
+
+    @Override
+    public void uploadBookImages(Long id, MultipartFile[] files) {
+        log.info("Uploading {} images for book ID: {}", files.length, id);
+
+        AbstractBookEntity abstractBook = abstractBookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
+
+        // Upload images using ImageService
+        for (int i = 0; i < files.length; i++) {
+            MultipartFile file = files[i];
+            if (file.isEmpty()) {
+                continue;
+            }
+
+            try {
+                // Get filename
+                String fileName = file.getOriginalFilename();
+                if (fileName == null || fileName.isBlank()) {
+                    fileName = "image_" + abstractBook.getCode() + "_" + (i + 1) + ".jpg";
+                }
+
+                // Get content type
+                String contentType = file.getContentType();
+                if (contentType == null || contentType.isBlank()) {
+                    contentType = "image/jpeg";
+                }
+
+                // Save image to S3 with correct folder path
+                String folderPath = IMAGES + "/" + BOOKS;
+                String relativePath = storageService.save(
+                        file.getInputStream(),
+                        fileName,
+                        folderPath,
+                        contentType
+                );
+
+                // Create BookImageEntityv2
+                BookImageEntity bookImage = new BookImageEntity();
+                bookImage.setBook(abstractBook);
+                bookImage.setUrl(relativePath);
+                bookImage.setAltText(fileName);
+                bookImage.setFileName(fileName);
+                bookImage.setFileType(FileType.findFileTypeByCode(contentType));
+                bookImage.setPosition(i + 1); // Position starts from 1
+
+                bookImageEntityRepository.save(bookImage);
+
+                // Add to abstractBook's images list
+                if (abstractBook.getImages() == null) {
+                    abstractBook.setImages(new ArrayList<>());
+                }
+                abstractBook.getImages().add(bookImage);
+                abstractBookRepository.save(abstractBook);
+
+                log.debug("Image uploaded for book ID: {}, position: {}, url: {}", id, i + 1, relativePath);
+            } catch (Exception e) {
+                log.error("Failed to upload image for book ID: {}", id, e);
+                throw new RuntimeException("Failed to upload image: " + e.getMessage());
+            }
         }
-        String suffix = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        return prefix + "-" + suffix;
     }
-    
-    /**
-     * Upload book images from Base64 data
-     * @param book the book entity
-     * @param images list of image data (Base64 encoded)
-     */
-    private void uploadBookImages(AbstractBookEntity book, List<BookImageData> images) {
-        if (book == null || CollectionUtils.isEmpty(images)) {
-            return;
+
+    @Override
+    public void addEbookEdition(Long id, String isbn, Double currentPrice, LocalDate publicationDate, String fileName, MultipartFile[] files) {
+        log.info("Uploading Ebook {} for book ID: {}", fileName, id);
+
+        AbstractBookEntity book = abstractBookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
+
+        EbookEntity ebookInfo;
+        boolean isNew = book.getEbookInfo() == null;
+        
+        if (isNew) {
+            ebookInfo = new EbookEntity();
+            ebookInfo.setAbstractBook(book);
+        } else {
+            ebookInfo = book.getEbookInfo();
+            if (ebookInfo.getAbstractBook() == null) {
+                ebookInfo.setAbstractBook(book);
+            }
         }
         
-        // String folderPath = "books/" + book.getId();
-        // TODO: folderPath
-        String folderPath = "images/";
+        // Update fields
+        ebookInfo.setIsbn(isbn);
+        ebookInfo.setCurrentPrice(BigDecimal.valueOf(currentPrice));
+        ebookInfo.setPublicationDate(publicationDate);
+        
+        // Initialize files list if null
+        if (ebookInfo.getFiles() == null) {
+            ebookInfo.setFiles(new ArrayList<>());
+        }
+        
+        if (isNew) {
+            ebookInfo = ebookRepository.save(ebookInfo);
+        } else {
+            ebookInfo = entityManager.merge(ebookInfo);
+        }
+
+        // Now add files after ebookInfo has been saved and has an ID
+        for (MultipartFile file : files) {
+            if (file.isEmpty()) {
+                continue;
+            }
+
+            try {
+                // Create ebook file entity (don't save yet - will be saved via cascade)
+                EbookFileEntity ebookFile = ebookFileService.saveEbookFromStream(
+                    file.getInputStream(), fileName, book.getCode(), file.getContentType());
+                
+                // Set the book reference (ebookInfo now has an ID)
+                ebookFile.setBook(ebookInfo);
+                
+                // Add to files list - will be saved via cascade when ebookInfo is saved again
+                ebookInfo.getFiles().add(ebookFile);
+            } catch (Exception e) {
+                log.error("Failed to upload ebook file for book ID: {}", id, e);
+                throw new RuntimeException("Failed to upload ebook: " + e.getMessage());
+            }
+        }
+
+        ebookRepository.save(ebookInfo);
+    }
+
+    private String generateBookCode(String title, Integer edition) {
+
+        // Normalize Vietnamese characters (remove diacritics)
+        String normalized = Normalizer.normalize(title, Normalizer.Form.NFD);
+        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        String withoutDiacritics = pattern.matcher(normalized).replaceAll("");
+
+        return withoutDiacritics
+                .toLowerCase(Locale.ROOT)
+                .trim()
+                .replaceAll("\\s+", "-")  // Replace multiple spaces with single hyphen
+                .replaceAll("[^a-z0-9-]", "")  // Remove special characters except hyphens
+                .replaceAll("-+", "-")  // Replace multiple hyphens with single hyphen
+                .replaceAll("^-|-$", "")
+                .concat("-" + edition);
+    }
+    
+    /**
+     * Upload book images from Base64 data to AbstractBookEntity using BookImageEntityv2
+     * @param abstractBooks list of AbstractBookEntity
+     * @param images list of image data (Base64 encoded)
+     */
+    private void uploadBookImagesToAbstractBook(List<AbstractBookEntity> abstractBooks, List<BookImageData> images) {
+        if (CollectionUtils.isEmpty(abstractBooks) || CollectionUtils.isEmpty(images)) {
+            return;
+        }
+
+        AbstractBookEntity abstractBook = abstractBooks.get(0);
 
         for (int i = 0; i < images.size(); i++) {
             BookImageData imageData = images.get(i);
             
             if (imageData == null || !StringUtils.hasText(imageData.getBase64Data())) {
-                log.warn("Skipping empty image data at index {}", i);
+                log.warn("Skipping null image data at index {} for book: {}", i, abstractBook.getCode());
                 continue;
             }
             
@@ -473,41 +676,50 @@ public class CatalogServiceImpl implements CatalogService {
                 // Generate filename if not provided
                 String fileName = imageData.getFileName();
                 if (fileName == null || fileName.isBlank()) {
-                    fileName = "image_" + position + ".jpg"; // Default filename
+                    fileName = "image_" + abstractBook.getCode() + "_" + position + ".jpg"; // Default filename
                 }
-                
-                // Upload image to S3
-                String relativePath = imageService.saveImageFromBase64(
-                    imageData.getBase64Data(),
-                    fileName,
-                    folderPath
-                );
-                
-                // TODO: Get full URL
-//                String fullUrl = imageService.getFullUrl(relativePath);
-                String fullUrl = relativePath;
 
-                // Create BookImageEntity
+                // Save image to S3 using StorageService
+                String folderPath = IMAGES + "/" + BOOKS;
+                String contentType = imageData.getFileType() != null ? imageData.getFileType() : "image/jpeg";
+                String relativePath = storageService.save(
+                        imageData.getBase64Data(),
+                        fileName,
+                        folderPath,
+                        contentType
+                );
+
+                // Create BookImageEntityv2
                 BookImageEntity bookImage = new BookImageEntity();
-                bookImage.setBook(book);
-                bookImage.setUrl(fullUrl);
-                bookImage.setAltText(imageData.getAltText() != null ? imageData.getAltText() : fileName);
+                bookImage.setBook(abstractBook);
+                bookImage.setUrl(relativePath);
+                bookImage.setAltText(fileName);
+                bookImage.setFileName(fileName);
+                bookImage.setFileType(FileType.findFileTypeByCode(contentType));
                 bookImage.setPosition(position);
+
+                // Save the image entity
+                BookImageEntity savedImage = bookImageEntityRepository.save(bookImage);
                 
-                // Save to database
-                bookImageRepository.save(bookImage);
-                
-                log.debug("Image uploaded for book ID: {}, position: {}, url: {}", 
-                    book.getId(), position, fullUrl);
+                // Add to abstractBook's images list if not already there
+                if (abstractBook.getImages() == null) {
+                    abstractBook.setImages(new ArrayList<>());
+                }
+                if (!abstractBook.getImages().contains(savedImage)) {
+                    abstractBook.getImages().add(savedImage);
+                }
+                abstractBookRepository.save(abstractBook);
+
+                log.info("Image uploaded successfully for book: {}, imageId: {}, position: {}, url: {}",
+                        abstractBook.getCode(), savedImage.getId(), position, relativePath);
                 
             } catch (Exception e) {
-                log.error("Failed to upload image at index {} for book ID: {}", i, book.getId(), e);
+                log.error("Failed to upload image at index {} for book: {}", i, abstractBook.getCode(), e);
                 // Continue with other images even if one fails
-                // In production, you might want to collect errors and report them
             }
         }
         
-        log.info("Processed {} images for book ID: {}", images.size(), book.getId());
+        log.info("Processed {} images for book: {}", images.size(), abstractBook.getCode());
     }
 }
 

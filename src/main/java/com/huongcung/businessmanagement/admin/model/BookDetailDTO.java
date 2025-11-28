@@ -5,7 +5,7 @@ import com.huongcung.core.contributor.model.dto.AuthorDTO;
 import com.huongcung.core.contributor.model.dto.PublisherDTO;
 import com.huongcung.core.contributor.model.dto.TranslatorDTO;
 import com.huongcung.core.media.model.dto.BookImageDTO;
-import com.huongcung.core.product.enumeration.CoverType;
+import com.huongcung.core.catalog.enumeration.CoverType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -47,8 +47,10 @@ public class BookDetailDTO {
     // PhysicalBookEntity specific fields
     private String isbn;
     private CoverType coverType;
-    private Double weightGrams;
-    private String dimensions;
+    private Integer weightGrams;
+    private Integer heightCm;
+    private Integer widthCm;
+    private Integer lengthCm;
     private BigDecimal currentPrice;
     
     // EbookEntity specific fields

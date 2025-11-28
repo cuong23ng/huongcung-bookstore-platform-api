@@ -1,12 +1,17 @@
 package com.huongcung.businessmanagement.admin.service;
 
-import com.huongcung.businessmanagement.admin.model.BookCreateRequest;
+import com.huongcung.businessmanagement.admin.model.request.BookCreateRequest;
 import com.huongcung.businessmanagement.admin.model.BookDetailDTO;
 import com.huongcung.businessmanagement.admin.model.BookListDTO;
-import com.huongcung.businessmanagement.admin.model.BookUpdateRequest;
+import com.huongcung.businessmanagement.admin.model.request.BookUpdateRequest;
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Service interface for catalog management operations
@@ -40,7 +45,7 @@ public interface CatalogService {
      * @throws IllegalArgumentException if validation fails (missing required fields, invalid bookType, etc.)
      * @throws RuntimeException if code already exists or related entities not found
      */
-    BookDetailDTO createBook(BookCreateRequest request);
+    void createBook(BookCreateRequest request);
     
     /**
      * Update existing book entry
@@ -52,6 +57,10 @@ public interface CatalogService {
      * @throws RuntimeException if book not found or related entities not found
      */
     BookDetailDTO updateBook(Long id, BookUpdateRequest request, String updatedBy);
+
+    void uploadBookImages(Long id, MultipartFile[] files);
+
+    void addEbookEdition(Long id, String isbn, Double currentPrice, LocalDate publicationDate, String fileName, MultipartFile[] files);
     
     /**
      * Deactivate book entry (soft delete)
@@ -65,7 +74,7 @@ public interface CatalogService {
     /**
      * Response wrapper for paginated book list
      */
-    record PaginatedBookResponse(java.util.List<BookListDTO> books, PaginationInfo pagination) {}
+    record PaginatedBookResponse(List<BookListDTO> books, PaginationInfo pagination) {}
 }
 
 

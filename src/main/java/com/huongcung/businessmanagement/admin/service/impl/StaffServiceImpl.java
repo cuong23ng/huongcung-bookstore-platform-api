@@ -1,15 +1,15 @@
 package com.huongcung.businessmanagement.admin.service.impl;
 
 import com.huongcung.businessmanagement.admin.mapper.StaffMapper;
-import com.huongcung.businessmanagement.admin.model.StaffCreateRequest;
+import com.huongcung.businessmanagement.admin.model.request.StaffCreateRequest;
 import com.huongcung.businessmanagement.admin.model.StaffDTO;
-import com.huongcung.businessmanagement.admin.model.StaffUpdateRequest;
+import com.huongcung.businessmanagement.admin.model.request.StaffUpdateRequest;
 import com.huongcung.businessmanagement.admin.service.StaffService;
+import com.huongcung.core.common.enumeration.City;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import com.huongcung.core.user.enumeration.StaffType;
 import com.huongcung.core.user.model.entity.StaffEntity;
 import com.huongcung.core.user.repository.StaffRepository;
-import com.huongcung.core.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class StaffServiceImpl implements StaffService {
     
-    private final UserRepository userRepository;
     private final StaffRepository staffRepository;
     private final PasswordEncoder passwordEncoder;
     private final StaffMapper staffMapper;
@@ -43,14 +42,14 @@ public class StaffServiceImpl implements StaffService {
         log.info("Creating staff account for email: {}, staffType: {}", request.getEmail(), request.getStaffType());
         
         // Validate staffType is not ADMIN
-        if (request.getStaffType() == StaffType.ADMIN) {
-            throw new IllegalArgumentException("ADMIN staff type cannot be created via this endpoint. Admins must be created separately.");
-        }
+//        if (request.getStaffType() == StaffType.ADMIN) {
+//            throw new IllegalArgumentException("ADMIN staff type cannot be created via this endpoint. Admins must be created separately.");
+//        }
         
         // Validate staffType is either STORE_MANAGER or SUPPORT_AGENT
-        if (request.getStaffType() != StaffType.STORE_MANAGER && request.getStaffType() != StaffType.SUPPORT_AGENT) {
-            throw new IllegalArgumentException("Staff type must be either STORE_MANAGER or SUPPORT_AGENT");
-        }
+//        if (request.getStaffType() != StaffType.STORE_MANAGER && request.getStaffType() != StaffType.SUPPORT_AGENT) {
+//            throw new IllegalArgumentException("Staff type must be either STORE_MANAGER or SUPPORT_AGENT");
+//        }
         
         // Validate assignedCity for STORE_MANAGER
         if (request.getStaffType() == StaffType.STORE_MANAGER) {
@@ -63,7 +62,7 @@ public class StaffServiceImpl implements StaffService {
         }
         
         // Check if email already exists
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (staffRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email is already registered");
         }
         
@@ -76,13 +75,12 @@ public class StaffServiceImpl implements StaffService {
         staff.setLastName(request.getLastName());
         staff.setPhone(request.getPhone());
         staff.setStaffType(request.getStaffType());
-        staff.setAssignedCity(request.getAssignedCity());
+        staff.setAssignedCity(request.getAssignedCity() != null ? City.valueOf(request.getAssignedCity()) : null);
         staff.setIsActive(true); // Set isActive = true by default (AC6)
         staff.setEmailVerified(false);
         
-        // Save using UserRepository (StaffEntity extends UserEntity)
-        // The @DiscriminatorValue("STAFF") annotation will set user_type = "STAFF" automatically
-        StaffEntity savedStaff = (StaffEntity) userRepository.save(staff);
+        // Save using StaffRepository
+        StaffEntity savedStaff = staffRepository.save(staff);
         
         log.info("Staff account created successfully with ID: {}, email: {}", savedStaff.getId(), savedStaff.getEmail());
         

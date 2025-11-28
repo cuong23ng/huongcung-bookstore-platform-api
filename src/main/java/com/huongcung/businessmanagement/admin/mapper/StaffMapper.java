@@ -1,8 +1,8 @@
 package com.huongcung.businessmanagement.admin.mapper;
 
-import com.huongcung.businessmanagement.admin.model.StaffCreateRequest;
+import com.huongcung.businessmanagement.admin.model.request.StaffCreateRequest;
 import com.huongcung.businessmanagement.admin.model.StaffDTO;
-import com.huongcung.businessmanagement.admin.model.StaffUpdateRequest;
+import com.huongcung.businessmanagement.admin.model.request.StaffUpdateRequest;
 import com.huongcung.core.common.mapper.CommonMapper;
 import com.huongcung.core.user.model.entity.StaffEntity;
 import org.mapstruct.Mapper;

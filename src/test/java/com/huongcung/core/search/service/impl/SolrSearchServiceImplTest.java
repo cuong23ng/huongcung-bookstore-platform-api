@@ -1,16 +1,15 @@
 package com.huongcung.core.search.service.impl;
 
+import com.huongcung.core.catalog.model.dto.BookDTO;
 import com.huongcung.core.common.enumeration.Language;
-import com.huongcung.core.product.model.dto.AbstractBookDTO;
-import com.huongcung.core.product.service.AbstractBookService;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import com.huongcung.core.search.model.dto.SearchFacet;
 import com.huongcung.core.search.model.dto.SearchRequest;
 import com.huongcung.core.search.model.dto.SearchResponse;
 import com.huongcung.core.search.repository.BookSearchRepository;
 import com.huongcung.core.search.service.SearchPerformanceMonitor;
-import com.huongcung.platform.bookstore.mapper.BookViewMapper;
-import com.huongcung.platform.bookstore.model.BookData;
+import com.huongcung.webstore.bookstore.mapper.BookViewMapper;
+import com.huongcung.webstore.bookstore.model.BookData;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
@@ -41,7 +40,7 @@ class SolrSearchServiceImplTest {
     private BookSearchRepository bookSearchRepository;
     
     @Mock
-    private AbstractBookService abstractBookService;
+    private BookService bookService;
     
     @Mock
     private BookViewMapper bookViewMapper;
@@ -55,7 +54,7 @@ class SolrSearchServiceImplTest {
     private SearchRequest searchRequest;
     private QueryResponse mockQueryResponse;
     private SolrDocumentList mockDocumentList;
-    private List<AbstractBookDTO> mockBooks;
+    private List<BookDTO> mockBooks;
     
     @BeforeEach
     void setUp() {
@@ -89,7 +88,7 @@ class SolrSearchServiceImplTest {
         
         // Setup mock books
         mockBooks = new ArrayList<>();
-        AbstractBookDTO book1 = new AbstractBookDTO();
+        BookDTO book1 = new BookDTO();
         book1.setId(1L);
         book1.setCode("BOOK001");
         book1.setTitle("Test Book 1");
@@ -98,7 +97,7 @@ class SolrSearchServiceImplTest {
         book1.setHasPhysicalEdition(true);
         book1.setHasElectricEdition(false);
         
-        AbstractBookDTO book2 = new AbstractBookDTO();
+        BookDTO book2 = new BookDTO();
         book2.setId(2L);
         book2.setCode("BOOK002");
         book2.setTitle("Test Book 2");
@@ -119,9 +118,9 @@ class SolrSearchServiceImplTest {
         bookData2.setCode("BOOK002");
         bookData2.setTitle("Test Book 2");
         
-        lenient().when(bookViewMapper.toBookData(any(AbstractBookDTO.class)))
+        lenient().when(bookViewMapper.toBookData(any(BookDTO.class)))
             .thenAnswer(invocation -> {
-                AbstractBookDTO dto = invocation.getArgument(0);
+                BookDTO dto = invocation.getArgument(0);
                 BookData data = new BookData();
                 data.setCode(dto.getCode());
                 data.setTitle(dto.getTitle());
@@ -136,7 +135,7 @@ class SolrSearchServiceImplTest {
         when(bookSearchRepository.searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), anyInt(), anyInt()))
             .thenReturn(mockQueryResponse);
-        when(abstractBookService.findByIds(anyList())).thenReturn(mockBooks);
+        when(bookService.findByIds(anyList())).thenReturn(mockBooks);
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);
@@ -151,7 +150,7 @@ class SolrSearchServiceImplTest {
         
         verify(bookSearchRepository).searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), eq(0), eq(20));
-        verify(abstractBookService).findByIds(Arrays.asList(1L, 2L));
+        verify(bookService).findByIds(Arrays.asList(1L, 2L));
     }
     
     @Test
@@ -183,7 +182,7 @@ class SolrSearchServiceImplTest {
         when(bookSearchRepository.searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), anyInt(), anyInt()))
             .thenReturn(mockQueryResponse);
-        when(abstractBookService.findByIds(anyList())).thenReturn(mockBooks);
+        when(bookService.findByIds(anyList())).thenReturn(mockBooks);
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);
@@ -204,7 +203,7 @@ class SolrSearchServiceImplTest {
         when(bookSearchRepository.searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), anyInt(), anyInt()))
             .thenReturn(mockQueryResponse);
-        when(abstractBookService.findByIds(anyList())).thenReturn(mockBooks);
+        when(bookService.findByIds(anyList())).thenReturn(mockBooks);
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);
@@ -225,7 +224,7 @@ class SolrSearchServiceImplTest {
         when(bookSearchRepository.searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), anyInt(), anyInt()))
             .thenReturn(mockQueryResponse);
-        when(abstractBookService.findByIds(anyList())).thenReturn(mockBooks);
+        when(bookService.findByIds(anyList())).thenReturn(mockBooks);
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);
@@ -247,7 +246,7 @@ class SolrSearchServiceImplTest {
         when(bookSearchRepository.searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), anyInt(), anyInt()))
             .thenReturn(mockQueryResponse);
-        when(abstractBookService.findByIds(anyList())).thenReturn(mockBooks);
+        when(bookService.findByIds(anyList())).thenReturn(mockBooks);
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);
@@ -268,7 +267,7 @@ class SolrSearchServiceImplTest {
         when(bookSearchRepository.searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), anyInt(), anyInt()))
             .thenReturn(mockQueryResponse);
-        when(abstractBookService.findByIds(anyList())).thenReturn(mockBooks);
+        when(bookService.findByIds(anyList())).thenReturn(mockBooks);
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);
@@ -291,7 +290,7 @@ class SolrSearchServiceImplTest {
         when(bookSearchRepository.searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), anyInt(), anyInt()))
             .thenReturn(mockQueryResponse);
-        when(abstractBookService.findByIds(anyList())).thenReturn(mockBooks);
+        when(bookService.findByIds(anyList())).thenReturn(mockBooks);
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);
@@ -318,7 +317,7 @@ class SolrSearchServiceImplTest {
         when(bookSearchRepository.searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), anyInt(), anyInt()))
             .thenReturn(mockQueryResponse);
-        when(abstractBookService.findByIds(anyList())).thenReturn(mockBooks);
+        when(bookService.findByIds(anyList())).thenReturn(mockBooks);
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);
@@ -346,7 +345,7 @@ class SolrSearchServiceImplTest {
         when(bookSearchRepository.searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), anyInt(), anyInt()))
             .thenReturn(mockQueryResponse);
-        when(abstractBookService.findByIds(anyList())).thenReturn(mockBooks);
+        when(bookService.findByIds(anyList())).thenReturn(mockBooks);
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);
@@ -366,7 +365,7 @@ class SolrSearchServiceImplTest {
         when(bookSearchRepository.searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), anyInt(), anyInt()))
             .thenReturn(mockQueryResponse);
-        when(abstractBookService.findByIds(anyList())).thenReturn(mockBooks);
+        when(bookService.findByIds(anyList())).thenReturn(mockBooks);
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);
@@ -384,7 +383,7 @@ class SolrSearchServiceImplTest {
         when(bookSearchRepository.searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), anyInt(), anyInt()))
             .thenThrow(new RuntimeException("Solr connection failed"));
-        when(abstractBookService.findAll()).thenReturn(mockBooks);
+        when(bookService.findAll()).thenReturn(mockBooks);
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);
@@ -393,7 +392,7 @@ class SolrSearchServiceImplTest {
         assertNotNull(response);
         assertTrue(response.getFallbackUsed());
         assertNotNull(response.getBooks());
-        verify(abstractBookService).findAll();
+        verify(bookService).findAll();
     }
     
     @Test
@@ -404,7 +403,7 @@ class SolrSearchServiceImplTest {
         when(bookSearchRepository.searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), anyInt(), anyInt()))
             .thenReturn(mockQueryResponse);
-        when(abstractBookService.findByIds(anyList())).thenReturn(mockBooks);
+        when(bookService.findByIds(anyList())).thenReturn(mockBooks);
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);
@@ -424,7 +423,7 @@ class SolrSearchServiceImplTest {
         when(bookSearchRepository.searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), anyInt(), anyInt()))
             .thenReturn(mockQueryResponse);
-        when(abstractBookService.findByIds(anyList())).thenReturn(mockBooks);
+        when(bookService.findByIds(anyList())).thenReturn(mockBooks);
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);
@@ -505,7 +504,7 @@ class SolrSearchServiceImplTest {
         when(bookSearchRepository.searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), anyInt(), anyInt()))
             .thenReturn(mockQueryResponse);
-        when(abstractBookService.findByIds(anyList())).thenReturn(Collections.emptyList());
+        when(bookService.findByIds(anyList())).thenReturn(Collections.emptyList());
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);
@@ -536,7 +535,7 @@ class SolrSearchServiceImplTest {
         // Then
         assertNotNull(response);
         assertTrue(response.getBooks().isEmpty());
-        verify(abstractBookService, never()).findByIds(anyList());
+        verify(bookService, never()).findByIds(anyList());
     }
     
     @Test
@@ -547,7 +546,7 @@ class SolrSearchServiceImplTest {
         when(bookSearchRepository.searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), anyInt(), anyInt()))
             .thenReturn(mockQueryResponse);
-        when(abstractBookService.findByIds(anyList())).thenReturn(mockBooks);
+        when(bookService.findByIds(anyList())).thenReturn(mockBooks);
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);
@@ -573,7 +572,7 @@ class SolrSearchServiceImplTest {
         when(bookSearchRepository.searchWithFacets(
             anyString(), anyMap(), anyList(), any(), any(), anyInt(), anyInt()))
             .thenReturn(mockQueryResponse);
-        when(abstractBookService.findByIds(anyList())).thenReturn(mockBooks);
+        when(bookService.findByIds(anyList())).thenReturn(mockBooks);
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);
@@ -608,8 +607,8 @@ class SolrSearchServiceImplTest {
             .thenReturn(mockQueryResponse);
         
         // Reverse order books
-        List<AbstractBookDTO> reversedBooks = Arrays.asList(mockBooks.get(1), mockBooks.get(0));
-        when(abstractBookService.findByIds(Arrays.asList(2L, 1L))).thenReturn(reversedBooks);
+        List<BookDTO> reversedBooks = Arrays.asList(mockBooks.get(1), mockBooks.get(0));
+        when(bookService.findByIds(Arrays.asList(2L, 1L))).thenReturn(reversedBooks);
         
         // When
         SearchResponse response = searchService.searchBooks(searchRequest);

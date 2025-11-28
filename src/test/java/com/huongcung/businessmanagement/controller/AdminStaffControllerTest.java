@@ -1,16 +1,15 @@
 package com.huongcung.businessmanagement.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huongcung.businessmanagement.admin.model.StaffCreateRequest;
+import com.huongcung.businessmanagement.admin.model.request.StaffCreateRequest;
 import com.huongcung.businessmanagement.admin.model.StaffDTO;
-import com.huongcung.businessmanagement.admin.model.StaffUpdateRequest;
+import com.huongcung.businessmanagement.admin.model.request.StaffUpdateRequest;
 import com.huongcung.businessmanagement.admin.service.StaffService;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import com.huongcung.core.user.enumeration.StaffType;
-import com.huongcung.platform.auth.configuration.JwtConfiguration;
-import com.huongcung.platform.auth.external.jwt.CustomUserDetailsService;
-import com.huongcung.platform.auth.external.jwt.JwtTokenBlacklistService;
-import com.huongcung.platform.auth.external.jwt.JwtTokenProvider;
+import com.huongcung.core.security.configuration.JwtConfiguration;
+import com.huongcung.core.security.external.jwt.JwtTokenBlacklistService;
+import com.huongcung.core.security.external.jwt.JwtTokenProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;

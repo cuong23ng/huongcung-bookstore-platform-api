@@ -1,0 +1,33 @@
+package com.huongcung.core.contributor.model.entity;
+
+import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
+import com.huongcung.core.common.model.entity.BaseEntity;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.util.List;
+
+@Entity
+@Table(name = "genres")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class GenreEntity extends BaseEntity {
+    
+    @Column(name = "code", nullable = false)
+    private String code;
+    
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private GenreEntity parent;
+    
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<GenreEntity> children;
+    
+    @ManyToMany(mappedBy = "genres", fetch = FetchType.LAZY)
+    private List<AbstractBookEntity> books;
+}

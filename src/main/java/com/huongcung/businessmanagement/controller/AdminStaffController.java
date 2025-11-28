@@ -1,10 +1,10 @@
 package com.huongcung.businessmanagement.controller;
 
-import com.huongcung.businessmanagement.admin.model.StaffCreateRequest;
+import com.huongcung.businessmanagement.admin.model.request.StaffCreateRequest;
 import com.huongcung.businessmanagement.admin.model.StaffDTO;
-import com.huongcung.businessmanagement.admin.model.StaffUpdateRequest;
+import com.huongcung.businessmanagement.admin.model.request.StaffUpdateRequest;
 import com.huongcung.businessmanagement.admin.service.StaffService;
-import com.huongcung.core.common.model.response.BaseResponse;
+import com.huongcung.core.common.model.dto.response.BaseResponse;
 import com.huongcung.core.user.enumeration.StaffType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

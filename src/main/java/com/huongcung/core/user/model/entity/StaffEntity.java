@@ -1,5 +1,6 @@
 package com.huongcung.core.user.model.entity;
 
+import com.huongcung.core.common.enumeration.City;
 import com.huongcung.core.user.enumeration.StaffType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,8 +9,6 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "staffs")
-@DiscriminatorValue("STAFF")
-@PrimaryKeyJoinColumn(name = "user_id")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -21,7 +20,7 @@ public class StaffEntity extends UserEntity {
     private StaffType staffType;
     
     @Column(name = "assigned_city")
-    private String assignedCity; // For store managers: Hanoi, HCMC, DaNang
+    private City assignedCity; // For store managers: Hanoi, HCMC, DaNang
     
     @Column(name = "hire_date")
     private LocalDate hireDate;

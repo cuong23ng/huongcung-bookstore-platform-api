@@ -1,5 +1,10 @@
 package com.huongcung.core.media.service;
 
+import com.huongcung.businessmanagement.admin.model.BookImageData;
+import com.huongcung.businessmanagement.admin.model.ImageData;
+import com.huongcung.core.media.model.entity.BookImageEntity;
+import com.huongcung.core.media.model.entity.ImageEntity;
+import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
@@ -10,17 +15,9 @@ public interface ImageService {
      * @param file the multipart file
      * @return relative path of the saved image
      */
-    String saveImage(MultipartFile file);
-    
-    /**
-     * Save image from Base64 string to S3
-     * @param base64Data Base64 encoded image data (with or without data URI prefix)
-     * @param fileName the filename to use (if null, will be generated)
-     * @param folderPath the folder path in S3 (e.g., "books/123")
-     * @return relative path of the saved image
-     */
-    String saveImageFromBase64(String base64Data, String fileName, String folderPath);
-    
+    String saveImage(MultipartFile file, String subFolder);
+
+    ImageEntity saveImageFromBase64(ImageData imageData, String subFolder);
     /**
      * Save image from InputStream to S3
      * @param inputStream the image input stream
@@ -30,6 +27,7 @@ public interface ImageService {
      * @return relative path of the saved image
      */
     String saveImageFromStream(InputStream inputStream, String fileName, String folderPath, String contentType);
-    
-    String getFullUrl(String relativePath);
+
+    // Book Image
+    BookImageEntity saveBookImageFromBase64(AbstractBookEntity book, BookImageData imageData, String subFolder);
 }

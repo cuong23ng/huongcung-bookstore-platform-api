@@ -1,6 +1,7 @@
 package com.huongcung.businessmanagement.admin.mapper;
 
 import com.huongcung.businessmanagement.admin.model.*;
+import com.huongcung.businessmanagement.admin.model.request.*;
 import com.huongcung.core.common.mapper.CommonMapper;
 import com.huongcung.core.contributor.model.dto.AuthorDTO;
 import com.huongcung.core.contributor.model.dto.PublisherDTO;
@@ -8,7 +9,8 @@ import com.huongcung.core.contributor.model.dto.TranslatorDTO;
 import com.huongcung.core.contributor.model.entity.AuthorEntity;
 import com.huongcung.core.contributor.model.entity.PublisherEntity;
 import com.huongcung.core.contributor.model.entity.TranslatorEntity;
-import com.huongcung.core.product.model.entity.GenreEntity;
+import com.huongcung.core.media.mapper.ImageMapper;
+import com.huongcung.core.contributor.model.entity.GenreEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -21,7 +23,7 @@ import org.mapstruct.ReportingPolicy;
  */
 @Mapper(
     componentModel = "spring",
-    uses = { CommonMapper.class },
+    uses = { CommonMapper.class, ImageMapper.class },
     unmappedTargetPolicy = ReportingPolicy.IGNORE,
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
 )
@@ -30,6 +32,7 @@ public interface ContributorMapper {
     // ========== Author Mappings ==========
     
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "image", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     AuthorEntity toEntity(AuthorCreateRequest request);
@@ -46,6 +49,7 @@ public interface ContributorMapper {
     // ========== Translator Mappings ==========
     
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "image", ignore = true) // Image is handled separately in service
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     TranslatorEntity toEntity(TranslatorCreateRequest request);
@@ -78,15 +82,16 @@ public interface ContributorMapper {
     // ========== Genre Mappings ==========
     
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "code", source = "name") // Map name (DTO) to code (entity)
     @Mapping(target = "parent", ignore = true) // Set in service from parentId
     @Mapping(target = "children", ignore = true)
     @Mapping(target = "books", ignore = true)
-    @Mapping(target = "isActive", ignore = true) // Set to true by default
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     GenreEntity toEntity(GenreCreateRequest request);
     
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "code", source = "name") // Map name (DTO) to code (entity)
     @Mapping(target = "parent", ignore = true) // Set in service from parentId
     @Mapping(target = "children", ignore = true)
     @Mapping(target = "books", ignore = true)
@@ -94,8 +99,9 @@ public interface ContributorMapper {
     @Mapping(target = "updatedAt", ignore = true)
     void updateEntityFromRequest(GenreUpdateRequest request, @MappingTarget GenreEntity entity);
     
+    @Mapping(target = "name", source = "code") // Map code (entity) to name (DTO)
     @Mapping(target = "parentId", expression = "java(entity.getParent() != null ? entity.getParent().getId() : null)")
-    @Mapping(target = "parentName", expression = "java(entity.getParent() != null ? entity.getParent().getName() : null)")
+    @Mapping(target = "parentName", expression = "java(entity.getParent() != null ? entity.getParent().getCode() : null)")
     GenreListDTO toListDTO(GenreEntity entity);
 }
 

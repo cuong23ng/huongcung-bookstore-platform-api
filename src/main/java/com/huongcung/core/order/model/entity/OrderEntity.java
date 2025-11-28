@@ -6,7 +6,7 @@ import com.huongcung.core.order.enumeration.OrderType;
 import com.huongcung.core.order.enumeration.PaymentMethod;
 import com.huongcung.core.order.enumeration.PaymentStatus;
 import com.huongcung.core.common.model.entity.BaseEntity;
-import com.huongcung.core.user.model.entity.UserEntity;
+import com.huongcung.core.user.model.entity.CustomerEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,7 +26,10 @@ public class OrderEntity extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
-    private UserEntity customer;
+    private CustomerEntity customer;
+
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private OrderCustomerEntity orderCustomer;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "order_type", nullable = false)
@@ -74,6 +77,6 @@ public class OrderEntity extends BaseEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ConsignmentEntity> consignments;
     
-    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private DeliveryInfoEntity deliveryInfo;
 }

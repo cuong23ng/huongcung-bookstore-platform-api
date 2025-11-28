@@ -15,6 +15,20 @@ import java.util.Optional;
 public interface StaffRepository extends JpaRepository<StaffEntity, Long> {
     
     /**
+     * Find staff by email address
+     * @param email the email address
+     * @return Optional containing the staff if found
+     */
+    Optional<StaffEntity> findByEmail(String email);
+    
+    /**
+     * Find staff by UID
+     * @param uid the unique identifier
+     * @return Optional containing the staff if found
+     */
+    Optional<StaffEntity> findByUid(String uid);
+    
+    /**
      * Find all staff with pagination and optional filtering
      * @param staffType optional filter by staff type
      * @param assignedCity optional filter by assigned city

@@ -1,6 +1,6 @@
 package com.huongcung.core.search.service;
 
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
+import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import com.huongcung.core.search.event.BookCreatedEvent;
 import com.huongcung.core.search.event.BookDeletedEvent;
 import com.huongcung.core.search.event.BookUpdatedEvent;

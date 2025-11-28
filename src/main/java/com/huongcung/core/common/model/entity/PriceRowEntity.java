@@ -1,6 +1,6 @@
 package com.huongcung.core.common.model.entity;
 
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
+import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import com.huongcung.core.common.enumeration.Currency;
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,0 +1,23 @@
+package com.huongcung.webstore.bookstore.model;
+
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+public class BookData {
+    private String code;
+    private String title;
+    private List<AuthorData> authors;
+    private List<TranslatorData> translators;
+    private int edition;
+    private PublisherData publisher;
+    private String publicationDate;
+    private String language;
+    private int pageCount;
+    private String description;
+    private BookImageData cover;
+    private List<BookImageData> images;
+    private PhysicalBookData physicalBookInfo;
+    private EbookData ebookInfo;
+}

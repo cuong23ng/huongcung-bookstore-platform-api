@@ -1,7 +1,7 @@
 package com.huongcung.core.search.service.impl;
 
-import com.huongcung.core.product.model.dto.AbstractBookDTO;
-import com.huongcung.core.product.service.AbstractBookService;
+import com.huongcung.core.catalog.model.dto.BookFrontPageDTO;
+import com.huongcung.core.catalog.service.AbstractBookService;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import com.huongcung.core.search.model.dto.SearchFacet;
 import com.huongcung.core.search.model.dto.SearchRequest;
@@ -9,13 +9,13 @@ import com.huongcung.core.search.model.dto.SearchResponse;
 import com.huongcung.core.search.repository.BookSearchRepository;
 import com.huongcung.core.search.service.SearchPerformanceMonitor;
 import com.huongcung.core.search.service.SearchService;
-import com.huongcung.platform.bookstore.mapper.BookViewMapper;
-import com.huongcung.platform.bookstore.model.BookData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.client.solrj.response.Suggestion;
 import org.apache.solr.common.SolrDocumentList;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 /**
  * Implementation of SearchService using Solr with fallback to database search
  */
+@Primary
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -31,7 +32,7 @@ public class SolrSearchServiceImpl implements SearchService {
     
     private final BookSearchRepository bookSearchRepository;
     private final AbstractBookService abstractBookService;
-    private final BookViewMapper bookViewMapper;
+    private final DatabaseSearchServiceImpl databaseSearchService;
     private final SearchPerformanceMonitor performanceMonitor;
     
     @Override
@@ -75,7 +76,7 @@ public class SolrSearchServiceImpl implements SearchService {
             
         } catch (Exception e) {
             log.warn("Solr search failed, falling back to database search: {}", e.getMessage());
-            SearchResponse fallbackResponse = fallbackToDatabaseSearch(request, startTime);
+            SearchResponse fallbackResponse = databaseSearchService.searchBooks(request);
             long executionTime = System.currentTimeMillis() - startTime;
             performanceMonitor.recordSearchTime("books", executionTime);
             return fallbackResponse;
@@ -95,8 +96,8 @@ public class SolrSearchServiceImpl implements SearchService {
             List<String> suggestions = Collections.emptyList();
             if (suggesterResponse != null && suggesterResponse.getSuggestions() != null) {
                 suggestions = suggesterResponse.getSuggestions().values().stream()
-                    .flatMap(suggestionList -> suggestionList.stream())
-                    .map(suggestion -> suggestion.getTerm())
+                    .flatMap(Collection::stream)
+                    .map(Suggestion::getTerm)
                     .limit(10)
                     .collect(Collectors.toList());
             }
@@ -160,11 +161,10 @@ public class SolrSearchServiceImpl implements SearchService {
                 Object idValue = doc.getFieldValue("id");
                 return idValue != null ? idValue.toString() : null;
             })
-            .filter(id -> id != null)
-            .collect(Collectors.toList());
-        
-        // Fetch full book data from database
-        List<BookData> books = fetchBooksByIds(bookIds);
+            .filter(Objects::nonNull)
+            .toList();
+
+        List<BookFrontPageDTO> books = fetchBooksByIds(bookIds);
         
         // Extract highlights
         Map<String, String> highlights = extractHighlights(solrResponse, bookIds);
@@ -178,7 +178,7 @@ public class SolrSearchServiceImpl implements SearchService {
             .pageSize(request.getSize())
             .totalResults(documents.getNumFound())
             .totalPages((int) Math.ceil((double) documents.getNumFound() / request.getSize()))
-            .hasNext((request.getPage() * request.getSize()) < documents.getNumFound())
+            .hasNext(((long) request.getPage() * request.getSize()) < documents.getNumFound())
             .hasPrevious(request.getPage() > 1)
             .build();
         
@@ -193,40 +193,12 @@ public class SolrSearchServiceImpl implements SearchService {
     /**
      * Fetch books from database by IDs
      */
-    private List<BookData> fetchBooksByIds(List<String> bookIds) {
+    private List<BookFrontPageDTO> fetchBooksByIds(List<String> bookIds) {
         if (bookIds.isEmpty()) {
             return Collections.emptyList();
         }
-        
-        // Convert string IDs to Long IDs
-        List<Long> longIds = bookIds.stream()
-            .map(id -> {
-                try {
-                    return Long.parseLong(id);
-                } catch (NumberFormatException e) {
-                    log.warn("Invalid book ID format: {}", id);
-                    return null;
-                }
-            })
-            .filter(id -> id != null)
-            .collect(Collectors.toList());
-        
-        if (longIds.isEmpty()) {
-            return Collections.emptyList();
-        }
-        
-        // Fetch books by IDs (efficient query)
-        List<AbstractBookDTO> books = abstractBookService.findByIds(longIds);
-        
-        // Maintain Solr result order
-        Map<Long, AbstractBookDTO> bookMap = books.stream()
-            .collect(Collectors.toMap(AbstractBookDTO::getId, book -> book));
-        
-        return longIds.stream()
-            .map(bookMap::get)
-            .filter(book -> book != null)
-            .map(bookViewMapper::toBookData)
-            .collect(Collectors.toList());
+        List<Long> longIds = bookIds.stream().map(Long::parseLong).toList();
+        return abstractBookService.getBooksForFrontPageByIds(longIds);
     }
     
     /**
@@ -435,123 +407,6 @@ public class SolrSearchServiceImpl implements SearchService {
             filterParts.add("cities=" + request.getCities());
         }
         return filterParts.isEmpty() ? "none" : String.join(", ", filterParts);
-    }
-    
-    /**
-     * Fallback to database search when Solr is unavailable
-     */
-    private SearchResponse fallbackToDatabaseSearch(SearchRequest request, long startTime) {
-        log.info("Using database fallback search");
-        
-        try {
-            // Get all books from database
-            List<AbstractBookDTO> allBooks = abstractBookService.findAll();
-            
-            // Apply basic filtering in memory
-            List<AbstractBookDTO> filteredBooks = allBooks.stream()
-                .filter(book -> matchesQuery(book, request.getQ()))
-                .filter(book -> matchesGenres(book, request.getGenres()))
-                .filter(book -> matchesLanguage(book, request.getLanguages()))
-                .filter(book -> matchesFormat(book, request.getFormats()))
-                .collect(Collectors.toList());
-            
-            // Apply pagination
-            int start = (request.getPage() - 1) * request.getSize();
-            int end = Math.min(start + request.getSize(), filteredBooks.size());
-            List<AbstractBookDTO> pagedBooks = filteredBooks.subList(
-                Math.max(0, start), 
-                Math.min(end, filteredBooks.size()));
-            
-            // Convert to BookData
-            List<BookData> books = pagedBooks.stream()
-                .map(bookViewMapper::toBookData)
-                .collect(Collectors.toList());
-            
-            // Build pagination
-            PaginationInfo pagination = PaginationInfo.builder()
-                .currentPage(request.getPage())
-                .pageSize(request.getSize())
-                .totalResults((long) filteredBooks.size())
-                .totalPages((int) Math.ceil((double) filteredBooks.size() / request.getSize()))
-                .hasNext(end < filteredBooks.size())
-                .hasPrevious(request.getPage() > 1)
-                .build();
-            
-            long executionTime = System.currentTimeMillis() - startTime;
-            
-            return SearchResponse.builder()
-                .books(books)
-                .facets(Collections.emptyMap())
-                .pagination(pagination)
-                .highlightedFields(Collections.emptyMap())
-                .executionTimeMs(executionTime)
-                .fallbackUsed(true)
-                .build();
-                
-        } catch (Exception e) {
-            log.error("Database fallback search also failed: {}", e.getMessage());
-            throw new RuntimeException("Search failed", e);
-        }
-    }
-    
-    /**
-     * Check if book matches query string (basic text matching)
-     */
-    private boolean matchesQuery(AbstractBookDTO book, String query) {
-        if (query == null || query.trim().isEmpty()) {
-            return true;
-        }
-        String lowerQuery = query.toLowerCase();
-        return (book.getTitle() != null && book.getTitle().toLowerCase().contains(lowerQuery)) ||
-               (book.getDescription() != null && book.getDescription().toLowerCase().contains(lowerQuery));
-    }
-    
-    /**
-     * Check if book matches genre filters
-     * Note: AbstractBookDTO doesn't include genres, so this is a limitation of fallback mode.
-     * In production, consider adding genres to DTO or using a separate genre lookup.
-     */
-    private boolean matchesGenres(AbstractBookDTO book, List<String> genres) {
-        if (genres == null || genres.isEmpty()) {
-            return true;
-        }
-        // Limitation: AbstractBookDTO doesn't have genres field
-        // In fallback mode, genre filtering is not available
-        // This is acceptable as fallback is a degraded mode
-        log.debug("Genre filtering not available in fallback mode for book: {}", book.getCode());
-        return true;
-    }
-    
-    /**
-     * Check if book matches language filters
-     */
-    private boolean matchesLanguage(AbstractBookDTO book, List<String> languages) {
-        if (languages == null || languages.isEmpty()) {
-            return true;
-        }
-        return book.getLanguage() != null && 
-               languages.contains(book.getLanguage().toString());
-    }
-    
-    /**
-     * Check if book matches format filters
-     */
-    private boolean matchesFormat(AbstractBookDTO book, List<String> formats) {
-        if (formats == null || formats.isEmpty()) {
-            return true;
-        }
-        for (String format : formats) {
-            if ("PHYSICAL".equals(format) && book.isHasPhysicalEdition()) {
-                return true;
-            }
-            if ("DIGITAL".equals(format) && book.isHasElectricEdition()) {
-                return true;
-            }
-            if ("BOTH".equals(format) && book.isHasPhysicalEdition() && book.isHasElectricEdition()) {
-                return true;
-            }
-        }
-        return false;
     }
 }
 

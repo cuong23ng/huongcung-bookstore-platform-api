@@ -1,6 +1,6 @@
 package com.huongcung.core.inventory.model.entity;
 
-import com.huongcung.core.product.model.entity.PhysicalBookEntity;
+import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
 import com.huongcung.core.common.model.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -16,11 +16,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class StockLevelEntity extends BaseEntity {
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "book_id", nullable = false)
     private PhysicalBookEntity book;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "warehouse_id", nullable = false)
     private WarehouseEntity warehouse;
     

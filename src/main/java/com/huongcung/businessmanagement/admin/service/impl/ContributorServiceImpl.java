@@ -2,6 +2,7 @@ package com.huongcung.businessmanagement.admin.service.impl;
 
 import com.huongcung.businessmanagement.admin.mapper.ContributorMapper;
 import com.huongcung.businessmanagement.admin.model.*;
+import com.huongcung.businessmanagement.admin.model.request.*;
 import com.huongcung.businessmanagement.admin.service.ContributorService;
 import com.huongcung.core.contributor.model.dto.AuthorDTO;
 import com.huongcung.core.contributor.model.dto.PublisherDTO;
@@ -12,8 +13,11 @@ import com.huongcung.core.contributor.model.entity.TranslatorEntity;
 import com.huongcung.core.contributor.repository.AuthorRepository;
 import com.huongcung.core.contributor.repository.PublisherRepository;
 import com.huongcung.core.contributor.repository.TranslatorRepository;
-import com.huongcung.core.product.model.entity.GenreEntity;
-import com.huongcung.core.product.repository.GenreRepository;
+import com.huongcung.core.media.model.entity.ImageEntity;
+import com.huongcung.core.media.repository.ImageRepository;
+import com.huongcung.core.media.service.ImageService;
+import com.huongcung.core.contributor.model.entity.GenreEntity;
+import com.huongcung.core.catalog.repository.GenreRepository;
 import com.huongcung.core.search.model.dto.PaginationInfo;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -28,6 +32,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.huongcung.core.media.constant.FolderConstants.AUTHORS;
+import static com.huongcung.core.media.constant.FolderConstants.TRANSLATORS;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -36,7 +43,9 @@ public class ContributorServiceImpl implements ContributorService {
     private final AuthorRepository authorRepository;
     private final TranslatorRepository translatorRepository;
     private final PublisherRepository publisherRepository;
+    private final ImageRepository imageRepository;
     private final GenreRepository genreRepository;
+    private final ImageService imageService;
     private final ContributorMapper contributorMapper;
     
     @PersistenceContext
@@ -90,6 +99,10 @@ public class ContributorServiceImpl implements ContributorService {
         log.info("Creating author: name={}", request.getName());
         
         AuthorEntity author = contributorMapper.toEntity(request);
+
+        // Handle image upload if provided
+        ImageEntity image = imageService.saveImageFromBase64(request.getImage(), AUTHORS);
+        author.setImage(image);
         AuthorEntity savedAuthor = authorRepository.save(author);
         
         log.info("Author created successfully with ID: {}", savedAuthor.getId());
@@ -180,6 +193,10 @@ public class ContributorServiceImpl implements ContributorService {
         log.info("Creating translator: name={}", request.getName());
         
         TranslatorEntity translator = contributorMapper.toEntity(request);
+        // Handle image upload if provided
+        ImageEntity image = imageService.saveImageFromBase64(request.getImage(), TRANSLATORS);
+        translator.setImage(image);
+
         TranslatorEntity savedTranslator = translatorRepository.save(translator);
         
         log.info("Translator created successfully with ID: {}", savedTranslator.getId());
@@ -325,9 +342,9 @@ public class ContributorServiceImpl implements ContributorService {
         Page<GenreEntity> page = genreRepository.findAll(pageable);
         
         List<GenreEntity> filtered = page.getContent().stream()
-                .filter(genre -> name == null || name.isBlank() || genre.getName().toLowerCase().contains(name.toLowerCase()))
+                .filter(genre -> name == null || name.isBlank() || (genre.getCode() != null && genre.getCode().toLowerCase().contains(name.toLowerCase())))
                 .filter(genre -> parentId == null || (genre.getParent() != null && genre.getParent().getId().equals(parentId)))
-                .filter(genre -> isActive == null || genre.getIsActive().equals(isActive))
+                .filter(genre -> isActive == null)
                 .collect(Collectors.toList());
         
         List<GenreListDTO> genres = filtered.stream()
@@ -372,8 +389,6 @@ public class ContributorServiceImpl implements ContributorService {
             genre.setParent(parent);
         }
         
-        genre.setIsActive(true); // Default to active
-        
         GenreEntity savedGenre = genreRepository.save(genre);
         
         log.info("Genre created successfully with ID: {}", savedGenre.getId());
@@ -399,11 +414,6 @@ public class ContributorServiceImpl implements ContributorService {
         } else if (request.getParentId() != null && request.getParentId() == 0) {
             // Explicitly remove parent
             genre.setParent(null);
-        }
-        
-        // Update isActive if provided
-        if (request.getIsActive() != null) {
-            genre.setIsActive(request.getIsActive());
         }
         
         GenreEntity updatedGenre = genreRepository.save(genre);

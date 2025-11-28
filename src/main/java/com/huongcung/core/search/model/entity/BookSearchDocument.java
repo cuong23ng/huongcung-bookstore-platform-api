@@ -55,13 +55,6 @@ public class BookSearchDocument {
     private String descriptionText;
     
     /**
-     * ISBN number
-     * Maps to Solr field: isbn (string)
-     */
-    @Field("isbn")
-    private String isbn;
-    
-    /**
      * Author names (multi-valued for co-authors)
      * Maps to Solr field: authorNames (string, multi-valued)
      */
@@ -109,13 +102,6 @@ public class BookSearchDocument {
      */
     @Field("digitalPrice")
     private Double digitalPrice;
-    
-    /**
-     * Publication date
-     * Maps to Solr field: publicationDate (pdate)
-     */
-    @Field("publicationDate")
-    private Date publicationDate;
     
     /**
      * Available in Hanoi

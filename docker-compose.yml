@@ -71,16 +71,43 @@ services:
     environment:
       SOLR_HEAP: 512m
       SOLR_CORE_NAME: ${SOLR_CORE_NAME:-books}
-    entrypoint:
-      - docker-entrypoint.sh
-      - solr-precreate
-      - ${SOLR_CORE_NAME:-books}
+    command:
+      - bash
+      - -c
+      - |
+        # Create core with default config first (if it doesn't exist)
+        if [ ! -d "/var/solr/data/${SOLR_CORE_NAME:-books}" ]; then
+          docker-entrypoint.sh solr-precreate ${SOLR_CORE_NAME:-books}
+        fi
+        
+        # Copy custom config files
+        echo "Copying custom schema and config..."
+        cp -r /opt/solr-config/* /var/solr/data/${SOLR_CORE_NAME:-books}/conf/
+        
+        # Start Solr
+        exec docker-entrypoint.sh solr-foreground
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8983/solr/admin/ping || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 60s
+  
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - platform-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   platform-app:
     build:
@@ -121,6 +148,7 @@ volumes:
   mysql-data:
   minio-data:
   solr-data:
+  redis-data:
 
 networks:
   platform-network:

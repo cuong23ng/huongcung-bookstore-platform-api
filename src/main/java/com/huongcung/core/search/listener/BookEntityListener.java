@@ -1,6 +1,6 @@
 package com.huongcung.core.search.listener;
 
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
+import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import com.huongcung.core.search.event.BookCreatedEvent;
 import com.huongcung.core.search.event.BookDeletedEvent;
 import com.huongcung.core.search.event.BookUpdatedEvent;
@@ -30,12 +30,12 @@ public class BookEntityListener {
     private static ApplicationEventPublisher eventPublisher;
 
     /**
-     * Called after a book entity is persisted (created)
+     * Called after an AbstractBookEntity is persisted (created)
      */
     @PostPersist
     public void postPersist(AbstractBookEntity book) {
         if (eventPublisher != null && book != null) {
-            log.debug("Book persisted, publishing BookCreatedEvent for book ID: {}", book.getId());
+            log.debug("AbstractBookEntity persisted, publishing BookCreatedEvent for book ID: {}", book.getId());
             eventPublisher.publishEvent(new BookCreatedEvent(this, book));
         } else if (eventPublisher == null) {
             log.warn("ApplicationEventPublisher not initialized in BookEntityListener");
@@ -43,12 +43,12 @@ public class BookEntityListener {
     }
     
     /**
-     * Called after a book entity is updated
+     * Called after an AbstractBookEntity is updated
      */
     @PostUpdate
     public void postUpdate(AbstractBookEntity book) {
         if (eventPublisher != null && book != null) {
-            log.debug("Book updated, publishing BookUpdatedEvent for book ID: {}", book.getId());
+            log.debug("AbstractBookEntity updated, publishing BookUpdatedEvent for book ID: {}", book.getId());
             eventPublisher.publishEvent(new BookUpdatedEvent(this, book.getId(), book));
         } else if (eventPublisher == null) {
             log.warn("ApplicationEventPublisher not initialized in BookEntityListener");
@@ -56,12 +56,12 @@ public class BookEntityListener {
     }
     
     /**
-     * Called after a book entity is removed (deleted)
+     * Called after an AbstractBookEntity is removed (deleted)
      */
     @PostRemove
     public void postRemove(AbstractBookEntity book) {
         if (eventPublisher != null && book != null) {
-            log.debug("Book removed, publishing BookDeletedEvent for book ID: {}", book.getId());
+            log.debug("AbstractBookEntity removed, publishing BookDeletedEvent for book ID: {}", book.getId());
             eventPublisher.publishEvent(new BookDeletedEvent(this, book.getId()));
         } else if (eventPublisher == null) {
             log.warn("ApplicationEventPublisher not initialized in BookEntityListener");

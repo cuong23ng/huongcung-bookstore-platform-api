@@ -1,23 +1,20 @@
 package com.huongcung.businessmanagement.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huongcung.businessmanagement.admin.model.BookCreateRequest;
+import com.huongcung.businessmanagement.admin.model.request.BookCreateRequest;
 import com.huongcung.businessmanagement.admin.model.BookDetailDTO;
 import com.huongcung.businessmanagement.admin.model.BookListDTO;
-import com.huongcung.businessmanagement.admin.model.BookUpdateRequest;
+import com.huongcung.businessmanagement.admin.model.request.BookUpdateRequest;
 import com.huongcung.businessmanagement.admin.service.CatalogService;
 import com.huongcung.core.common.enumeration.Language;
-import com.huongcung.core.common.model.response.BaseResponse;
-import com.huongcung.core.media.repository.BookImageRepository;
 import com.huongcung.core.media.service.ImageService;
-import com.huongcung.core.product.model.entity.AbstractBookEntity;
-import com.huongcung.core.product.model.entity.PhysicalBookEntity;
-import com.huongcung.core.product.repository.AbstractBookRepository;
+import com.huongcung.core.catalog.model.entity.PhysicalBookEntity;
+import com.huongcung.core.catalog.repository.BookRepository;
 import com.huongcung.core.search.model.dto.PaginationInfo;
-import com.huongcung.platform.auth.external.jwt.JwtConfiguration;
-import com.huongcung.platform.auth.external.jwt.JwtTokenBlacklistService;
-import com.huongcung.platform.auth.external.jwt.JwtTokenProvider;
-import com.huongcung.platform.auth.service.CustomUserDetailsService;
+import com.huongcung.webstore.auth.external.jwt.JwtConfiguration;
+import com.huongcung.core.security.external.jwt.JwtTokenBlacklistService;
+import com.huongcung.core.security.external.jwt.JwtTokenProvider;
+import com.huongcung.webstore.auth.service.CustomUserDetailsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,15 +22,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -65,7 +59,7 @@ class AdminCatalogControllerTest {
     private CatalogService catalogService;
     
     @MockBean
-    private AbstractBookRepository bookRepository;
+    private BookRepository bookRepository;
     
     @MockBean
     private BookImageRepository bookImageRepository;
@@ -274,7 +268,7 @@ class AdminCatalogControllerTest {
         request.setAuthorIds(Arrays.asList(1L));
         request.setBookType("PHYSICAL");
         request.setIsbn("9876543210");
-        request.setCurrentPrice(new BigDecimal("200000"));
+        request.setPhysicalPrice(new BigDecimal("200000"));
         
         BookDetailDTO createdBook = BookDetailDTO.builder()
                 .id(2L)
@@ -314,7 +308,7 @@ class AdminCatalogControllerTest {
         request.setFileUrl("https://example.com/ebook.pdf");
         request.setFileName("ebook.pdf");
         request.setFileFormat("PDF");
-        request.setCurrentPrice(new BigDecimal("150000"));
+        request.setPhysicalPrice(new BigDecimal("150000"));
         
         BookDetailDTO createdBook = BookDetailDTO.builder()
                 .id(3L)

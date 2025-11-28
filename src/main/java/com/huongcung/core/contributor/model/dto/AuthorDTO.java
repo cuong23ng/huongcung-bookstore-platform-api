@@ -1,21 +1,15 @@
 package com.huongcung.core.contributor.model.dto;
 
-import com.huongcung.core.common.model.dto.BaseDTO;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
+import com.huongcung.core.media.model.dto.ImageDTO;
+import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDate;
 
-@Getter
-@Setter
-@SuperBuilder
-@NoArgsConstructor
-public class AuthorDTO extends BaseDTO {
+@Data
+public class AuthorDTO {
     private String name;
     private String biography;
-    private String photoUrl;
-    private Date birthDate;
+    private ImageDTO image;
+    private LocalDate birthDate;
     private String nationality;
 }
