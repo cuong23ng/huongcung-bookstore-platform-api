@@ -1,5 +1,6 @@
 package com.huongcung.webstore.checkout.dto;
 
+import com.huongcung.core.order.enumeration.PaymentMethod;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,6 +26,8 @@ public class CheckoutRequest {
     private ShippingAddressDTO shippingAddress;
     
     private String shippingMethod; // standard or express
+
+    private PaymentMethod paymentMethod; // COD or VNPAY
 
     // Information for GUEST
     @NotBlank(message = "Email is required")

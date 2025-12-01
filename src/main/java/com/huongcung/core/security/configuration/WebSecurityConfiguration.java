@@ -112,6 +112,7 @@ public class WebSecurityConfiguration {
                 .requestMatchers("/api/checkout/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/api/admin/**").permitAll()
+                .requestMatchers("/api/payment/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 
                 // Admin endpoints

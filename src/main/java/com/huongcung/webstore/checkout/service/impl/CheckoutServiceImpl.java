@@ -130,7 +130,11 @@ public class CheckoutServiceImpl implements CheckoutService {
         order.setTotalAmount(totalAmount);
         order.setStatus(OrderStatus.PENDING);
         order.setPaymentStatus(PaymentStatus.PENDING);
-        order.setPaymentMethod(PaymentMethod.COD); // TODO: Payment method
+        // Set payment method from request, default to COD if not provided
+        PaymentMethod paymentMethod = request.getPaymentMethod() != null 
+            ? request.getPaymentMethod() 
+            : PaymentMethod.COD;
+        order.setPaymentMethod(paymentMethod);
         order.setShippingAddress(serializeShippingAddress(request.getShippingAddress()));
 
         orderCustomer.setOrder(order);
@@ -154,7 +158,8 @@ public class CheckoutServiceImpl implements CheckoutService {
         
         log.info("Order created successfully: {}", orderNumber);
 
-        // Immediate confirm for COD
+        // Immediate confirm for COD only
+        // VNPay orders will be confirmed after successful payment via IPN callback
         if (order.getPaymentMethod() == PaymentMethod.COD) {
             orderConfirmationService.autoConfirmOrder(order.getId());
         }

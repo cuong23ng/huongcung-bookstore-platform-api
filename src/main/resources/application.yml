@@ -91,3 +91,12 @@ ghn:
   timeout: ${GHN_TIMEOUT:10000}
   retry-max-attempts: ${GHN_RETRY_MAX_ATTEMPTS:3}
   retry-delay-ms: ${GHN_RETRY_DELAY_MS:1000}
+
+
+payment:
+  vnpay:
+    url: ${VNPAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+    return-url: https://front-end.huongcungbookstore.com/
+    tmn-code: ${VNPAY_TMN_CODE}
+    hash-secret: ${VNPAY_HASH_SECRET:KT8FY47LW1JHQXD6DWX18KW5R2GOHX2H}
+    api-url: https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
