@@ -38,6 +38,8 @@ public class PaymentController {
     // 2. API IPN (Webhook)
     @GetMapping("/vnpay-ipn")
     public ResponseEntity<?> vnpayIpn(HttpServletRequest request) {
+        log.info("vnpayIpn: request {}", request.getPathInfo());
+
         // Chuyển đổi request params thành Map
         Map<String, String> fields = new HashMap<>();
         for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements();) {

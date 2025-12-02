@@ -33,6 +33,7 @@ public class PaymentServiceImpl implements PaymentService {
         String vnp_Command = "pay";
         String vnp_TxnRef = order.getOrderNumber(); // Mã đơn hàng
         String vnp_IpAddr = VnpayConfig.getIpAddress(request);
+        //String vnp_IpAddr = "127.0.0.1";
         String vnp_TmnCode = vnpayConfig.vnp_TmnCode;
 
         // Số tiền nhân 100 (theo quy định VNPay)
@@ -46,7 +47,7 @@ public class PaymentServiceImpl implements PaymentService {
         vnp_Params.put("vnp_CurrCode", "VND");
         vnp_Params.put("vnp_BankCode", "NCB");
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);
+        vnp_Params.put("vnp_OrderInfo", "Thanh_Toan_Don_Hang:" + vnp_TxnRef);
         vnp_Params.put("vnp_OrderType", "other");
         vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", vnpayConfig.vnp_ReturnUrl);
@@ -72,20 +73,32 @@ public class PaymentServiceImpl implements PaymentService {
             String fieldName = itr.next();
             String fieldValue = vnp_Params.get(fieldName);
             if ((fieldValue != null) && (!fieldValue.isEmpty())) {
+                // 1. Encode chuẩn UTF-8
+                String encodedValue = URLEncoder.encode(fieldValue, StandardCharsets.UTF_8);
+
+                // 2. FIX QUAN TRỌNG: Thay thế '+' bằng '%20'
+                // VNPay thường yêu cầu khoảng trắng là %20 để tính checksum chính xác
+                encodedValue = encodedValue.replace("+", "%20");
+
                 // Build hash data
                 hashData.append(fieldName);
                 hashData.append('=');
-                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+                hashData.append(encodedValue); // Dùng giá trị đã fix
+
                 // Build query
-                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII));
+                query.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8));
                 query.append('=');
-                query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+                query.append(encodedValue); // Dùng giá trị đã fix
+
                 if (itr.hasNext()) {
                     query.append('&');
                     hashData.append('&');
                 }
             }
         }
+
+        log.info("VNPAY Raw Hash: {}", hashData.toString());
+        log.info("Secret Key: {}", vnpayConfig.secretKey);
 
         String queryUrl = query.toString();
         String vnp_SecureHash = VnpayConfig.hmacSHA512(vnpayConfig.secretKey, hashData.toString());
