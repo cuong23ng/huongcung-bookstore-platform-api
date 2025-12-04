@@ -1,6 +1,6 @@
 package com.huongcung.core.inventory.service.impl;
 
-import com.huongcung.businessmanagement.inventory.model.request.StockAdjustmentRequest;
+import com.huongcung.core.inventory.model.dto.request.StockAdjustmentRequest;
 import com.huongcung.core.common.enumeration.City;
 import com.huongcung.core.inventory.service.InventoryService;
 import com.huongcung.core.inventory.converter.StockAdjustmentConverter;

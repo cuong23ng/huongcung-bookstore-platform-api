@@ -1,6 +1,6 @@
 package com.huongcung.core.order.model.entity;
 
-import com.huongcung.core.inventory.model.entity.ConsignmentEntity;
+import com.huongcung.core.logistics.model.entity.ConsignmentEntity;
 import com.huongcung.core.order.enumeration.OrderStatus;
 import com.huongcung.core.order.enumeration.OrderType;
 import com.huongcung.core.order.enumeration.PaymentMethod;
@@ -71,10 +71,10 @@ public class OrderEntity extends BaseEntity {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
     
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<OrderEntryEntity> entries;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<ConsignmentEntity> consignments;
     
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)

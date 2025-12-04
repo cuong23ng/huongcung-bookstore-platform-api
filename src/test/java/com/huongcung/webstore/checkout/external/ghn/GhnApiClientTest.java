@@ -1,8 +1,10 @@
 package com.huongcung.webstore.checkout.external.ghn;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huongcung.webstore.checkout.external.ghn.config.GhnApiConfig;
-import com.huongcung.webstore.checkout.external.ghn.dto.*;
+import com.huongcung.core.logistics.external.ghn.client.GhnApiClient;
+import com.huongcung.core.logistics.external.ghn.config.GhnApiConfig;
+import com.huongcung.core.logistics.external.ghn.dto.request.CalculateFeeRequest;
+import com.huongcung.core.logistics.external.ghn.dto.response.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -54,22 +56,22 @@ class GhnApiClientTest {
     @DisplayName("Should successfully get provinces")
     void getProvinces_Success() {
         // Given
-        GhnProvinceDTO province1 = new GhnProvinceDTO();
+        GetProvinceResponse province1 = new GetProvinceResponse();
         province1.setProvinceId(201);
         province1.setProvinceName("Hà Nội");
         
-        GhnProvinceDTO province2 = new GhnProvinceDTO();
+        GetProvinceResponse province2 = new GetProvinceResponse();
         province2.setProvinceId(202);
         province2.setProvinceName("Hồ Chí Minh");
         
-        List<GhnProvinceDTO> provinces = Arrays.asList(province1, province2);
+        List<GetProvinceResponse> provinces = Arrays.asList(province1, province2);
         
-        GhnApiResponse<List<GhnProvinceDTO>> response = new GhnApiResponse<>();
+        GhnApiResponse<List<GetProvinceResponse>> response = new GhnApiResponse<>();
         response.setCode(200);
         response.setMessage("Success");
         response.setData(provinces);
         
-        ResponseEntity<GhnApiResponse<List<GhnProvinceDTO>>> responseEntity = 
+        ResponseEntity<GhnApiResponse<List<GetProvinceResponse>>> responseEntity =
             new ResponseEntity<>(response, HttpStatus.OK);
         
         when(restTemplate.exchange(
@@ -80,7 +82,7 @@ class GhnApiClientTest {
         )).thenReturn(responseEntity);
         
         // When
-        List<GhnProvinceDTO> result = ghnApiClient.getProvinces();
+        List<GetProvinceResponse> result = ghnApiClient.getProvinces();
         
         // Then
         assertNotNull(result);
@@ -98,12 +100,12 @@ class GhnApiClientTest {
     @DisplayName("Should return empty list when GHN API fails")
     void getProvinces_ApiFailure_ReturnsEmptyList() {
         // Given
-        GhnApiResponse<List<GhnProvinceDTO>> response = new GhnApiResponse<>();
+        GhnApiResponse<List<GetProvinceResponse>> response = new GhnApiResponse<>();
         response.setCode(500);
         response.setMessage("Internal Server Error");
         response.setData(null);
         
-        ResponseEntity<GhnApiResponse<List<GhnProvinceDTO>>> responseEntity = 
+        ResponseEntity<GhnApiResponse<List<GetProvinceResponse>>> responseEntity =
             new ResponseEntity<>(response, HttpStatus.OK);
         
         when(restTemplate.exchange(
@@ -114,7 +116,7 @@ class GhnApiClientTest {
         )).thenReturn(responseEntity);
         
         // When
-        List<GhnProvinceDTO> result = ghnApiClient.getProvinces();
+        List<GetProvinceResponse> result = ghnApiClient.getProvinces();
         
         // Then
         assertNotNull(result);
@@ -144,19 +146,19 @@ class GhnApiClientTest {
         // Given
         Integer provinceId = 201;
         
-        GhnDistrictDTO district1 = new GhnDistrictDTO();
+        GetDistrictResponse district1 = new GetDistrictResponse();
         district1.setDistrictId(1442);
         district1.setDistrictName("Quận Ba Đình");
         district1.setProvinceId(provinceId);
         
-        List<GhnDistrictDTO> districts = Collections.singletonList(district1);
+        List<GetDistrictResponse> districts = Collections.singletonList(district1);
         
-        GhnApiResponse<List<GhnDistrictDTO>> response = new GhnApiResponse<>();
+        GhnApiResponse<List<GetDistrictResponse>> response = new GhnApiResponse<>();
         response.setCode(200);
         response.setMessage("Success");
         response.setData(districts);
         
-        ResponseEntity<GhnApiResponse<List<GhnDistrictDTO>>> responseEntity = 
+        ResponseEntity<GhnApiResponse<List<GetDistrictResponse>>> responseEntity =
             new ResponseEntity<>(response, HttpStatus.OK);
         
         when(restTemplate.exchange(
@@ -167,7 +169,7 @@ class GhnApiClientTest {
         )).thenReturn(responseEntity);
         
         // When
-        List<GhnDistrictDTO> result = ghnApiClient.getDistricts(provinceId);
+        List<GetDistrictResponse> result = ghnApiClient.getDistricts(provinceId);
         
         // Then
         assertNotNull(result);
@@ -190,19 +192,19 @@ class GhnApiClientTest {
         // Given
         Integer districtId = 1442;
         
-        GhnWardDTO ward1 = new GhnWardDTO();
+        GetWardResponse ward1 = new GetWardResponse();
         ward1.setWardCode("1A0001");
         ward1.setWardName("Phường Cống Vị");
         ward1.setDistrictId(districtId);
         
-        List<GhnWardDTO> wards = Collections.singletonList(ward1);
+        List<GetWardResponse> wards = Collections.singletonList(ward1);
         
-        GhnApiResponse<List<GhnWardDTO>> response = new GhnApiResponse<>();
+        GhnApiResponse<List<GetWardResponse>> response = new GhnApiResponse<>();
         response.setCode(200);
         response.setMessage("Success");
         response.setData(wards);
         
-        ResponseEntity<GhnApiResponse<List<GhnWardDTO>>> responseEntity = 
+        ResponseEntity<GhnApiResponse<List<GetWardResponse>>> responseEntity =
             new ResponseEntity<>(response, HttpStatus.OK);
         
         when(restTemplate.exchange(
@@ -213,7 +215,7 @@ class GhnApiClientTest {
         )).thenReturn(responseEntity);
         
         // When
-        List<GhnWardDTO> result = ghnApiClient.getWards(districtId);
+        List<GetWardResponse> result = ghnApiClient.getWards(districtId);
         
         // Then
         assertNotNull(result);

@@ -7,6 +7,9 @@ import com.huongcung.core.common.enumeration.City;
 import com.huongcung.core.inventory.model.domain.StockLevel;
 import com.huongcung.core.inventory.model.entity.WarehouseEntity;
 import com.huongcung.core.inventory.repository.WarehouseRepository;
+import com.huongcung.core.logistics.external.ghn.dto.GhnCalculateFeeDTO;
+import com.huongcung.core.logistics.external.ghn.exception.GhnApiException;
+import com.huongcung.core.logistics.model.dto.CalculateFeeDTO;
 import com.huongcung.core.order.enumeration.*;
 import com.huongcung.core.order.model.entity.DeliveryInfoEntity;
 import com.huongcung.core.order.model.entity.OrderCustomerEntity;
@@ -23,10 +26,9 @@ import com.huongcung.core.user.model.entity.CustomerEntity;
 import com.huongcung.core.user.repository.CustomerRepository;
 import com.huongcung.core.user.service.CustomerService;
 import com.huongcung.webstore.checkout.dto.*;
-import com.huongcung.webstore.checkout.external.ghn.GhnApiClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huongcung.webstore.checkout.service.CheckoutService;
-import com.huongcung.webstore.checkout.service.DeliveryService;
+import com.huongcung.core.logistics.service.DeliveryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -105,7 +107,7 @@ public class CheckoutServiceImpl implements CheckoutService {
             try {
                 shippingAmount = calculateDeliveryFee(request, physicalBooks);
                 deliveryInfo = createDeliveryInfo(request, shippingAmount);
-            } catch (GhnApiClient.GhnApiException e) {
+            } catch (GhnApiException e) {
                 log.warn("GHN API failed, proceeding without delivery fee: {}", e.getMessage());
                 // Continue without delivery info for backward compatibility
             }
@@ -258,11 +260,11 @@ public class CheckoutServiceImpl implements CheckoutService {
     
     private BigDecimal calculateDeliveryFee(CheckoutRequest request, List<AbstractBookEntity> books) {
         // Simplified fee calculation - in real scenario, use GHN API with proper weight/dimensions
-        CalculateFeeResponseDTO calculateFeeResponseDTO = deliveryService.calculateEstimatedDeliveryFee("2",
+        CalculateFeeDTO ghnCalculateFeeDTO = deliveryService.calculateEstimatedDeliveryFee("2",
                 request.getShippingAddress().getDistrictId().toString(),
                 request.getShippingAddress().getWardCode(),
                 books.stream().mapToInt(book -> book.getPhysicalBookInfo().getWeightGrams()).sum());
-        return calculateFeeResponseDTO.getTotal();
+        return ghnCalculateFeeDTO.getTotal();
     }
     
     private DeliveryInfoEntity createDeliveryInfo(CheckoutRequest request, BigDecimal shippingAmount) {

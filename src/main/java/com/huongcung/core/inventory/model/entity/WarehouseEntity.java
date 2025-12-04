@@ -22,8 +22,8 @@ public class WarehouseEntity extends BaseEntity {
     @Column(name = "city", nullable = false)
     private City city;
 
-    @Column(name = "address", nullable = false)
-    private String address;
+    @Column(name = "address", nullable = false, columnDefinition = "TEXT")
+    private String address; // JSON
 
     @Column(name = "phone")
     private String phone;

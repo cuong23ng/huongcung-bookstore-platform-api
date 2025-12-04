@@ -1,11 +1,9 @@
 package com.huongcung.core.inventory.controller;
 
-import com.huongcung.businessmanagement.inventory.model.request.StockAdjustmentRequest;
+import com.huongcung.core.inventory.model.dto.request.StockAdjustmentRequest;
 import com.huongcung.core.common.enumeration.City;
 import com.huongcung.core.inventory.service.InventoryService;
 import com.huongcung.core.common.model.dto.response.BaseResponse;
-import com.huongcung.core.inventory.repository.WarehouseRepository;
-import com.huongcung.core.user.repository.StaffRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

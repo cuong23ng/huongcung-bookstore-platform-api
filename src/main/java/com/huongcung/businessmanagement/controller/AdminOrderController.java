@@ -3,11 +3,13 @@ package com.huongcung.businessmanagement.controller;
 import com.huongcung.businessmanagement.fulfillment.service.FulfillmentService;
 import com.huongcung.core.common.enumeration.City;
 import com.huongcung.core.common.model.dto.response.BaseResponse;
+import com.huongcung.core.logistics.service.impl.LogisticsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +29,7 @@ import java.util.Map;
 public class AdminOrderController {
     
     private final FulfillmentService fulfillmentService;
+    private final LogisticsServiceImpl fulfillmentServiceImplv2;
     
     /**
      * Get fulfillment queue for all cities (or filtered by city)
@@ -71,6 +74,19 @@ public class AdminOrderController {
                         "pagination", response.pagination()
                 ))
                 .build());
+    }
+
+    @PostMapping("/fulfill")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BaseResponse> fulfillOrder(
+            @RequestParam(required = true) Long orderId) {
+
+        fulfillmentServiceImplv2.fulfillOrder(orderId);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(BaseResponse.builder()
+                        .message("Fulfill Order successfully")
+                        .build());
     }
 }
 
