@@ -6,6 +6,7 @@ import com.huongcung.businessmanagement.admin.model.BookDetailDTO;
 import com.huongcung.businessmanagement.admin.model.BookImageData;
 import com.huongcung.businessmanagement.admin.model.request.BookUpdateRequest;
 import com.huongcung.core.catalog.model.entity.BookEntity;
+import com.huongcung.core.catalog.service.impl.CatalogServiceImpl;
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.contributor.model.entity.AuthorEntity;
 import com.huongcung.core.contributor.model.entity.PublisherEntity;

@@ -3,6 +3,7 @@ package com.huongcung.core.logistics.external.ghn.client;
 import com.huongcung.core.logistics.external.ghn.dto.request.CalculateExpectedDeliveryTimeRequest;
 import com.huongcung.core.logistics.external.ghn.dto.request.CalculateFeeRequest;
 import com.huongcung.core.logistics.external.ghn.dto.request.CreateShippingOrderRequest;
+import com.huongcung.core.logistics.external.ghn.dto.request.GetOrderStatusRequest;
 import com.huongcung.core.logistics.external.ghn.dto.request.GetServiceRequest;
 import com.huongcung.core.logistics.external.ghn.dto.response.*;
 import com.huongcung.core.logistics.external.ghn.exception.GhnApiException;
@@ -304,6 +305,50 @@ public class GhnApiClient {
         } catch (RestClientException e) {
             log.info("Error calling GHN API for creating shipping order: {}", e.getMessage(), e);
             throw new GhnApiException("Failed to create shipping order from GHN API", e);
+        }
+    }
+
+    /**
+     * <a href="https://api.ghn.vn/home/docs/detail?id=66">API Order Info</a>
+     */
+    public GetOrderStatusResponse getOrderStatus(GetOrderStatusRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("GetOrderStatusRequest cannot be null");
+        }
+
+        try {
+            String url = ghnApiConfig.getBaseUrl() + "/shiip/public-api/v2/shipping-order/detail";
+
+            HttpHeaders headers = createHeaders();
+            HttpEntity<GetOrderStatusRequest> entity = new HttpEntity<>(request, headers);
+
+            log.debug("Calling GHN API: POST {} with request: {}", url, request);
+            ResponseEntity<GhnApiResponse<GetOrderStatusResponse>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    entity,
+                    new ParameterizedTypeReference<>() {}
+            );
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                GhnApiResponse<GetOrderStatusResponse> apiResponse = response.getBody();
+                if (apiResponse.getCode() == 200 && apiResponse.getData() != null) {
+                    log.debug("GHN API get order status response: order_code={}, status={}",
+                            apiResponse.getData().getOrderCode(), apiResponse.getData().getStatus());
+                    return apiResponse.getData();
+                } else {
+                    log.warn("GHN API returned non-success code: {}, message: {}",
+                            apiResponse.getCode(), apiResponse.getMessage());
+                    throw new GhnApiException("GHN API get order status failed: " + apiResponse.getMessage());
+                }
+            }
+
+            log.warn("GHN API get order status failed with status: {}", response.getStatusCode());
+            throw new GhnApiException("GHN API get order status failed with status: " + response.getStatusCode());
+
+        } catch (RestClientException e) {
+            log.error("Error calling GHN API for getting order status: {}", e.getMessage(), e);
+            throw new GhnApiException("Failed to get order status from GHN API", e);
         }
     }
     

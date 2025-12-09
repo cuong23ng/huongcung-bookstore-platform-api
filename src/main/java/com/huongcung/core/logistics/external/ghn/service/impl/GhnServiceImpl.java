@@ -158,4 +158,12 @@ public class GhnServiceImpl implements GhnService {
         CreateShippingOrderResponse response = ghnApiClient.createShippingOrder(request);
         return response.getOrderCode();
     }
+
+    public String getOrderStatus(String trackingNumber) {
+        GetOrderStatusRequest request = GetOrderStatusRequest.builder()
+                .orderCode(trackingNumber)
+                .build();
+        GetOrderStatusResponse response = ghnApiClient.getOrderStatus(request);
+        return response.getStatus();
+    }
 }

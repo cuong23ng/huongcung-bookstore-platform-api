@@ -76,17 +76,36 @@ public class AdminOrderController {
                 .build());
     }
 
-    @PostMapping("/fulfill")
+    /**
+     * Plan fulfillment for an order (consignment splitting)
+     * Creates consignments based on stock availability and optimization
+     * 
+     * @param orderId the order ID to plan fulfillment for
+     * @return BaseResponse with created consignments
+     */
+    @PostMapping("/{orderId}/plan-fulfillment")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<BaseResponse> fulfillOrder(
-            @RequestParam(required = true) Long orderId) {
-
+    public ResponseEntity<BaseResponse> planFulfillment(@PathVariable Long orderId) {
+        log.info("Planning fulfillment for order ID: {}", orderId);
+        
         fulfillmentServiceImplv2.fulfillOrder(orderId);
-
+        
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(BaseResponse.builder()
-                        .message("Fulfill Order successfully")
+                        .message("Fulfillment planned successfully. Consignments created and stock reserved.")
                         .build());
+    }
+    
+    /**
+     * Fulfill order (legacy endpoint - calls plan-fulfillment internally)
+     * @deprecated Use /{orderId}/plan-fulfillment instead
+     */
+    @PostMapping("/fulfill")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Deprecated
+    public ResponseEntity<BaseResponse> fulfillOrder(
+            @RequestParam(required = true) Long orderId) {
+        return planFulfillment(orderId);
     }
 }
 

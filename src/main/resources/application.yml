@@ -45,6 +45,13 @@ spring:
           connectiontimeout: 5000
           timeout: 3000
           writetimeout: 5000
+  ai:
+    google:
+      genai:
+        api-key: ${GOOGLE_AI_API_KEY}
+        chat:
+          options:
+            model: ${GOOGLE_AI_MODEL:gemini-1.5-flash-001}
 
 # Server Configuration
 server:

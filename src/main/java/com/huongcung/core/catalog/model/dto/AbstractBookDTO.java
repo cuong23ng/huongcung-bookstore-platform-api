@@ -24,7 +24,8 @@ public class AbstractBookDTO {
     private int pageCount;
     private String description;
     private List<BookImageDTO> images;
-
+    private Boolean hasPhysicalEdition = false;
     private EbookInformationDTO ebookInfo;
+    private Boolean hasEbookEdition = false;
     private PhysicalBookInformationDTO physicalBookInfo;
 }

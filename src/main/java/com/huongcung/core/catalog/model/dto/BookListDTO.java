@@ -1,5 +1,6 @@
-package com.huongcung.businessmanagement.admin.model;
+package com.huongcung.core.catalog.model.dto;
 
+import com.huongcung.businessmanagement.admin.model.AuthorListDTO;
 import com.huongcung.core.common.enumeration.Language;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * DTO for book list responses (paginated)
@@ -24,6 +26,9 @@ public class BookListDTO {
     private Language language;
     private LocalDate publicationDate;
     private String bookType; // "PHYSICAL" or "EBOOK"
+    private Boolean hasPhysicalEdition;
+    private Boolean hasEbookEdition;
+    private List<AuthorListDTO> authors;
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

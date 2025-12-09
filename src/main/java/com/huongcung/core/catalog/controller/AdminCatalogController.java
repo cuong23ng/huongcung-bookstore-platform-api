@@ -1,8 +1,10 @@
-package com.huongcung.businessmanagement.controller;
+package com.huongcung.core.catalog.controller;
 
 import com.huongcung.businessmanagement.admin.model.*;
 import com.huongcung.businessmanagement.admin.model.request.*;
-import com.huongcung.businessmanagement.admin.service.CatalogService;
+import com.huongcung.core.catalog.model.dto.AbstractBookDTO;
+import com.huongcung.core.catalog.model.dto.response.GetBookCatalogPageResponse;
+import com.huongcung.core.catalog.service.CatalogService;
 import com.huongcung.businessmanagement.admin.service.ContributorService;
 import com.huongcung.core.common.enumeration.Language;
 import com.huongcung.core.common.model.dto.response.BaseResponse;
@@ -21,7 +23,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
 
@@ -57,16 +58,13 @@ public class AdminCatalogController {
             @RequestParam(required = false) String bookType,
             @RequestParam(required = false) Boolean isActive) {
         
-        log.debug("Fetching books list - page: {}, size: {}, title: {}, language: {}, bookType: {}, isActive: {}", 
+        log.info("Fetching books list - page: {}, size: {}, title: {}, language: {}, bookType: {}, isActive: {}",
                 pageable.getPageNumber(), pageable.getPageSize(), title, language, bookType, isActive);
-        
-        CatalogService.PaginatedBookResponse response = catalogService.getAllBooks(pageable, title, language, bookType, isActive);
+
+        GetBookCatalogPageResponse response = catalogService.getAllBooks(pageable, title, language, bookType, isActive);
         
         return ResponseEntity.ok(BaseResponse.builder()
-                .data(Map.of(
-                        "books", response.books(),
-                        "pagination", response.pagination()
-                ))
+                .data(response)
                 .build());
     }
     
@@ -79,8 +77,8 @@ public class AdminCatalogController {
     @GetMapping("/{id}")
     public ResponseEntity<BaseResponse> getBookById(@PathVariable Long id) {
         log.debug("Fetching book by ID: {}", id);
-        
-        BookDetailDTO bookDTO = catalogService.getBookById(id);
+
+        AbstractBookDTO bookDTO = catalogService.getBookById(id);
         
         return ResponseEntity.ok(BaseResponse.builder()
                 .data(bookDTO)

@@ -1,12 +1,18 @@
-package com.huongcung.businessmanagement.admin.service.impl;
+package com.huongcung.core.catalog.service.impl;
 
 import com.huongcung.businessmanagement.admin.mapper.AdminBookMapper;
+import com.huongcung.businessmanagement.admin.model.AuthorListDTO;
 import com.huongcung.businessmanagement.admin.model.request.BookCreateRequest;
 import com.huongcung.businessmanagement.admin.model.BookDetailDTO;
 import com.huongcung.businessmanagement.admin.model.BookImageData;
-import com.huongcung.businessmanagement.admin.model.BookListDTO;
+import com.huongcung.core.catalog.converter.AbstractBookConverter;
+import com.huongcung.core.catalog.converter.BookDetailsConverter;
+import com.huongcung.core.catalog.model.domain.AbstractBook;
+import com.huongcung.core.catalog.model.dto.AbstractBookDTO;
+import com.huongcung.core.catalog.model.dto.BookListDTO;
 import com.huongcung.businessmanagement.admin.model.request.BookUpdateRequest;
-import com.huongcung.businessmanagement.admin.service.CatalogService;
+import com.huongcung.core.catalog.model.dto.response.GetBookCatalogPageResponse;
+import com.huongcung.core.catalog.service.CatalogService;
 import com.huongcung.core.catalog.model.entity.AbstractBookEntity;
 import com.huongcung.core.catalog.repository.EbookRepository;
 import com.huongcung.core.catalog.repository.PhysicalBookRepository;
@@ -72,6 +78,7 @@ public class CatalogServiceImpl implements CatalogService {
     private final StorageService storageService;
     private final AbstractBookService abstractBookService;
     private final EbookFileService ebookFileService;
+    private final BookDetailsConverter bookDetailsConverter;
     
     @PersistenceContext
     private EntityManager entityManager;
@@ -82,8 +89,8 @@ public class CatalogServiceImpl implements CatalogService {
     
     @Override
     @Transactional(readOnly = true)
-    public PaginatedBookResponse getAllBooks(Pageable pageable, String title, Language language, String bookType, Boolean isActive) {
-        log.debug("Fetching books list - page: {}, size: {}, title: {}, language: {}, bookType: {}, isActive: {}", 
+    public GetBookCatalogPageResponse getAllBooks(Pageable pageable, String title, Language language, String bookType, Boolean isActive) {
+        log.info("Fetching books list - page: {}, size: {}, title: {}, language: {}, bookType: {}, isActive: {}",
                 pageable.getPageNumber(), pageable.getPageSize(), title, language, bookType, isActive);
         
         // Use Criteria API for dynamic filtering with AbstractBookEntity
@@ -128,7 +135,11 @@ public class CatalogServiceImpl implements CatalogService {
         
         // Convert AbstractBookEntity to BookListDTO
         List<BookListDTO> bookDTOs = books.stream()
-                .map(bookMapper::toListDTO)
+                .map(b -> {
+                    BookListDTO bookListDTO = new BookListDTO();
+                    populate(b, bookListDTO);
+                    return bookListDTO;
+                })
                 .collect(Collectors.toList());
         
         // Convert Spring Data Page (0-based) to PaginationInfo (1-based)
@@ -142,8 +153,27 @@ public class CatalogServiceImpl implements CatalogService {
                 .build();
         
         log.debug("Found {} books (page {} of {})", totalCount, pagination.getCurrentPage(), pagination.getTotalPages());
-        
-        return new PaginatedBookResponse(bookDTOs, pagination);
+
+        return new GetBookCatalogPageResponse(bookDTOs, pagination);
+    }
+
+    private void populate(AbstractBookEntity source, BookListDTO target) {
+        target.setId(source.getId());
+        target.setCode(source.getCode());
+        target.setLanguage(source.getLanguage());
+        target.setTitle(source.getTitle());
+        List<AuthorListDTO> authors = source.getAuthors()
+                .parallelStream()
+                .map(a -> {
+                  AuthorListDTO author = new AuthorListDTO();
+                  author.setId(a.getId());
+                  author.setName(a.getName());
+                  return author;
+                }).toList();
+        target.setAuthors(authors);
+        target.setCreatedAt(source.getCreatedAt());
+        target.setHasEbookEdition(source.getEbookInfo() != null);
+        target.setHasPhysicalEdition(source.getPhysicalBookInfo() != null);
     }
     
     private BookListDTO mapAbstractBookToListDTO(AbstractBookEntity abstractBook) {
@@ -164,14 +194,13 @@ public class CatalogServiceImpl implements CatalogService {
     
     @Override
     @Transactional(readOnly = true)
-    public BookDetailDTO getBookById(Long id) {
+    public AbstractBookDTO getBookById(Long id) {
         log.debug("Fetching book by ID: {}", id);
         
         // Get AbstractBookEntity
-        AbstractBookEntity abstractBook = abstractBookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
+        AbstractBook abstractBook = abstractBookService.findById(id);
         
-        return bookMapper.toDetailDTO(abstractBook);
+        return bookDetailsConverter.convert(abstractBook);
     }
     
     @Override

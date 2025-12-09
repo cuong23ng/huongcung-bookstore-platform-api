@@ -54,6 +54,7 @@ public class BookDetailDTO {
     private BigDecimal currentPrice;
     
     // EbookEntity specific fields
+    private String eisbn;
     private String fileUrl;
     private String fileName;
     private Long fileSize;

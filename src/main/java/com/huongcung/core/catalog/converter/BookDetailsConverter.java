@@ -65,10 +65,12 @@ public class BookDetailsConverter implements Converter<AbstractBook, AbstractBoo
         target.setImages(imageDTOS);
 
         if (source.hasPhysicalEdition()) {
+            target.setHasPhysicalEdition(true);
             target.setPhysicalBookInfo(physicalBookInformationConverter.convert(source.getPhysicalBookInfo()));
         }
 
         if (source.hasEbookEdition()) {
+            target.setHasEbookEdition(true);
             target.setEbookInfo(ebookInformationConverter.convert(source.getEbookInfo()));
         }
     }

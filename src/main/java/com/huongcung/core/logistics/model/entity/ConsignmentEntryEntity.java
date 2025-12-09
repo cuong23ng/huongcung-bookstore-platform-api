@@ -13,7 +13,7 @@ import lombok.*;
 @NoArgsConstructor
 public class ConsignmentEntryEntity extends BaseEntity {
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "consignment_id", nullable = false)
     private ConsignmentEntity consignment;
 

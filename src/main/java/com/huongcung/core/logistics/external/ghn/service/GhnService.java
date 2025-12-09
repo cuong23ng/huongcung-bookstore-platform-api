@@ -20,4 +20,5 @@ public interface GhnService {
                                                                       String toWardCode, Integer serviceId);
 
     String createShippingOrder(ConsignmentEntity consignment);
+    String getOrderStatus(String trackingNumber);
 }
