@@ -16,7 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 public class ReviewEntity extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
     private AbstractBookEntity book;
 
@@ -27,6 +27,9 @@ public class ReviewEntity extends BaseEntity {
     @Column(name = "rating")
     private Integer rating;
 
+    @Column(name = "title", nullable = true)
+    private String title;
+
     @Column(name = "comment", columnDefinition = "TEXT")
     private String comment;
 
@@ -35,8 +38,7 @@ public class ReviewEntity extends BaseEntity {
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "review_sources", joinColumns = @JoinColumn(name = "review_id"))
-    @Column(name = "source")
-    private List<String> sources;
+    private List<ReviewSource> sources;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")

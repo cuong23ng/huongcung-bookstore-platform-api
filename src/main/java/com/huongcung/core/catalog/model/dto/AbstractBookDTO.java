@@ -28,4 +28,5 @@ public class AbstractBookDTO {
     private EbookInformationDTO ebookInfo;
     private Boolean hasEbookEdition = false;
     private PhysicalBookInformationDTO physicalBookInfo;
+    private BookReviewDTO review; // Only included if status is PUBLISHED
 }

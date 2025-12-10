@@ -1,6 +1,7 @@
 package com.huongcung.core.catalog.model.dto.response;
 
 import com.huongcung.core.catalog.enumeration.ReviewStatus;
+import com.huongcung.core.catalog.model.dto.ReviewSourceDTO;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,7 +16,7 @@ public class ReviewResponse {
     private String title;           // Tiêu đề bài review (AI tự đặt cho hấp dẫn)
     private String content;         // Nội dung
     private Integer suggestedRating;// Điểm số AI đề xuất (1-5)
-    private List<String> sources;   // Nguồn tham khảo
+    private List<ReviewSourceDTO> sources;   // Nguồn tham khảo
     private String sentiment;
     private Boolean isAiGenerated;
     private ReviewStatus status;

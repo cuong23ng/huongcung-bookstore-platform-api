@@ -2,6 +2,10 @@ package com.huongcung.core.catalog.converter;
 
 import com.huongcung.core.catalog.model.domain.AbstractBook;
 import com.huongcung.core.catalog.model.dto.AbstractBookDTO;
+import com.huongcung.core.catalog.model.dto.BookReviewDTO;
+import com.huongcung.core.catalog.model.dto.ReviewSourceDTO;
+import com.huongcung.core.catalog.model.entity.ReviewSource;
+import com.huongcung.core.catalog.enumeration.ReviewStatus;
 import com.huongcung.core.contributor.converter.GenreConverter;
 import com.huongcung.core.contributor.model.dto.AuthorDTO;
 import com.huongcung.core.contributor.model.dto.PublisherDTO;
@@ -13,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -72,6 +78,30 @@ public class BookDetailsConverter implements Converter<AbstractBook, AbstractBoo
         if (source.hasEbookEdition()) {
             target.setHasEbookEdition(true);
             target.setEbookInfo(ebookInformationConverter.convert(source.getEbookInfo()));
+        }
+
+        // Include review only if it exists and is PUBLISHED
+        if (source.getReview() != null && source.getReview().getStatus() == ReviewStatus.PUBLISHED) {
+            // Convert ReviewSource to ReviewSourceDTO and force load to avoid lazy initialization
+            List<ReviewSourceDTO> sourceDTOs = new ArrayList<>();
+            if (source.getReview().getSources() != null) {
+                // Force load by copying to new ArrayList
+                List<ReviewSource> sources = new ArrayList<>(source.getReview().getSources());
+                for (ReviewSource reviewSource : sources) {
+                    ReviewSourceDTO sourceDTO = ReviewSourceDTO.builder()
+                            .title(reviewSource.getTitle())
+                            .url(reviewSource.getUrl())
+                            .build();
+                    sourceDTOs.add(sourceDTO);
+                }
+            }
+            
+            BookReviewDTO reviewDTO = BookReviewDTO.builder()
+                    .title(source.getReview().getTitle())
+                    .content(source.getReview().getComment())
+                    .sources(sourceDTOs)
+                    .build();
+            target.setReview(reviewDTO);
         }
     }
 }

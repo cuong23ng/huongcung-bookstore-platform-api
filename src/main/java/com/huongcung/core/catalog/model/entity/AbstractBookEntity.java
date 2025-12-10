@@ -78,4 +78,8 @@ public class AbstractBookEntity extends BaseEntity {
 
     @OneToOne(mappedBy = "abstractBook", cascade = CascadeType.ALL, fetch = FetchType.EAGER, optional = true)
     private EbookEntity ebookInfo;
+
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "review_id", nullable = true)
+    private ReviewEntity review;
 }
