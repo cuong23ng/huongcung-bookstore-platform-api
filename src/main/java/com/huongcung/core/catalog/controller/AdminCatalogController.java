@@ -167,6 +167,25 @@ public class AdminCatalogController {
                 .build());
     }
 
+    /**
+     * Delete a book image by image ID
+     * 
+     * @param id the book ID
+     * @param imageId the image ID to delete
+     * @return BaseResponse with success message
+     */
+    @DeleteMapping("/{id}/images/{imageId}")
+    public ResponseEntity<BaseResponse> deleteBookImage(
+            @PathVariable Long id,
+            @PathVariable Long imageId) {
+
+        catalogService.deleteBookImage(id, imageId);
+
+        return ResponseEntity.ok(BaseResponse.builder()
+                .message("Image deleted successfully")
+                .build());
+    }
+
     @PostMapping("/{id}/ebook")
     public ResponseEntity<BaseResponse> addEbookEdition(
             @PathVariable Long id,

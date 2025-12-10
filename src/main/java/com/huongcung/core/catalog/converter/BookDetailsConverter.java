@@ -11,6 +11,7 @@ import com.huongcung.core.contributor.model.dto.AuthorDTO;
 import com.huongcung.core.contributor.model.dto.PublisherDTO;
 import com.huongcung.core.contributor.model.dto.TranslatorDTO;
 import com.huongcung.core.media.converter.ImageConverter;
+import com.huongcung.core.media.model.domain.BookImage;
 import com.huongcung.core.media.model.dto.BookImageDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,7 @@ public class BookDetailsConverter implements Converter<AbstractBook, AbstractBoo
     }
 
     private void populate(AbstractBook source, AbstractBookDTO target) {
+        target.setId(source.getId());
         target.setCode(source.getCode());
         target.setTitle(source.getTitle());
         target.setEdition(source.getEdition());
@@ -64,10 +66,16 @@ public class BookDetailsConverter implements Converter<AbstractBook, AbstractBoo
         publisherDTO.setName(source.getPublisher().getName());
         target.setPublisher(publisherDTO);
 
-        List<BookImageDTO> imageDTOS = source.getImages()
-                .stream().map(imageConverter::convert)
-                .map(imageDTO -> (BookImageDTO) imageDTO)
-                .toList();
+        // Force load images to avoid lazy initialization issues
+        List<BookImageDTO> imageDTOS = new ArrayList<>();
+        if (source.getImages() != null) {
+            // Force load by accessing the collection
+            List<BookImage> images = new ArrayList<>(source.getImages());
+            imageDTOS = images.stream()
+                    .map(imageConverter::convert)
+                    .map(imageDTO -> (BookImageDTO) imageDTO)
+                    .toList();
+        }
         target.setImages(imageDTOS);
 
         if (source.hasPhysicalEdition()) {

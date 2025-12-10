@@ -24,10 +24,13 @@ public class ImageConverter implements Converter<Image, ImageDTO> {
     }
 
     private void populate(Image image, ImageDTO imageDTO) {
-
+        imageDTO.setId(image.getId());
+        imageDTO.setUrl(image.getUrl());
+        imageDTO.setAltText(image.getAltText());
     }
 
     private void populate(BookImage source, BookImageDTO target) {
+        target.setId(source.getId());
         target.setPosition(source.getPosition());
         target.setUrl(source.getUrl());
         target.setAltText(source.getAltText());

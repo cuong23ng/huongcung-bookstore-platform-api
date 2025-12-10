@@ -542,6 +542,7 @@ public class CatalogServiceImpl implements CatalogService {
         AbstractBookEntity abstractBook = abstractBookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with ID: " + id));
 
+        int lastIndex = abstractBook.getImages().size();
         // Upload images using ImageService
         for (int i = 0; i < files.length; i++) {
             MultipartFile file = files[i];
@@ -550,10 +551,11 @@ public class CatalogServiceImpl implements CatalogService {
             }
 
             try {
+                int currentIndex = lastIndex + i + 1;
                 // Get filename
                 String fileName = file.getOriginalFilename();
                 if (fileName == null || fileName.isBlank()) {
-                    fileName = "image_" + abstractBook.getCode() + "_" + (i + 1) + ".jpg";
+                    fileName = "image_" + abstractBook.getCode() + "_" + currentIndex + ".jpg";
                 }
 
                 // Get content type
@@ -578,7 +580,7 @@ public class CatalogServiceImpl implements CatalogService {
                 bookImage.setAltText(fileName);
                 bookImage.setFileName(fileName);
                 bookImage.setFileType(FileType.findFileTypeByCode(contentType));
-                bookImage.setPosition(i + 1); // Position starts from 1
+                bookImage.setPosition(currentIndex);
 
                 bookImageEntityRepository.save(bookImage);
 
@@ -589,12 +591,41 @@ public class CatalogServiceImpl implements CatalogService {
                 abstractBook.getImages().add(bookImage);
                 abstractBookRepository.save(abstractBook);
 
-                log.debug("Image uploaded for book ID: {}, position: {}, url: {}", id, i + 1, relativePath);
+                log.debug("Image uploaded for book ID: {}, position: {}, url: {}", id, currentIndex, relativePath);
             } catch (Exception e) {
                 log.error("Failed to upload image for book ID: {}", id, e);
                 throw new RuntimeException("Failed to upload image: " + e.getMessage());
             }
         }
+    }
+
+    @Override
+    @Transactional
+    public void deleteBookImage(Long bookId, Long imageId) {
+        log.info("Deleting image ID: {} for book ID: {}", imageId, bookId);
+
+        // Verify book exists
+        AbstractBookEntity abstractBook = abstractBookRepository.findById(bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found with ID: " + bookId));
+
+        // Find and verify image belongs to this book
+        BookImageEntity bookImage = bookImageEntityRepository.findById(imageId)
+                .orElseThrow(() -> new RuntimeException("Image not found with ID: " + imageId));
+
+        if (!bookImage.getBook().getId().equals(bookId)) {
+            throw new RuntimeException("Image does not belong to this book");
+        }
+
+        // Remove from book's images list
+        if (abstractBook.getImages() != null) {
+            abstractBook.getImages().remove(bookImage);
+            abstractBookRepository.save(abstractBook);
+        }
+
+        // Delete the image entity
+        bookImageEntityRepository.delete(bookImage);
+
+        log.info("Image ID: {} deleted successfully for book ID: {}", imageId, bookId);
     }
 
     @Override

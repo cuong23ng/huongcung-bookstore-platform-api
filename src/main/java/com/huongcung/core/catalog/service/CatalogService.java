@@ -61,6 +61,8 @@ public interface CatalogService {
 
     void uploadBookImages(Long id, MultipartFile[] files);
 
+    void deleteBookImage(Long bookId, Long imageId);
+
     void addEbookEdition(Long id, String isbn, Double currentPrice, LocalDate publicationDate, String fileName, MultipartFile[] files);
     
     /**
