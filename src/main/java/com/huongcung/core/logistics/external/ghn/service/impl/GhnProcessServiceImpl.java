@@ -20,8 +20,9 @@ public class GhnProcessServiceImpl implements GhnProcessService {
         log.info("Received GHN update for tracking: {}, status: {}", data.getOrderCode(), data.getStatus());
 
         ConsignmentStatus newStatus = logisticsService.mapGhnStatus(data.getStatus());
-        if (newStatus != null) {
-            logisticsService.updateConsignmentStatusByTrackingNumber(data.getOrderCode(), newStatus);
-        }
+        if (newStatus == null) return;
+        if (newStatus == ConsignmentStatus.PICKED_UP) return;
+
+        logisticsService.updateConsignmentStatusByTrackingNumber(data.getOrderCode(), newStatus);
     }
 }

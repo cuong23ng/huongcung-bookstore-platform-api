@@ -322,7 +322,7 @@ public class GhnApiClient {
             HttpHeaders headers = createHeaders();
             HttpEntity<GetOrderStatusRequest> entity = new HttpEntity<>(request, headers);
 
-            log.debug("Calling GHN API: POST {} with request: {}", url, request);
+            log.info("Calling GHN API: POST {} with request: {}", url, request);
             ResponseEntity<GhnApiResponse<GetOrderStatusResponse>> response = restTemplate.exchange(
                     url,
                     HttpMethod.POST,

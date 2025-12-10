@@ -53,6 +53,7 @@ public class GhnSyncJob {
             try {
                 // 4. Gọi GHN
                 String ghnStatus = ghnService.getOrderStatus(consignment.getTrackingNumber());
+                log.info("GHN Status: {}", ghnStatus);
 
                 // 5. Nếu có trạng thái mới và KHÁC trạng thái cũ
                 if (ghnStatus != null) {
@@ -73,7 +74,7 @@ public class GhnSyncJob {
                 consignmentRepository.save(consignment);
 
             } catch (Exception e) {
-                log.error("Lỗi sync đơn: " + consignment.getTrackingNumber(), e);
+                log.info("Lỗi sync đơn: " + consignment.getTrackingNumber(), e);
             }
 
             // (Optional) Sleep nhẹ 100ms để tránh DDOS GHN nếu chạy quá nhanh

@@ -1,9 +1,13 @@
 package com.huongcung.businessmanagement.controller;
 
+import com.huongcung.businessmanagement.fulfillment.model.ConsignmentShipRequest;
 import com.huongcung.businessmanagement.fulfillment.service.FulfillmentService;
 import com.huongcung.core.common.enumeration.City;
 import com.huongcung.core.common.model.dto.response.BaseResponse;
+import com.huongcung.core.logistics.enumeration.ConsignmentStatus;
 import com.huongcung.core.logistics.service.impl.LogisticsServiceImpl;
+import com.huongcung.core.security.model.dto.CustomUserDetails;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +16,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -106,6 +112,76 @@ public class AdminOrderController {
     public ResponseEntity<BaseResponse> fulfillOrder(
             @RequestParam(required = true) Long orderId) {
         return planFulfillment(orderId);
+    }
+    
+    /**
+     * Get consignments for all cities (or filtered by city)
+     * Admin can view all consignments or filter by specific city and status
+     * 
+     * @param pageable pagination parameters (page, size, sort) - defaults to page=0, size=20
+     * @param city optional filter by city (e.g., "Hanoi", "HCMC", "DaNang") - if not provided, returns all cities
+     * @param status optional filter by status (default: PENDING)
+     * @return BaseResponse containing paginated consignments
+     */
+    @GetMapping("/consignments")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BaseResponse> getConsignments(
+            @PageableDefault(size = 20, page = 0) Pageable pageable,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) ConsignmentStatus status) {
+        
+        log.info("Admin requesting consignments - city: {}, status: {}, page: {}, size: {}",
+                city, status, pageable.getPageNumber(), pageable.getPageSize());
+        
+        // Convert city string to City enum if provided
+        City cityEnum = null;
+        if (city != null && !city.isBlank()) {
+            try {
+                cityEnum = City.valueOf(city.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid city value: {}", city);
+                throw new IllegalArgumentException("Invalid city: " + city);
+            }
+        }
+        
+        FulfillmentService.PaginatedConsignmentResponse response = 
+                fulfillmentService.getConsignments(cityEnum, status, pageable);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .data(Map.of(
+                        "consignments", response.consignments(),
+                        "pagination", response.pagination()
+                ))
+                .build());
+    }
+    
+    /**
+     * Ship a consignment (update status and commit stock)
+     * Admin can ship consignments from any city
+     * 
+     * @param consignmentId the consignment ID
+     * @param request the ship request with tracking number, shipping company, status, and estimated delivery date
+     * @return BaseResponse
+     */
+    @PutMapping("/consignments/{consignmentId}/ship")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BaseResponse> shipConsignment(
+            @PathVariable Long consignmentId,
+            @Valid @RequestBody ConsignmentShipRequest request) {
+        
+        log.info("Admin shipping consignment {}, status: {}",
+                consignmentId, request.getStatus());
+        
+        // Get current authenticated user ID
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Long shippedBy = userDetails.getId();
+        
+        fulfillmentService.shipConsignment(consignmentId, request, shippedBy);
+        
+        return ResponseEntity.ok(BaseResponse.builder()
+                .message("Consignment shipped successfully")
+                .build());
     }
 }
 
