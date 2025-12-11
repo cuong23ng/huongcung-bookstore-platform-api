@@ -57,6 +57,56 @@ public class LogisticsServiceImpl implements LogisticsService {
         orderRepository.save(order);
     }
 
+    /**
+     * Plan fulfillment - create consignments without creating shipping orders
+     * This method only splits the order into consignments and reserves stock,
+     * but does not create shipping orders with GHN.
+     * 
+     * @param orderId the order ID
+     * @return list of created consignments
+     */
+    @Transactional
+    public List<ConsignmentEntity> planFulfillment(Long orderId) {
+        OrderEntity order = orderRepository.findById(orderId).orElseThrow();
+        List<ConsignmentEntity> consignments = splitOrderStrategy(order);
+
+        // Set status to CREATED (not yet sent shipping order request)
+        for (ConsignmentEntity consignment : consignments) {
+            consignment.setStatus(ConsignmentStatus.CREATED);
+            consignmentRepository.save(consignment);
+        }
+
+        order.setStatus(OrderStatus.PROCESSING);
+        orderRepository.save(order);
+        
+        return consignments;
+    }
+
+    /**
+     * Create shipping order for a consignment
+     * This method sends a request to GHN to create a shipping order
+     * 
+     * @param consignmentId the consignment ID
+     * @return tracking number from GHN
+     */
+    @Transactional
+    public String createShippingOrderForConsignment(Long consignmentId) {
+        ConsignmentEntity consignment = consignmentRepository.findById(consignmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Consignment not found: " + consignmentId));
+
+        if (consignment.getStatus() != ConsignmentStatus.CREATED) {
+            throw new IllegalStateException(
+                    "Consignment must be in CREATED status to create shipping order. Current status: " + consignment.getStatus());
+        }
+
+        String trackingCode = ghnService.createShippingOrder(consignment);
+        consignment.setTrackingNumber(trackingCode);
+        consignment.setStatus(ConsignmentStatus.PENDING);
+        consignmentRepository.save(consignment);
+
+        return trackingCode;
+    }
+
     @Override
     public void updateConsignmentStatusByTrackingNumber(String trackingNumber, ConsignmentStatus status) {
         ConsignmentEntity consignment = consignmentRepository.findByTrackingNumber(trackingNumber).orElse(null);

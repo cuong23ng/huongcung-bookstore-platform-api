@@ -26,7 +26,7 @@ public class ConsignmentEntity extends BaseEntity {
     @Column(name = "code", unique = true, nullable = false)
     private String code;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "order_id", nullable = false)
     private OrderEntity order;
     

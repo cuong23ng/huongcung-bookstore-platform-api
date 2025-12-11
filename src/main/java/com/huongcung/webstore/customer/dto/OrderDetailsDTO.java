@@ -1,5 +1,7 @@
 package com.huongcung.webstore.customer.dto;
 
+import com.huongcung.businessmanagement.fulfillment.model.ConsignmentDTO;
+import com.huongcung.core.logistics.model.dto.AddressDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,10 +29,11 @@ public class OrderDetailsDTO {
     private BigDecimal taxAmount;
     private BigDecimal discountAmount;
     private BigDecimal totalAmount;
-    private String shippingAddress; // JSON string
-    private String billingAddress; // JSON string
+    private AddressDTO shippingAddress; // Parsed address object
+    private String billingAddress; // JSON string (can be parsed later if needed)
     private String notes;
     private List<OrderItemDTO> items;
     private DeliveryInfoDTO deliveryInfo;
+    private List<ConsignmentDTO> consignments; // Consignments for this order
 }
 

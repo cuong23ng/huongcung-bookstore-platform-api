@@ -27,3 +27,5 @@ public class ConsignmentEntryDTO {
     private BigDecimal totalPrice;
 }
 
+
+

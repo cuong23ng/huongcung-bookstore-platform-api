@@ -23,3 +23,5 @@ public class ConsignmentShipRequest {
     private ConsignmentStatus status; // PICKED_UP or IN_TRANSIT
 }
 
+
+
