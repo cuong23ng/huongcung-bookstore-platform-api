@@ -1,10 +1,11 @@
 package com.huongcung.webstore.controller;
 
 import com.huongcung.core.common.model.dto.response.BaseResponse;
+import com.huongcung.core.logistics.model.dto.*;
+import com.huongcung.core.logistics.model.dto.request.CalculateFeeRequest;
 import com.huongcung.webstore.checkout.dto.*;
-import com.huongcung.webstore.checkout.external.ghn.dto.*;
 import com.huongcung.webstore.checkout.service.CheckoutService;
-import com.huongcung.webstore.checkout.service.DeliveryService;
+import com.huongcung.core.logistics.service.DeliveryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ public class CheckoutController {
 
     @GetMapping("/ghn/services")
     public ResponseEntity<BaseResponse> getServices() {
-        List<GhnServiceDTO> services = deliveryService.getServices();
+        List<ServiceDTO> services = deliveryService.getServices(null);
         return ResponseEntity.ok(BaseResponse.builder()
                 .data(services)
                 .build());
@@ -33,31 +34,31 @@ public class CheckoutController {
 
     @GetMapping("/ghn/provinces")
     public ResponseEntity<BaseResponse> getProvinces() {
-        List<GhnProvinceDTO> provinces = deliveryService.getProvinces();
+        List<ProvinceDTO> provinces = deliveryService.getProvinces();
         return ResponseEntity.ok(BaseResponse.builder()
                 .data(provinces)
                 .build());
     }
     
     @GetMapping("/ghn/districts")
-    public ResponseEntity<BaseResponse> getDistricts(@RequestParam Integer provinceId) {
-        List<GhnDistrictDTO> districts = deliveryService.getDistricts(provinceId);
+    public ResponseEntity<BaseResponse> getDistricts(@RequestParam String provinceId) {
+        List<DistrictDTO> districts = deliveryService.getDistricts(provinceId);
         return ResponseEntity.ok(BaseResponse.builder()
                 .data(districts)
                 .build());
     }
     
     @GetMapping("/ghn/wards")
-    public ResponseEntity<BaseResponse> getWards(@RequestParam Integer districtId) {
-        List<GhnWardDTO> wards = deliveryService.getWards(districtId);
+    public ResponseEntity<BaseResponse> getWards(@RequestParam String districtId) {
+        List<WardDTO> wards = deliveryService.getWards(districtId);
         return ResponseEntity.ok(BaseResponse.builder()
                 .data(wards)
                 .build());
     }
     
     @PostMapping("/ghn/calculate-fee")
-    public ResponseEntity<BaseResponse> calculateFee(@Valid @RequestBody CalculateFeeRequestDTO request) {
-        CalculateFeeResponseDTO dto = deliveryService.calculateEstimatedDeliveryFee(request.getServiceTypeId(), request.getDistrictId(), request.getWardCode(), request.getWeight());
+    public ResponseEntity<BaseResponse> calculateFee(@Valid @RequestBody CalculateFeeRequest request) {
+        CalculateFeeDTO dto = deliveryService.calculateEstimatedDeliveryFee(request.getServiceTypeId(), request.getDistrictId(), request.getWardCode(), request.getWeight());
         return ResponseEntity.ok(BaseResponse.builder()
                 .data(dto)
                 .build());

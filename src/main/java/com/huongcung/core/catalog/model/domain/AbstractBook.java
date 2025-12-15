@@ -31,6 +31,7 @@ public class AbstractBook extends BaseDomain {
 
     private EbookInformation ebookInfo;
     private PhysicalBookInformation physicalBookInfo;
+    private com.huongcung.core.catalog.model.entity.ReviewEntity review;
 
     private Boolean isAvailable;
 

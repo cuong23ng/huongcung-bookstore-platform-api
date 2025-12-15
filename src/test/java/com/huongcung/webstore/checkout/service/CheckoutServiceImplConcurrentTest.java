@@ -15,7 +15,7 @@ import com.huongcung.core.user.model.entity.CustomerEntity;
 import com.huongcung.webstore.checkout.dto.CheckoutItemDTO;
 import com.huongcung.webstore.checkout.dto.CheckoutRequest;
 import com.huongcung.webstore.checkout.dto.ShippingAddressDTO;
-import com.huongcung.webstore.checkout.external.ghn.GhnApiClient;
+import com.huongcung.core.logistics.external.ghn.client.GhnApiClient;
 import com.huongcung.webstore.checkout.service.impl.CheckoutServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

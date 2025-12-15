@@ -30,6 +30,13 @@ spring:
           max-idle: 8
           min-idle: 0
           max-wait: -1ms
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
   mail:
     host: ${SMTP_HOST:smtp.gmail.com}
     port: ${SMTP_PORT:587}
@@ -45,6 +52,13 @@ spring:
           connectiontimeout: 5000
           timeout: 3000
           writetimeout: 5000
+  ai:
+    google:
+      genai:
+        api-key: ${GOOGLE_AI_API_KEY}
+        chat:
+          options:
+            model: ${GOOGLE_AI_MODEL:gemini-1.5-flash-001}
 
 # Server Configuration
 server:

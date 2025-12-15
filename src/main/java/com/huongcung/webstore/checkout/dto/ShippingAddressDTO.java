@@ -25,11 +25,17 @@ public class ShippingAddressDTO {
     @NotNull(message = "Province ID is required")
     private Integer provinceId;
     
+    private String provinceName;
+    
     @NotNull(message = "District ID is required")
     private Integer districtId;
     
+    private String districtName;
+    
     @NotBlank(message = "Ward code is required")
     private String wardCode;
+    
+    private String wardName;
     
     private String postalCode;
 }

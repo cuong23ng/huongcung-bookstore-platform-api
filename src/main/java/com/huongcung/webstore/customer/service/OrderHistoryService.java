@@ -1,5 +1,7 @@
 package com.huongcung.webstore.customer.service;
 
+import com.huongcung.core.logistics.model.dto.AddressDTO;
+import com.huongcung.core.common.utils.AddressUtils;
 import com.huongcung.core.order.model.entity.OrderEntity;
 import com.huongcung.core.order.model.entity.OrderEntryEntity;
 import com.huongcung.core.order.repository.OrderRepository;
@@ -75,6 +77,11 @@ public class OrderHistoryService {
         if (order.getDeliveryInfo() != null) {
             deliveryInfo = toDeliveryInfoDTO(order.getDeliveryInfo());
         }
+
+        AddressDTO shippingAddressDTO = null;
+        if (order.getShippingAddress() != null && !order.getShippingAddress().isBlank()) {
+            shippingAddressDTO = AddressUtils.parseAddressJson(order.getShippingAddress());
+        }
         
         return OrderDetailsDTO.builder()
             .id(order.getId())
@@ -90,7 +97,7 @@ public class OrderHistoryService {
             .taxAmount(order.getTaxAmount())
             .discountAmount(order.getDiscountAmount())
             .totalAmount(order.getTotalAmount())
-            .shippingAddress(order.getShippingAddress())
+            .shippingAddress(shippingAddressDTO)
             .billingAddress(order.getBillingAddress())
             .notes(order.getNotes())
             .items(items)

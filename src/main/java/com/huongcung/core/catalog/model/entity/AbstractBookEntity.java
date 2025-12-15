@@ -29,7 +29,7 @@ public class AbstractBookEntity extends BaseEntity {
     @Column(name = "title", nullable = false)
     private String title;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "books_authors_v2",
             joinColumns = @JoinColumn(name = "book_id"),
@@ -37,7 +37,7 @@ public class AbstractBookEntity extends BaseEntity {
     )
     private List<AuthorEntity> authors;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "books_translators_v2",
             joinColumns = @JoinColumn(name = "book_id"),
@@ -48,7 +48,7 @@ public class AbstractBookEntity extends BaseEntity {
     @Column(name = "edition")
     private Integer edition;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "books_genres_v2",
             joinColumns = @JoinColumn(name = "book_id"),
@@ -56,7 +56,7 @@ public class AbstractBookEntity extends BaseEntity {
     )
     private List<GenreEntity> genres;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "publisher_id")
     private PublisherEntity publisher;
 
@@ -70,7 +70,7 @@ public class AbstractBookEntity extends BaseEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<BookImageEntity> images;
 
     @OneToOne(mappedBy = "abstractBook", cascade = CascadeType.ALL, fetch = FetchType.EAGER, optional = true)
@@ -78,4 +78,8 @@ public class AbstractBookEntity extends BaseEntity {
 
     @OneToOne(mappedBy = "abstractBook", cascade = CascadeType.ALL, fetch = FetchType.EAGER, optional = true)
     private EbookEntity ebookInfo;
+
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "review_id", nullable = true)
+    private ReviewEntity review;
 }

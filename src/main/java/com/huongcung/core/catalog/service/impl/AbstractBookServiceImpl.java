@@ -79,7 +79,7 @@ public class AbstractBookServiceImpl implements AbstractBookService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "bookDetails", key = "'bookCode:' + #code")
+//    @Cacheable(value = "bookDetails", key = "'bookCode:' + #code")
     public AbstractBookDTO getBookDetails(String code) {
         AbstractBook book = findByCode(code);
         return bookDetailsConverter.convert(book);

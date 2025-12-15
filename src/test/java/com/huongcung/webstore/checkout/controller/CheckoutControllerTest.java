@@ -1,12 +1,16 @@
 package com.huongcung.webstore.checkout.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huongcung.core.logistics.external.ghn.dto.response.CalculateFeeResponse;
+import com.huongcung.core.logistics.external.ghn.dto.response.GetDistrictResponse;
+import com.huongcung.core.logistics.external.ghn.dto.response.GetProvinceResponse;
+import com.huongcung.core.logistics.external.ghn.dto.response.GetWardResponse;
+import com.huongcung.core.logistics.model.dto.request.CalculateFeeRequest;
 import com.huongcung.core.security.configuration.JwtConfiguration;
 import com.huongcung.core.security.external.jwt.JwtTokenBlacklistService;
 import com.huongcung.core.security.external.jwt.JwtTokenProvider;
 import com.huongcung.webstore.checkout.dto.*;
-import com.huongcung.webstore.checkout.external.ghn.GhnApiClient;
-import com.huongcung.webstore.checkout.external.ghn.dto.*;
+import com.huongcung.core.logistics.external.ghn.client.GhnApiClient;
 import com.huongcung.webstore.checkout.service.impl.CheckoutServiceImpl;
 import com.huongcung.webstore.controller.CheckoutController;
 import org.junit.jupiter.api.DisplayName;
@@ -71,15 +75,15 @@ class CheckoutControllerTest {
     @DisplayName("Should get provinces successfully")
     void getProvinces_Success() throws Exception {
         // Given
-        GhnProvinceDTO province1 = new GhnProvinceDTO();
+        GetProvinceResponse province1 = new GetProvinceResponse();
         province1.setProvinceId(201);
         province1.setProvinceName("Hà Nội");
         
-        GhnProvinceDTO province2 = new GhnProvinceDTO();
+        GetProvinceResponse province2 = new GetProvinceResponse();
         province2.setProvinceId(202);
         province2.setProvinceName("Hồ Chí Minh");
         
-        List<GhnProvinceDTO> provinces = Arrays.asList(province1, province2);
+        List<GetProvinceResponse> provinces = Arrays.asList(province1, province2);
         when(ghnApiClient.getProvinces()).thenReturn(provinces);
         
         // When & Then
@@ -107,7 +111,7 @@ class CheckoutControllerTest {
     @DisplayName("Should get districts successfully")
     void getDistricts_Success() throws Exception {
         // Given
-        GhnDistrictDTO district = new GhnDistrictDTO();
+        GetDistrictResponse district = new GetDistrictResponse();
         district.setDistrictId(1442);
         district.setDistrictName("Quận Ba Đình");
         district.setProvinceId(201);
@@ -126,7 +130,7 @@ class CheckoutControllerTest {
     @DisplayName("Should get wards successfully")
     void getWards_Success() throws Exception {
         // Given
-        GhnWardDTO ward = new GhnWardDTO();
+        GetWardResponse ward = new GetWardResponse();
         ward.setWardCode("1A0001");
         ward.setWardName("Phường Cống Vị");
         ward.setDistrictId(1442);
@@ -145,7 +149,7 @@ class CheckoutControllerTest {
     @DisplayName("Should calculate delivery fee successfully")
     void calculateFee_Success() throws Exception {
         // Given
-        CalculateFeeRequestDTO request = CalculateFeeRequestDTO.builder()
+        CalculateFeeRequest request = CalculateFeeRequest.builder()
             .districtId(1442)
             .wardCode("1A0001")
             .weight(1000)
