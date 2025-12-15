@@ -1,7 +1,7 @@
 package com.huongcung.webstore.customer.service;
 
 import com.huongcung.core.logistics.model.dto.AddressDTO;
-import com.huongcung.core.logistics.utils.AddressUtils;
+import com.huongcung.core.common.utils.AddressUtils;
 import com.huongcung.core.order.model.entity.OrderEntity;
 import com.huongcung.core.order.model.entity.OrderEntryEntity;
 import com.huongcung.core.order.repository.OrderRepository;

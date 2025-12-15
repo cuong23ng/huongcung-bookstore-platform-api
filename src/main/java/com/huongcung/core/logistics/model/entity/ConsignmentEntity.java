@@ -52,6 +52,12 @@ public class ConsignmentEntity extends BaseEntity {
     @Column(name = "total_price", precision = 10, scale = 2, nullable = false)
     private BigDecimal totalPrice;
 
+    @Column(name = "sub_total", precision = 10, scale = 2, nullable = false)
+    private BigDecimal subTotal;
+
+    @Column(name = "shipping_amount", precision = 10, scale = 2)
+    private BigDecimal shippingAmount = BigDecimal.ZERO;
+
     @Column(name = "cod_amount", precision = 10, scale = 2, nullable = false)
     private BigDecimal codAmount;
 

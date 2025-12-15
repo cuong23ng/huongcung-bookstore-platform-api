@@ -7,7 +7,7 @@ import com.huongcung.core.common.enumeration.City;
 import com.huongcung.core.logistics.model.entity.ConsignmentEntity;
 import com.huongcung.core.logistics.model.entity.ConsignmentEntryEntity;
 import com.huongcung.core.logistics.model.dto.AddressDTO;
-import com.huongcung.core.logistics.utils.AddressUtils;
+import com.huongcung.core.common.utils.AddressUtils;
 import com.huongcung.core.order.enumeration.OrderStatus;
 import com.huongcung.core.order.model.entity.OrderEntity;
 import com.huongcung.core.order.model.entity.OrderEntryEntity;

@@ -101,6 +101,7 @@ public class LogisticsServiceImpl implements LogisticsService {
 
         String trackingCode = ghnService.createShippingOrder(consignment);
         consignment.setTrackingNumber(trackingCode);
+
         consignment.setStatus(ConsignmentStatus.PENDING);
         consignmentRepository.save(consignment);
 
@@ -208,7 +209,7 @@ public class LogisticsServiceImpl implements LogisticsService {
                 consignmentTotalPrice = consignmentTotalPrice.add(proportionalPrice);
             }
             
-            consignment.setTotalPrice(consignmentTotalPrice);
+            consignment.setSubTotal(consignmentTotalPrice);
             
             // Set COD amount if payment method is COD
             if (order.getPaymentMethod() == PaymentMethod.COD) {
@@ -282,7 +283,7 @@ public class LogisticsServiceImpl implements LogisticsService {
         consignment.setShippingAddress(order.getShippingAddress());
         consignment.setOriginWarehouse(warehouse);
         consignment.setStatus(ConsignmentStatus.PENDING);
-        consignment.setTotalPrice(BigDecimal.ZERO);
+        consignment.setSubTotal(BigDecimal.ZERO);
         
         // Set COD amount if payment method is COD
         if (order.getPaymentMethod() == PaymentMethod.COD) {

@@ -1,9 +1,13 @@
 package com.huongcung.core.order.enumeration;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
 public enum PaymentMethod {
-    COD,
-    CREDIT_CARD,
-    MOMO,
-    ZALOPAY,
-    VNPAY
+    COD("Cash On Delivery"),
+    VNPAY("VNPAY");
+
+    private final String name;
 }

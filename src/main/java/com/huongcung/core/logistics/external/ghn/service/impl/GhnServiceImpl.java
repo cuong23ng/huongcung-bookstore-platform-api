@@ -7,7 +7,7 @@ import com.huongcung.core.logistics.external.ghn.dto.response.*;
 import com.huongcung.core.logistics.model.dto.AddressDTO;
 import com.huongcung.core.logistics.model.entity.ConsignmentEntity;
 import com.huongcung.core.logistics.external.ghn.service.GhnService;
-import com.huongcung.core.logistics.utils.AddressUtils;
+import com.huongcung.core.common.utils.AddressUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
