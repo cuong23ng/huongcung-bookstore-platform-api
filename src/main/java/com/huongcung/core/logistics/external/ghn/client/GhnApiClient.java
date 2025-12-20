@@ -7,7 +7,7 @@ import com.huongcung.core.logistics.external.ghn.dto.request.GetOrderStatusReque
 import com.huongcung.core.logistics.external.ghn.dto.request.GetServiceRequest;
 import com.huongcung.core.logistics.external.ghn.dto.response.*;
 import com.huongcung.core.logistics.external.ghn.exception.GhnApiException;
-import com.huongcung.core.logistics.external.ghn.config.GhnApiConfig;
+import com.huongcung.core.logistics.external.ghn.configuration.GhnApiConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
@@ -191,7 +191,7 @@ public class GhnApiClient {
             HttpHeaders headers = createHeaders();
             HttpEntity<CalculateFeeRequest> entity = new HttpEntity<>(request, headers);
             
-            log.debug("Calling GHN API: POST {} with request: {}", url, request);
+            log.info("Calling GHN API: POST {} with request: {}", url, request);
             ResponseEntity<GhnApiResponse<CalculateFeeResponse>> response = restTemplate.exchange(
                 url,
                 HttpMethod.POST,

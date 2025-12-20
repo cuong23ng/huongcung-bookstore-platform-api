@@ -79,4 +79,7 @@ public class OrderEntity extends BaseEntity {
     
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private DeliveryInfoEntity deliveryInfo;
+
+    @Column(name = "allocation_plan", columnDefinition = "json")
+    private String allocationPlan;
 }

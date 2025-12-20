@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @Configuration
 @EnableJpaAuditing
-@EnableJpaRepositories(basePackages = {"com.huongcung.core", "com.huongcung.webstore"})
+@EnableJpaRepositories(basePackages = {"com.huongcung.core", "com.huongcung.storefront"})
 public class JpaConfig {
 }

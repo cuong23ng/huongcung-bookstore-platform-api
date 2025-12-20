@@ -2,6 +2,7 @@ package com.huongcung.core.payment.controller;
 
 import com.huongcung.core.common.model.dto.response.BaseResponse;
 import com.huongcung.core.order.model.entity.OrderEntity;
+import com.huongcung.core.payment.external.vnpay.service.VnPayService;
 import com.huongcung.core.payment.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -33,27 +34,5 @@ public class PaymentController {
                 .message("Payment URL created")
                 .data(paymentUrl)
                 .build());
-    }
-
-    // 2. API IPN (Webhook)
-    @GetMapping("/vnpay-ipn")
-    public ResponseEntity<?> vnpayIpn(HttpServletRequest request) {
-        log.info("vnpayIpn: request {}", request.getPathInfo());
-
-        // Chuyển đổi request params thành Map
-        Map<String, String> fields = new HashMap<>();
-        for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements();) {
-            String fieldName = params.nextElement();
-            String fieldValue = request.getParameter(fieldName);
-            if ((fieldValue != null) && (!fieldValue.isEmpty())) {
-                fields.put(fieldName, fieldValue);
-            }
-        }
-
-        // Gọi Service để xử lý logic
-        Map<String, String> result = paymentService.processIpn(fields);
-
-        // Trả kết quả JSON cho VNPay xác nhận
-        return ResponseEntity.ok(result);
     }
 }

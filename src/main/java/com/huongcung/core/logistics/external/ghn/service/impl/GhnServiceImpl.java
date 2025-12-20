@@ -96,14 +96,18 @@ public class GhnServiceImpl implements GhnService {
     }
 
     @Override
-    public GhnCalculateExpectedDeliveryTimeDTO calculateExpectedDeliveryTime(Integer fromDistrictId, Integer toDistrictId,
-                                                                             String toWardCode, Integer serviceId) {
+    public GhnCalculateExpectedDeliveryTimeDTO calculateExpectedDeliveryTime(Integer serviceTypeId,
+                                                                             Integer fromDistrictId, String fromWardCode,
+                                                                             Integer toDistrictId, String toWardCode,
+                                                                             Integer weight) {
 
         CalculateExpectedDeliveryTimeRequest request = CalculateExpectedDeliveryTimeRequest.builder()
                 .fromDistrictId(fromDistrictId)
+                .fromWardCode(fromWardCode)
                 .toDistrictId(toDistrictId)
                 .toWardCode(toWardCode)
-                .serviceId(serviceId)
+                .serviceTypeId(serviceTypeId)
+                .weight(weight)
                 .build();
 
         CalculateExpectedDeliveryTimeResponse response = ghnApiClient.calculateExpectedDeliveryTime(request);
@@ -115,48 +119,52 @@ public class GhnServiceImpl implements GhnService {
     }
 
     @Override
-    public String createShippingOrder(ConsignmentEntity consignment) {
-        AddressDTO warehouseAddressDTO = AddressUtils.parseAddressJson(consignment.getOriginWarehouse().getAddress());
-        AddressDTO customerAddressDTO = AddressUtils.parseAddressJson(consignment.getShippingAddress());
+    public CreateShippingOrderResponse createShippingOrder(Integer serviceTypeId, Integer paymentTypeId,
+                                                    String fromName, String fromPhone, String fromProvinceName, String fromDistrictName, String fromWardName, String fromAddress,
+                                                    String toName, String toPhone, Integer toDistrictId, String toWardCode, String toAddress,
+                                                    Integer weight, Integer height, Integer length, Integer width,
+                                                    Integer codAmount, String clientOrderCode, String requiredNote, List<ShippingItemRequest> items) {
         CreateShippingOrderRequest request = CreateShippingOrderRequest.builder()
-                .fromName(warehouseAddressDTO.getName())
-                .fromPhone(warehouseAddressDTO.getPhone())
-                .fromProvinceName(warehouseAddressDTO.getProvince().getProvinceName())
-                .fromDistrictName(warehouseAddressDTO.getDistrict().getDistrictName())
-                .fromWardName(warehouseAddressDTO.getWard().getWardName())
-                .fromAddress(warehouseAddressDTO.getAddress())
-                .toName(customerAddressDTO.getName())
-                .toPhone(customerAddressDTO.getPhone())
-                .toDistrictId(Integer.valueOf(customerAddressDTO.getDistrict().getDistrictId()))
-                .toWardCode(customerAddressDTO.getWard().getWardCode())
-                .toAddress(customerAddressDTO.getAddress())
-                .clientOrderCode(consignment.getCode())
-                .codAmount(consignment.getCodAmount().toBigInteger().intValue())
-                .weight(2)
-                .height(2)
-                .length(10)
-                .width(2)
-                .serviceTypeId(2)
-                .paymentTypeId(2)
-                .requiredNote("CHOXEMHANGKHONGTHU")
+                .fromName(fromName)
+                .fromPhone(fromPhone)
+                .fromProvinceName(fromProvinceName)
+                .fromDistrictName(fromDistrictName)
+                .fromWardName(fromWardName)
+                .fromAddress(fromAddress)
+                .toName(toName)
+                .toPhone(toPhone)
+                .toDistrictId(toDistrictId)
+                .toWardCode(toWardCode)
+                .toAddress(toAddress)
+                .clientOrderCode(clientOrderCode)
+                .codAmount(codAmount)
+                .weight(weight)
+                .height(height)
+                .length(length)
+                .width(width)
+                .serviceTypeId(serviceTypeId)
+                .paymentTypeId(paymentTypeId)
+                .requiredNote(requiredNote)
+                .items(items)
                 .build();
 
-        List<ShippingItemRequest> items = consignment.getEntries().stream()
-                .map(e -> ShippingItemRequest.builder()
-                        .name(e.getOrderEntry().getBook().getTitle())
-                        .code(e.getOrderEntry().getBook().getCode())
-                        .quantity(e.getQuantity())
-                        .price(e.getQuantity() * e.getOrderEntry().getUnitPrice().intValue())
-                        .height(e.getOrderEntry().getBook().getPhysicalBookInfo().getHeightCm())
-                        .weight(e.getOrderEntry().getBook().getPhysicalBookInfo().getWeightGrams())
-                        .length(e.getOrderEntry().getBook().getPhysicalBookInfo().getLengthCm())
-                        .width(e.getOrderEntry().getBook().getPhysicalBookInfo().getWidthCm())
-                        .build())
-                .toList();
-
-        request.setItems(items);
         CreateShippingOrderResponse response = ghnApiClient.createShippingOrder(request);
-        return response.getOrderCode();
+        return response;
+    }
+
+    public ShippingItemRequest createShippingItem(String name, String code,
+                                                  Integer quantity, Integer price,
+                                                  Integer height, Integer weight, Integer length, Integer width) {
+        return ShippingItemRequest.builder()
+                .name(name)
+                .code(code)
+                .quantity(quantity)
+                .price(price)
+                .height(height)
+                .weight(weight)
+                .length(length)
+                .width(width)
+                .build();
     }
 
     public String getOrderStatus(String trackingNumber) {

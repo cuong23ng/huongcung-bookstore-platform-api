@@ -96,10 +96,9 @@ public class ReviewController {
      */
     @PostMapping("/generate-ai/{bookId}")
     public ResponseEntity<BaseResponse> triggerAiReview(@PathVariable Long bookId) {
-        // Gọi hàm async, không chờ kết quả
+
         aiReviewService.generateReviewAsync(bookId);
 
-        // Trả về ngay lập tức
         return ResponseEntity.accepted().body(
                 BaseResponse.builder()
                         .message("Yêu cầu tạo Review AI đã được tiếp nhận. Vui lòng kiểm tra lại sau 1-2 phút.")

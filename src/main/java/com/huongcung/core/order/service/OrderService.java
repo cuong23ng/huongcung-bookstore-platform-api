@@ -7,6 +7,4 @@ import java.util.List;
 
 public interface OrderService {
     List<OrderEntity> findAllByStatus(OrderStatus status);
-
-    void handlePaymentSuccess(Long orderId);
 }

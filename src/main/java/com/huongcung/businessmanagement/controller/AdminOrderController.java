@@ -11,7 +11,7 @@ import com.huongcung.core.logistics.model.entity.ConsignmentEntity;
 import com.huongcung.core.logistics.service.impl.LogisticsServiceImpl;
 import com.huongcung.core.order.enumeration.OrderStatus;
 import com.huongcung.core.security.model.dto.CustomUserDetails;
-import com.huongcung.webstore.customer.dto.OrderDetailsDTO;
+import com.huongcung.core.order.model.dto.OrderDetailsDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

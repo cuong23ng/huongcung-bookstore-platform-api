@@ -13,8 +13,8 @@ import com.huongcung.core.order.model.entity.OrderEntity;
 import com.huongcung.core.order.model.entity.OrderEntryEntity;
 import com.huongcung.core.order.repository.OrderRepository;
 import com.huongcung.core.inventory.model.entity.WarehouseEntity;
-import com.huongcung.webstore.customer.dto.OrderDetailsDTO;
-import com.huongcung.webstore.customer.dto.OrderItemDTO;
+import com.huongcung.core.order.model.dto.OrderDetailsDTO;
+import com.huongcung.core.order.model.dto.OrderItemDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -101,18 +101,18 @@ public class AdminOrderService {
             customerEmail = order.getOrderCustomer().getEmail();
         }
         
-        return AdminOrderDTO.builder()
-            .id(order.getId())
-            .orderNumber(order.getOrderNumber())
-            .customerId(customerId)
-            .customerName(customerName != null ? customerName.trim() : null)
-            .customerEmail(customerEmail)
-            .createdAt(order.getCreatedAt())
-            .status(order.getStatus().name())
-            .paymentStatus(order.getPaymentStatus() != null ? order.getPaymentStatus().name() : "PENDING")
-            .totalAmount(order.getTotalAmount())
-            .itemCount(itemCount)
-            .build();
+        return new AdminOrderDTO(
+            order.getId(),
+            order.getOrderNumber(),
+            customerId,
+            customerName != null ? customerName.trim() : null,
+            customerEmail,
+            order.getCreatedAt(),
+            order.getStatus().name(),
+            order.getPaymentStatus() != null ? order.getPaymentStatus().name() : "PENDING",
+            order.getTotalAmount(),
+            itemCount
+        );
     }
     
     private OrderDetailsDTO toOrderDetailsDTO(OrderEntity order) {

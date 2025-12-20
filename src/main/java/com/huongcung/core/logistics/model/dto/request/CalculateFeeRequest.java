@@ -1,5 +1,9 @@
 package com.huongcung.core.logistics.model.dto.request;
 
+import com.huongcung.storefront.checkout.dto.CheckoutItemDTO;
+import com.huongcung.storefront.checkout.dto.ShippingAddressDTO;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -7,20 +11,20 @@ import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.NotNull;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class CalculateFeeRequest {
-    @NotNull(message = "District ID is required")
-    private String districtId;
-    
-    @NotNull(message = "Ward code is required")
-    private String wardCode;
-    
-    @NotNull(message = "Weight is required")
-    private Integer weight; // in grams
-    
-    private String serviceTypeId; // Optional, defaults to standard
+
+    @NotEmpty(message = "Cart items are required")
+    @Valid
+    private List<CheckoutItemDTO> items;
+
+    @NotNull(message = "Shipping address is required")
+    @Valid
+    private ShippingAddressDTO shippingAddress;
 }
 
